@@ -3,10 +3,19 @@
 import os
 import sys
 
+from dotenv import load_dotenv
+
 
 def main():
-    """Run administrative tasks."""
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'alertmanager.settings')
+
+    # Only for Local Development - Load environment variables from the .env file
+    if 'WEBSITE_HOSTNAME' not in os.environ:
+        load_dotenv('./.env')
+
+    # When running on Azure App Service you should use the production settings.
+    settings_module = "alertmanager.production" if 'WEBSITE_HOSTNAME' in os.environ else \
+        'alertmanager.settings'
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', settings_module)
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:

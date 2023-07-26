@@ -34,6 +34,7 @@ if 'CODESPACE_NAME' in os.environ:
 # Application definition
 
 INSTALLED_APPS = [
+    'alert_cache.apps.AlertCacheConfig',
     'django_celery_results',
     'django_celery_beat',
     'django.contrib.admin',
@@ -43,7 +44,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django_extensions',
-    'corsheaders'
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
