@@ -9,6 +9,3 @@ class AlertCacheConfig(AppConfig):
     def ready(self):
         from .cache import cache_alert
         cache_alert()
-
-
-

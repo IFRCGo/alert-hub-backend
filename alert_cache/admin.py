@@ -62,5 +62,3 @@ admin.site.register(CapFeedContinent)
 admin.site.register(CapFeedRegion)
 admin.site.register(CapFeedCountry, CapFeedCountryAdmin)
 admin.site.register(CapFeedFeed, CapFeedFeedAdmin)
-
-
