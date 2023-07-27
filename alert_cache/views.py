@@ -1,3 +1,8 @@
-from django.shortcuts import render
+import json
 
-# Create your views here.
+from .cache import get_alert
+from django.http import HttpResponse
+
+#Get all alerts and show them on page
+def get_alerts(request):
+    return HttpResponse(json.dumps(get_alert()))

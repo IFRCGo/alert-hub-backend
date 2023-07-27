@@ -6,5 +6,9 @@ class AlertCacheConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'alert_cache'
 
+    def ready(self):
+        from .cache import cache_alert
+        cache_alert()
+
 
 

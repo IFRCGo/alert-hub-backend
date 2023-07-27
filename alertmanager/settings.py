@@ -140,9 +140,9 @@ CELERY_broker_url = os.environ.get("CELERY_broker_url")
 accept_content = ['application/json']
 task_serializer = 'json'
 result_backend = 'django-db'
-cache_backend = 'django-cache'
+cache_backend = 'django-cache.py'
 CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
-
+BROKER_CONNECTION_RETRY_ON_STARTUP = True
 
 CORS_ALLOWED_ORIGINS = [
 "http://localhost:3000",
