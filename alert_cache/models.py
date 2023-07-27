@@ -25,19 +25,19 @@ class CapFeedAlert(models.Model):
     def to_dict(self):
         alert_dict = dict()
         #alert_dict['id'] = self.id
-        alert_dict['identifier'] = self.identifier
-        alert_dict['sender'] = self.sender
-        alert_dict['sent'] = str(self.sent)
         alert_dict['status'] = self.status
-        alert_dict['msg_type'] = self.msg_type
         alert_dict['source'] = self.source
+        alert_dict['sent'] = str(self.sent)
+        alert_dict['sender'] = self.sender
+        alert_dict['references'] = self.references
         alert_dict['scope'] = self.scope
         alert_dict['restriction'] = self.restriction
-        alert_dict['addresses'] = self.addresses
-        alert_dict['code'] = self.code
         alert_dict['note'] = self.note
-        alert_dict['references'] = self.references
+        alert_dict['msg_type'] = self.msg_type
         alert_dict['incidents'] = self.incidents
+        alert_dict['identifier'] = self.identifier
+        alert_dict['code'] = self.code
+        alert_dict['addresses'] = self.addresses
         alert_dict['country'] = self.country.name
         alert_dict['iso3'] = self.country.iso3
         alert_dict['country_id'] = self.country.id
@@ -82,37 +82,39 @@ class CapFeedAlertInfo(models.Model):
 
     def to_dict(self):
         alert_info_dict = dict()
-        alert_info_dict['language'] = self.language
-        alert_info_dict['category'] = self.category
-        alert_info_dict['event'] = self.event
-        alert_info_dict['response_type'] = self.response_type
-        alert_info_dict['urgency'] = self.urgency
-        alert_info_dict['severity'] = self.severity
-        alert_info_dict['certainty'] = self.certainty
-        alert_info_dict['audience'] = self.audience
-        alert_info_dict['event_code'] = self.event_code
-        alert_info_dict['effective'] = str(self.effective)
-        alert_info_dict['onset'] = str(self.onset)
-        alert_info_dict['expires'] = str(self.expires)
-        alert_info_dict['sender_name'] = self.sender_name
-        alert_info_dict['headline'] = self.headline
-        alert_info_dict['description'] = self.description
-        alert_info_dict['instruction'] = self.instruction
         alert_info_dict['web'] = self.web
+        alert_info_dict['urgency'] = self.urgency
+        alert_info_dict['audience'] = self.audience
+        alert_info_dict['category'] = self.category
+        alert_info_dict['certainty'] = self.certainty
         alert_info_dict['contact'] = self.contact
-        parameter_set = self.capfeedalertinfoparameter_set.all()
-        parameter_list = []
-        for parameter in parameter_set:
-            parameter_list.append(parameter.to_dict())
-        if len(parameter_list) != 0:
-            alert_info_dict['parameter'] = parameter_list
-        area_set = self.capfeedalertinfoarea_set.all()
+        alert_info_dict['effective'] = str(self.effective)
+        alert_info_dict['event'] = self.event
+        alert_info_dict['event_code'] = self.event_code
+        alert_info_dict['headline'] = self.headline
+        alert_info_dict['expires'] = str(self.expires)
+        alert_info_dict['instruction'] = self.instruction
+        alert_info_dict['language'] = self.language
+        alert_info_dict['onset'] = str(self.onset)
+        alert_info_dict['response_type'] = self.response_type
+        alert_info_dict['sender_name'] = self.sender_name
+        alert_info_dict['severity'] = self.severity
+        alert_info_dict['id'] = self.id
+        alert_info_dict['description'] = self.description
 
-        area_list = []
-        for area in area_set:
-            area_list.append(area.to_dict())
-        if len(area_list) != 0:
-            alert_info_dict['area'] = area_list
+        #parameter_set = self.capfeedalertinfoparameter_set.all()
+        #parameter_list = []
+        #for parameter in parameter_set:
+        #    parameter_list.append(parameter.to_dict())
+        #if len(parameter_list) != 0:
+        #    alert_info_dict['parameter'] = parameter_list
+        #area_set = self.capfeedalertinfoarea_set.all()
+
+        #area_list = []
+        #for area in area_set:
+        #    area_list.append(area.to_dict())
+        #if len(area_list) != 0:
+        #    alert_info_dict['area'] = area_list
         return alert_info_dict
 
 
