@@ -5,4 +5,4 @@ from django.http import HttpResponse
 
 #Get all alerts and show them on page
 def get_alerts(request):
-    return HttpResponse(json.dumps(get_alert()))
+    return HttpResponse(get_alert())

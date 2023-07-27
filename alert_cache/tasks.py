@@ -13,7 +13,7 @@ def cache_incoming_alert(self, alert_id):
         alert = CapFeedAlert.objects.filter(id=alert_id).first()
         if alert != None:
             alerts_dictionary = cache.get("alerts")
-            alerts_dictionary[alert_id] = json.dumps(alert.to_dict())
+            alerts_dictionary[alert_id] = alert.to_dict()
             cache.set("alerts", alerts_dictionary, timeout=None)
             return f"Cached alert with id : {alert_id}"
         else:
