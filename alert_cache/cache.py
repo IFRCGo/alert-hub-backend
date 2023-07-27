@@ -9,9 +9,9 @@ def cache_alert():
     for alert in all_alerts:
         alert_dictionary[alert.id] = alert.to_dict()
     cache.set("alerts",alert_dictionary,timeout=None)
+    cache.set("alerts_in_json", json.dumps(alert_dictionary, indent=None), timeout=None)
     print(len(alert_dictionary))
 
 def get_alert():
-    alerts = cache.get("alerts")
-    print(len(alerts))
-    return json.dumps(alerts, ensure_ascii=False)
+    alerts = cache.get("alerts_in_json")
+    return alerts

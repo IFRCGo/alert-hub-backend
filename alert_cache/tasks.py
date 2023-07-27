@@ -15,6 +15,7 @@ def cache_incoming_alert(self, alert_id):
             alerts_dictionary = cache.get("alerts")
             alerts_dictionary[alert_id] = alert.to_dict()
             cache.set("alerts", alerts_dictionary, timeout=None)
+            cache.set("alerts_in_json", json.dumps(alerts_dictionary, indent=None), timeout=None)
             return f"Cached alert with id : {alert_id}"
         else:
             return f"Alert: {alert_id} is not found in database"
@@ -27,5 +28,6 @@ def remove_cached_alert(self, alert_id):
     if alert_id in alerts_dictionary.keys():
         del alerts_dictionary[alert_id]
         cache.set("alerts", alerts_dictionary, timeout=None)
+        cache.set("alerts_in_json", json.dumps(alerts_dictionary, indent=None), timeout=None)
         return f"Removed alert with id : {alert_id}"
     return f"Alert with id : {alert_id} is not in the cache"
