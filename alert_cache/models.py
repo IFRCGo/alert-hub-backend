@@ -38,11 +38,13 @@ class CapFeedAlert(models.Model):
         alert_dict['note'] = self.note
         alert_dict['references'] = self.references
         alert_dict['incidents'] = self.incidents
-        alert_dict['feed_url'] = self.feed.url
-        alert_dict['feed_format'] = self.feed.format
         alert_dict['country'] = self.country.name
         alert_dict['iso3'] = self.country.iso3
-        alert_dict['country_polygon'] = self.country.polygon
+        alert_dict['country_id'] = self.country.id
+        alert_dict['country_name'] = self.country.name
+        alert_dict['region_name'] = self.country.region.name
+        alert_dict['feed_url'] = self.feed.url
+        alert_dict['feed_name'] = self.feed.name
 
         info_list = []
         for info in self.capfeedalertinfo_set.all():
