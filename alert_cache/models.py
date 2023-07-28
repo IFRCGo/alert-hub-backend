@@ -52,6 +52,19 @@ class CapFeedAlert(models.Model):
         alert_dict['info'] = info_list
         return alert_dict
 
+    def to_dict_in_short(self):
+        alert_dict = dict()
+        #alert_dict['id'] = self.id
+        alert_dict['status'] = self.status
+        alert_dict['source'] = self.source
+        alert_dict['sent'] = str(self.sent)
+        alert_dict['sender'] = self.sender
+
+        info_list = []
+        for info in self.capfeedalertinfo_set.all():
+            info_list.append(info.to_dict())
+        alert_dict['info'] = info_list
+        return alert_dict
 
 class CapFeedAlertInfo(models.Model):
     id = models.BigAutoField(primary_key=True)
@@ -117,6 +130,23 @@ class CapFeedAlertInfo(models.Model):
         #    alert_info_dict['area'] = area_list
         return alert_info_dict
 
+    def to_dict_in_short(self):
+        alert_info_dict = dict()
+        alert_info_dict['urgency'] = self.urgency
+        alert_info_dict['audience'] = self.audience
+        alert_info_dict['category'] = self.category
+        alert_info_dict['certainty'] = self.certainty
+        alert_info_dict['contact'] = self.contact
+        alert_info_dict['event'] = self.event
+        alert_info_dict['headline'] = self.headline
+        alert_info_dict['expires'] = str(self.expires)
+        alert_info_dict['instruction'] = self.instruction
+        alert_info_dict['language'] = self.language
+        alert_info_dict['severity'] = self.severity
+        alert_info_dict['id'] = self.id
+        alert_info_dict['description'] = self.description
+
+        return alert_info_dict
 
 class CapFeedAlertInfoArea(models.Model):
     id = models.BigAutoField(primary_key=True)
