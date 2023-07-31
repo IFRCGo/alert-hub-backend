@@ -21,5 +21,6 @@ from django.urls import path, include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('alert/', include('alert_cache.urls'))
+    path('alert/', include('alert_cache.alert_urls')),
+    path('country/', include('alert_cache.country_urls'))
 ]

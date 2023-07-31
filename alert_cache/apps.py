@@ -7,5 +7,6 @@ class AlertCacheConfig(AppConfig):
     name = 'alert_cache'
 
     def ready(self):
-        from .cache import cache_alert
+        from .cache import cache_alert,cache_country
         cache_alert()
+        cache_country()

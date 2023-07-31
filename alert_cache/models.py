@@ -1,7 +1,8 @@
 from django.db import models
 
 class CapFeedAlert(models.Model):
-    id = models.CharField(primary_key=True, max_length=255)
+    id = models.BigAutoField(primary_key=True)
+    url = models.CharField(unique=True, max_length=255)
     identifier = models.CharField(max_length=255)
     sender = models.CharField(max_length=255)
     sent = models.DateTimeField()
@@ -53,18 +54,18 @@ class CapFeedAlert(models.Model):
         return alert_dict
 
     def to_dict_in_short(self):
-        alert_dict = dict()
-        #alert_dict['id'] = self.id
-        alert_dict['status'] = self.status
-        alert_dict['source'] = self.source
-        alert_dict['sent'] = str(self.sent)
-        alert_dict['sender'] = self.sender
+        alert_dict_in_short = dict()
+        alert_dict_in_short['id'] = self.id
+        info = self.capfeedalertinfo_set.first()
+        if info != None:
+            alert_dict_in_short['category'] = info.category
+            alert_dict_in_short['event'] = info.event
+        else:
+            alert_dict_in_short['category'] = ''
+            alert_dict_in_short['event'] = ''
+        alert_dict_in_short['country_id'] = self.country.id
 
-        info_list = []
-        for info in self.capfeedalertinfo_set.all():
-            info_list.append(info.to_dict())
-        alert_dict['info'] = info_list
-        return alert_dict
+        return alert_dict_in_short
 
 class CapFeedAlertInfo(models.Model):
     id = models.BigAutoField(primary_key=True)
@@ -115,19 +116,19 @@ class CapFeedAlertInfo(models.Model):
         alert_info_dict['id'] = self.id
         alert_info_dict['description'] = self.description
 
-        #parameter_set = self.capfeedalertinfoparameter_set.all()
-        #parameter_list = []
-        #for parameter in parameter_set:
-        #    parameter_list.append(parameter.to_dict())
-        #if len(parameter_list) != 0:
-        #    alert_info_dict['parameter'] = parameter_list
-        #area_set = self.capfeedalertinfoarea_set.all()
+        parameter_set = self.capfeedalertinfoparameter_set.all()
+        parameter_list = []
+        for parameter in parameter_set:
+            parameter_list.append(parameter.to_dict())
+        if len(parameter_list) != 0:
+            alert_info_dict['parameter'] = parameter_list
+        area_set = self.capfeedalertinfoarea_set.all()
 
-        #area_list = []
-        #for area in area_set:
-        #    area_list.append(area.to_dict())
-        #if len(area_list) != 0:
-        #    alert_info_dict['area'] = area_list
+        area_list = []
+        for area in area_set:
+            area_list.append(area.to_dict())
+        if len(area_list) != 0:
+            alert_info_dict['area'] = area_list
         return alert_info_dict
 
     def to_dict_in_short(self):
@@ -277,6 +278,15 @@ class CapFeedCountry(models.Model):
     class Meta:
         managed = False
         db_table = 'cap_feed_country'
+
+    def to_dict(self):
+        country_dict = dict()
+        country_dict['id'] = self.id
+        country_dict['name'] = self.name
+        flag = True if self.polygon != '' else False
+        country_dict['polygon_flag'] = flag
+        country_dict['polygon'] = self.polygon if flag else self.multipolygon
+        return country_dict
 
 
 class CapFeedFeed(models.Model):
