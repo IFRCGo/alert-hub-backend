@@ -9,14 +9,10 @@ class AlertCacheConfig(AppConfig):
     name = 'alert_cache'
 
     def ready(self):
-        from .cache import cache_alert,cache_country,cache_startup
+        from .cache import initialise_region_cache, cache_startup, initialise_alerts_cache
         if 'collectstatic' not in sys.argv or 'migrate' not in sys.argv or 'makemigrations' not \
                 in sys.argv:
             is_locked = cache_startup()
             if is_locked == True:
-                print("a ha ha")
-                try:
-                    cache_alert()
-                    cache_country()
-                except Exception as e:
-                    print(f" error : {e}")
+                initialise_alerts_cache()
+                initialise_region_cache()
