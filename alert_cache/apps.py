@@ -15,5 +15,8 @@ class AlertCacheConfig(AppConfig):
             is_locked = cache_startup()
             if is_locked == True:
                 print("a ha ha")
-                #cache_alert()
-                #cache_country()
+                try:
+                    cache_alert()
+                    cache_country()
+                except Exception as e:
+                    print(f" error : {e}")
