@@ -51,3 +51,7 @@ def get_country_by_id(country_id):
         return country_dictionary[country_id]
     else:
         return "No Country with Provided Id is Found."
+
+def cache_startup():
+    #Since Azure runs two worker process, I apply the lock that only one process can process alerts
+    return cache.add("lock", True, 500)
