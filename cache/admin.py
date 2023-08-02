@@ -4,7 +4,8 @@ from django.contrib import admin
 from django.contrib import admin
 from .models import CapFeedAlert, CapFeedAlertInfo, CapFeedAlertInfoParameter, CapFeedAlertInfoArea, \
     CapFeedAlertInfoAreaGeocode, CapFeedAlertInfoAreaPolygon, CapFeedAlertInfoAreaCircle, CapFeedContinent, \
-    CapFeedRegion, CapFeedCountry, CapFeedFeed
+    CapFeedRegion, CapFeedCountry, CapFeedFeed, CapFeedDistrict, CapFeedAlertDistrict
+
 from django_celery_beat.models import CrontabSchedule, ClockedSchedule, SolarSchedule, IntervalSchedule
 
 class CapFeedAlertInfoAreaGeocodeAdmin(admin.ModelAdmin):
@@ -41,7 +42,9 @@ class CapFeedAlertAdmin(admin.ModelAdmin):
     search_fields = ["id"]
     fieldsets = [
         ("Administration", {"fields": ["country", "feed"]}),
-        ("Alert Header" , {"fields": ["identifier", "sender", "sent", "status", "msg_type", "source", "scope", "restriction", "addresses", "code", "note", "references", "incidents"]}),
+        ("Alert Header" , {"fields": ["identifier", "sender", "sent", "status", "msg_type",
+                                      "source", "scope", "restriction", "addresses", "code",
+                                      "note", "references", "incidents"]}),
     ]
     inlines = [CapFeedAlertInfoInline]
 
@@ -62,3 +65,5 @@ admin.site.register(CapFeedContinent)
 admin.site.register(CapFeedRegion)
 admin.site.register(CapFeedCountry, CapFeedCountryAdmin)
 admin.site.register(CapFeedFeed, CapFeedFeedAdmin)
+admin.site.register(CapFeedAlertDistrict)
+admin.site.register(CapFeedDistrict)

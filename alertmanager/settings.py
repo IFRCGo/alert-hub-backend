@@ -34,7 +34,7 @@ if 'CODESPACE_NAME' in os.environ:
 # Application definition
 
 INSTALLED_APPS = [
-    'alert_cache.apps.AlertCacheConfig',
+    'cache.apps.CacheConfig',
     'django_celery_results',
     'django_celery_beat',
     'django.contrib.admin',

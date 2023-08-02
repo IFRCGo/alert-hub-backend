@@ -30,9 +30,11 @@ app.conf.task_default_exchange_type = 'topic'
 app.conf.task_default_routing_key = 'cache.default'
 
 task_routes = {
-        'alert_cache.tasks.*': {
+        'cache.tasks.*': {
             'queue': 'cache',
             'routing_key': 'cache.#',
             'exchange' : 'cache',
         },
 }
+#Used for testing
+#app.send_task("cache.tasks.remove_cached_alert", kwargs={"alert_id": 6565})
