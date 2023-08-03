@@ -54,7 +54,7 @@ class CapFeedCountryAdmin(admin.ModelAdmin):
     search_fields = ["name", "iso3"]
 
 class CapFeedFeedAdmin(admin.ModelAdmin):
-    list_display = ["name", "country", "url", "format", "polling_interval"]
+    list_display = ["country", "url", "format", "polling_interval"]
     list_filter = ["format", "polling_interval"]
     search_fields = ["url", "country"]
 

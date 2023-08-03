@@ -1,3 +1,4 @@
+import os
 import sys
 
 from django.apps import AppConfig
@@ -14,12 +15,11 @@ class CacheConfig(AppConfig):
         from .country_cache import initialise_countries_cache
         from django.core.cache import cache
         #For local
-        if 'runserver' in sys.argv:
-        #For production
-        #if 'collectstatic' not in sys.argv or 'migrate' not in sys.argv or 'makemigrations' not \
-        #        in sys.argv:
-            is_locked = cache.add("locked", True, 5)
-            if is_locked == True:
+        is_locked = cache.add("locked", True, 5)
+        if is_locked == True:
+            if 'WEBSITE_HOSTNAME' in os.environ and 'collectstatic' not in sys.argv \
+                and 'migrate' not in sys.argv or ('WEBSITE_HOSTNAME' not in os.environ
+                    and 'runserver' in sys.argv):
                 initialise_alert_cache()
                 initialise_region_cache()
                 initialise_countries_cache()

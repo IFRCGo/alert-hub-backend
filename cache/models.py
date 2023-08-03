@@ -109,7 +109,7 @@ class CapFeedAlert(models.Model):
         alert_dict['country_name'] = self.country.name
         alert_dict['region_name'] = self.country.region.name
         alert_dict['feed_url'] = self.feed.url
-        alert_dict['feed_name'] = self.feed.name
+        alert_dict['feed_id'] = self.feed.id
 
         info_list = []
         for info in self.capfeedalertinfo_set.all():
@@ -321,14 +321,15 @@ class CapFeedAlertInfoParameter(models.Model):
         return alert_info_parameter_dict
 
 class CapFeedFeed(models.Model):
-    name = models.CharField(max_length=255)
     url = models.CharField(primary_key=True, max_length=255)
     format = models.CharField()
     polling_interval = models.IntegerField()
-    atom = models.CharField()
-    cap = models.CharField()
     country = models.ForeignKey(CapFeedCountry, models.DO_NOTHING)
     notes = models.TextField()
+    author_email = models.CharField()
+    author_name = models.CharField()
+    id = models.CharField(unique=True, max_length=255)
+    status = models.CharField()
 
     class Meta:
         managed = False
