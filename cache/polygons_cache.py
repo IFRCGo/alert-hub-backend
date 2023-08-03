@@ -19,7 +19,7 @@ def initialise_polygons_cache():
                 area_data['polygons'].append(polygon_data)
         info_data['areas'].append(area_data)
 
-        cache.set("info" + str(info.id), info_data)
+        cache.set("info" + str(info.id), info_data, timeout = None)
 
 def get_polygons_by_info(info_id):
     info_cache_key = "info" + str(info_id)

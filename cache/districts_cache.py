@@ -11,7 +11,7 @@ def initialise_districts_cache():
             if district.capfeedalertdistrict_set.count() > 0:
                 country_data['districts'].append(district.to_dict())
         
-        cache.set("country" + str(country.id), country_data)
+        cache.set("country" + str(country.id), country_data, timeout = None)
 
 def get_districts_by_country(country_id):
     country_cache_key = "country" + str(country_id)

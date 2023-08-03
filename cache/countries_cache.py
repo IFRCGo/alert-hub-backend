@@ -18,7 +18,7 @@ def initialise_countries_cache():
         if len(region_data['countries']) > 0:
             regions_data['regions'].append(region_data)
 
-    cache.set("regions", regions_data)
+    cache.set("regions", regions_data, timeout = None)
     
 def get_countries():
     regions_cache_key = "regions"
