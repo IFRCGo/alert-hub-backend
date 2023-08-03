@@ -1,18 +1,20 @@
-import json
+from cache import countries_cache, districts_cache, alerts_cache, polygons_cache
+from django.http import JsonResponse
 
 
-from django.http import HttpResponse
-from cache import region_cache, country_cache,alert_cache
 
+def get_countries(request):
+    response = countries_cache.get_countries()
+    return JsonResponse(response, json_dumps_params={'indent': 2, 'ensure_ascii': False})
 
-#Get all alerts and show them on page
+def get_districts_by_country(request, country_id):
+    response = districts_cache.get_districts_by_country(country_id)
+    return JsonResponse(response, json_dumps_params={'indent': 2, 'ensure_ascii': False})
 
+def get_alerts_by_district(request, district_id):
+    response = alerts_cache.get_alerts_by_district(district_id)
+    return JsonResponse(response, json_dumps_params={'indent': 2, 'ensure_ascii': False})
 
-def get_regions(request):
-    return HttpResponse(region_cache.get_regions())
-
-def get_alert_by_id(request, alert_id):
-    return HttpResponse(alert_cache.get_alert_by_id(alert_id))
-
-def get_alerts_by_country(request, country_id):
-    return HttpResponse(country_cache.get_alerts_by_country(country_id))
+def get_polygons_by_info(request, info_id):
+    response = polygons_cache.get_polygons_by_info(info_id)
+    return JsonResponse(response, json_dumps_params={'indent': 2, 'ensure_ascii': False})
