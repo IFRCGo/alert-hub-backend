@@ -6,7 +6,11 @@ from .models import CapFeedCountry
 def initialise_districts_cache():
     countries = CapFeedCountry.objects.all()
     for country in countries:
-        country_data = {'districts' : []}
+        country_data = {
+            'country_id' : country.id,
+            'country_name' : country.name,
+            'districts' : []
+            }
         for district in country.capfeeddistrict_set.all():
             if district.capfeedalertdistrict_set.count() > 0:
                 country_data['districts'].append(district.to_dict())

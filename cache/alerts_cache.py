@@ -6,9 +6,11 @@ from .models import CapFeedDistrict
 def initialise_alerts_cache():
     districts = CapFeedDistrict.objects.all()
     for district in districts:
-        district_data = {}
-        district_data['id'] = district.id
-        district_data['alerts'] = []
+        district_data = {
+            'district_id' : district.id,
+            'district_name' : district.name,
+            'alerts' : []
+            }
         for alert_district in district.capfeedalertdistrict_set.all():
             alert = alert_district.alert
             alert_data = alert.to_dict()

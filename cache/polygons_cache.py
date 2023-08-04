@@ -6,9 +6,11 @@ from .models import CapFeedAlertInfo
 def initialise_polygons_cache():
     infos = CapFeedAlertInfo.objects.all()
     for info in infos:
-        info_data = {}
-        info_data['id'] = info.id
-        info_data['areas'] = []
+        info_data = {
+            'info_id' : info.id,
+            'info_name' : info.name,
+            'areas' : []
+        }
         areas = info.capfeedalertinfoarea_set.all()
         for area in areas:
             area_data = area.to_dict()
