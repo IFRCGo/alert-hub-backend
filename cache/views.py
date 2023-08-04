@@ -18,3 +18,19 @@ def get_admin1(request, admin1_id):
 def get_info(request, info_id):
     response = info_areas_cache.get_info(info_id)
     return JsonResponse(response, json_dumps_params={'indent': 2, 'ensure_ascii': False})
+
+def refresh_cache(request):
+    from .region_countries_cache import initialise_region_cache
+    from .country_admin1s_cache import initialise_country_cache
+    from .admin1_alerts_cache import initialise_admin1_cache
+    from .info_areas_cache import initialise_info_cache
+    print('Initialising region_countries cache...')
+    initialise_region_cache()
+    print('Initialising country_admin1s cache...')
+    initialise_country_cache()
+    print('Initialising admin1_alerts cache...')
+    initialise_admin1_cache()
+    print('Initialising info_areas cache...')
+    initialise_info_cache()
+    response = {'status': 'success'}
+    return JsonResponse(response, json_dumps_params={'indent': 2, 'ensure_ascii': False})

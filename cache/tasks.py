@@ -1,6 +1,8 @@
 from __future__ import absolute_import, unicode_literals
 from celery import shared_task
 
+
+
 # Add the incoming alerts in cache
 @shared_task(bind=True)
 def cache_incoming_alert(self, alert_id):
