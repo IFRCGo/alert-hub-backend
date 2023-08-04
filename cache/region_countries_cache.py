@@ -3,7 +3,7 @@ from .models import CapFeedRegion
 
 
 
-def initialise_countries_cache():
+def initialise_region_cache():
     regions_data = {'regions': []}
     regions = CapFeedRegion.objects.all()
     for region in regions:
@@ -20,6 +20,6 @@ def initialise_countries_cache():
 
     cache.set("regions", regions_data, timeout = None)
     
-def get_countries():
+def get_regions():
     regions_cache_key = "regions"
     return cache.get(regions_cache_key, {})

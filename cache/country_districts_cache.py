@@ -3,7 +3,7 @@ from .models import CapFeedCountry
 
 
 
-def initialise_districts_cache():
+def initialise_country_cache():
     countries = CapFeedCountry.objects.all()
     for country in countries:
         country_data = {
@@ -17,6 +17,6 @@ def initialise_districts_cache():
         
         cache.set("country" + str(country.id), country_data, timeout = None)
 
-def get_districts_by_country(country_id):
+def get_country(country_id):
     country_cache_key = "country" + str(country_id)
     return cache.get(country_cache_key, {})

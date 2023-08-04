@@ -3,8 +3,8 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path('countries/', views.get_countries, name='Get countries'),
-    path('districts/<int:country_id>/', views.get_districts_by_country, name='Get alerts by district'),
-    path('alerts/<int:district_id>/', views.get_alerts_by_district, name='Get alerts by district'),
-    path('polygons/<int:info_id>/', views.get_polygons_by_info, name='Get polygons by info'),
+    path('regions/', views.get_regions, name='Get countries by regions'),
+    path('countries/<int:country_id>/', views.get_country, name='Get districts by country'),
+    path('districts/<int:district_id>/', views.get_district, name='Get alerts by district'),
+    path('infos/<int:info_id>/', views.get_info, name='Get areas by info'),
 ]

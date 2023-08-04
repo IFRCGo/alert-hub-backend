@@ -10,10 +10,10 @@ class CacheConfig(AppConfig):
     name = 'cache'
 
     def ready(self):
-        from .countries_cache import initialise_countries_cache
-        from .districts_cache import initialise_districts_cache
-        from .alerts_cache import initialise_alerts_cache
-        from .polygons_cache import initialise_polygons_cache
+        from .region_countries_cache import initialise_region_cache
+        from .country_districts_cache import initialise_country_cache
+        from .district_alerts_cache import initialise_district_cache
+        from .info_areas_cache import initialise_info_cache
         from django.core.cache import cache
         #For local
         is_locked = cache.add("locked", True, 5)
@@ -21,12 +21,12 @@ class CacheConfig(AppConfig):
             if 'WEBSITE_HOSTNAME' in os.environ and 'collectstatic' not in sys.argv \
                 and 'migrate' not in sys.argv or ('WEBSITE_HOSTNAME' not in os.environ
                     and 'runserver' in sys.argv):
-                print('Initialising countries cache...')
-                initialise_countries_cache()
-                print('Initialising districts cache...')
-                initialise_districts_cache()
-                print('Initialising alerts cache...')
-                initialise_alerts_cache()
-                print('Initialising polygons cache...')
-                initialise_polygons_cache()
+                print('Initialising region_countries cache...')
+                initialise_region_cache()
+                print('Initialising country_districts cache...')
+                initialise_country_cache()
+                print('Initialising district_alerts cache...')
+                initialise_district_cache()
+                print('Initialising info_areas cache...')
+                initialise_info_cache()
                 

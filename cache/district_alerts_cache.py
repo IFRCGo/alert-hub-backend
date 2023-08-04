@@ -3,7 +3,7 @@ from .models import CapFeedDistrict
 
 
 
-def initialise_alerts_cache():
+def initialise_district_cache():
     districts = CapFeedDistrict.objects.all()
     for district in districts:
         district_data = {
@@ -15,16 +15,18 @@ def initialise_alerts_cache():
             alert = alert_district.alert
             alert_data = alert.to_dict()
             alert_data['info'] = []
-            for alert_info in alert.capfeedalertinfo_set.all():
-                info = alert_info.to_dict()
-                info['areas'] = []
-                for area in alert_info.capfeedalertinfoarea_set.all():
-                    area_data = area.to_dict()
-                    info['areas'].append(area_data)
-                alert_data['info'].append(info)
+            for info in alert.capfeedalertinfo_set.all():
+                info_data = info.to_dict()
+                info_data['parameter'] = []
+                parameters = info.capfeedalertinfoparameter_set.all()
+                for parameter in parameters:
+                    parameter_data = parameter.to_dict()
+                    info_data['parameter'].append(parameter_data)
+                alert_data['info'].append(info_data)
             district_data['alerts'].append(alert_data)
+            
         cache.set("district" + str(district.id), district_data, timeout = None)
 
-def get_alerts_by_district(district_id):
+def get_district(district_id):
     district_cache_key = "district" + str(district_id)
     return cache.get(district_cache_key, {})

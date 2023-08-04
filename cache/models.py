@@ -1,5 +1,5 @@
-import json
 from django.db import models
+
 
 
 class CapFeedContinent(models.Model):
@@ -109,7 +109,6 @@ class CapFeedAlertDistrict(models.Model):
         managed = False
         db_table = 'cap_feed_alertdistrict'
 
-
 class CapFeedAlertInfo(models.Model):
     id = models.BigAutoField(primary_key=True)
     language = models.CharField(max_length=255)
@@ -179,40 +178,7 @@ class CapFeedAlertInfoArea(models.Model):
         alert_info_area_dict['altitude'] = self.altitude
         alert_info_area_dict['ceiling'] = self.ceiling
         return alert_info_area_dict
-
-
-class CapFeedAlertInfoAreaCircle(models.Model):
-    id = models.BigAutoField(primary_key=True)
-    value = models.TextField()
-    alert_info_area = models.ForeignKey(CapFeedAlertInfoArea, models.DO_NOTHING)
-
-    class Meta:
-        managed = False
-        db_table = 'cap_feed_alertinfoareacircle'
-
-    def to_dict(self):
-        alert_info_area_circle_dict = dict()
-        alert_info_area_circle_dict['value'] = self.value
-        return alert_info_area_circle_dict
-
-
-
-class CapFeedAlertInfoAreaGeocode(models.Model):
-    id = models.BigAutoField(primary_key=True)
-    value_name = models.CharField(max_length=255)
-    value = models.CharField(max_length=255)
-    alert_info_area = models.ForeignKey(CapFeedAlertInfoArea, models.DO_NOTHING)
-
-    class Meta:
-        managed = False
-        db_table = 'cap_feed_alertinfoareageocode'
-
-    def to_dict(self):
-        alert_info_area_geocode_dict = dict()
-        alert_info_area_geocode_dict['value_name'] = self.value_name
-        alert_info_area_geocode_dict['value'] = self.value
-        return alert_info_area_geocode_dict
-
+    
 class CapFeedAlertInfoAreaPolygon(models.Model):
     id = models.BigAutoField(primary_key=True)
     value = models.TextField()
@@ -228,6 +194,38 @@ class CapFeedAlertInfoAreaPolygon(models.Model):
         alert_info_area_polygon_dict['value'] = self.value
         return alert_info_area_polygon_dict
 
+class CapFeedAlertInfoAreaCircle(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    value = models.TextField()
+    alert_info_area = models.ForeignKey(CapFeedAlertInfoArea, models.DO_NOTHING)
+
+    class Meta:
+        managed = False
+        db_table = 'cap_feed_alertinfoareacircle'
+
+    def to_dict(self):
+        alert_info_area_circle_dict = dict()
+        alert_info_area_circle_dict['id'] = self.id
+        alert_info_area_circle_dict['value'] = self.value
+        return alert_info_area_circle_dict
+
+class CapFeedAlertInfoAreaGeocode(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    value_name = models.CharField(max_length=255)
+    value = models.CharField(max_length=255)
+    alert_info_area = models.ForeignKey(CapFeedAlertInfoArea, models.DO_NOTHING)
+
+    class Meta:
+        managed = False
+        db_table = 'cap_feed_alertinfoareageocode'
+
+    def to_dict(self):
+        alert_info_area_geocode_dict = dict()
+        alert_info_area_geocode_dict['id'] = self.id
+        alert_info_area_geocode_dict['value_name'] = self.value_name
+        alert_info_area_geocode_dict['value'] = self.value
+        return alert_info_area_geocode_dict
+
 class CapFeedAlertInfoParameter(models.Model):
     id = models.BigAutoField(primary_key=True)
     value_name = models.CharField(max_length=255)
@@ -238,10 +236,9 @@ class CapFeedAlertInfoParameter(models.Model):
         managed = False
         db_table = 'cap_feed_alertinfoparameter'
 
-
-
     def to_dict(self):
         alert_info_parameter_dict = dict()
+        alert_info_parameter_dict['id'] = self.id
         alert_info_parameter_dict['value_name'] = self.value_name
         alert_info_parameter_dict['value'] = self.value
         return alert_info_parameter_dict
@@ -260,7 +257,6 @@ class CapFeedFeed(models.Model):
     class Meta:
         managed = False
         db_table = 'cap_feed_feed'
-
 
 class CapFeedRegion(models.Model):
     id = models.BigAutoField(primary_key=True)
