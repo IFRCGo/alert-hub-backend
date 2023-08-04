@@ -34,3 +34,9 @@ def refresh_cache(request):
     initialise_info_cache()
     response = {'status': 'success'}
     return JsonResponse(response, json_dumps_params={'indent': 2, 'ensure_ascii': False})
+
+def clear_cache(request):
+    from django.core.cache import cache
+    cache.clear()
+    response = {'status': 'success'}
+    return JsonResponse(response, json_dumps_params={'indent': 2, 'ensure_ascii': False})
