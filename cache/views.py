@@ -1,4 +1,4 @@
-from cache import country_districts_cache, district_alerts_cache, info_areas_cache, region_countries_cache
+from cache import admin1_alerts_cache, country_admin1s_cache, info_areas_cache, region_countries_cache
 from django.http import JsonResponse
 
 
@@ -8,11 +8,11 @@ def get_regions(request):
     return JsonResponse(response, json_dumps_params={'indent': 2, 'ensure_ascii': False})
 
 def get_country(request, country_id):
-    response = country_districts_cache.get_country(country_id)
+    response = country_admin1s_cache.get_country(country_id)
     return JsonResponse(response, json_dumps_params={'indent': 2, 'ensure_ascii': False})
 
-def get_district(request, district_id):
-    response = district_alerts_cache.get_district(district_id)
+def get_admin1(request, admin1_id):
+    response = admin1_alerts_cache.get_admin1(admin1_id)
     return JsonResponse(response, json_dumps_params={'indent': 2, 'ensure_ascii': False})
 
 def get_info(request, info_id):

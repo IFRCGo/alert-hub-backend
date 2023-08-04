@@ -2,6 +2,24 @@ from django.db import models
 
 
 
+class CapFeedRegion(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    name = models.CharField(max_length=255)
+    polygon = models.TextField(blank=True, null=True)
+    centroid = models.CharField(max_length=255, blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'cap_feed_region'
+
+    def to_dict(self):
+        region_dict = dict()
+        region_dict['id'] = self.id
+        region_dict['name'] = self.name
+        region_dict['polygon'] = self.polygon
+        region_dict['centroid'] = self.centroid
+        return region_dict
+    
 class CapFeedContinent(models.Model):
     id = models.BigAutoField(primary_key=True)
     name = models.CharField(max_length=255)
@@ -14,11 +32,11 @@ class CapFeedCountry(models.Model):
     id = models.BigAutoField(primary_key=True)
     name = models.CharField(max_length=255)
     iso3 = models.CharField(unique=True)
-    polygon = models.TextField()
-    multipolygon = models.TextField()
+    polygon = models.TextField(blank=True, null=True)
+    multipolygon = models.TextField(blank=True, null=True)
     centroid = models.CharField(max_length=255)
     continent = models.ForeignKey(CapFeedContinent, models.DO_NOTHING)
-    region = models.ForeignKey('CapFeedRegion', models.DO_NOTHING)
+    region = models.ForeignKey(CapFeedRegion, models.DO_NOTHING)
 
     class Meta:
         managed = False
@@ -34,20 +52,20 @@ class CapFeedCountry(models.Model):
         country_dict['centroid'] = self.centroid
         return country_dict
 
-class CapFeedDistrict(models.Model):
+class CapFeedAdmin1(models.Model):
     id = models.BigAutoField(primary_key=True)
     name = models.CharField(max_length=255)
-    polygon = models.TextField()
-    multipolygon = models.TextField()
-    country = models.ForeignKey(CapFeedCountry, models.DO_NOTHING)
-    max_latitude = models.FloatField(blank=True, null=True)
-    max_longitude = models.FloatField(blank=True, null=True)
+    polygon = models.TextField(blank=True, null=True)
+    multipolygon = models.TextField(blank=True, null=True)
     min_latitude = models.FloatField(blank=True, null=True)
+    max_latitude = models.FloatField(blank=True, null=True)
     min_longitude = models.FloatField(blank=True, null=True)
+    max_longitude = models.FloatField(blank=True, null=True)
+    country = models.ForeignKey('CapFeedCountry', models.DO_NOTHING)
 
     class Meta:
         managed = False
-        db_table = 'cap_feed_district'
+        db_table = 'cap_feed_admin1'
 
     def to_dict(self):
         country_dict = dict()
@@ -75,7 +93,6 @@ class CapFeedAlert(models.Model):
     incidents = models.TextField()
     country = models.ForeignKey('CapFeedCountry', models.DO_NOTHING)
     feed = models.ForeignKey('CapFeedFeed', models.DO_NOTHING)
-    districts = models.ManyToManyField(CapFeedDistrict, through='CapFeedAlertDistrict')
 
     class Meta:
         managed = False
@@ -100,14 +117,14 @@ class CapFeedAlert(models.Model):
         alert_dict['incidents'] = self.incidents
         return alert_dict
 
-class CapFeedAlertDistrict(models.Model):
+class CapFeedAlertAdmin1(models.Model):
     id = models.BigAutoField(primary_key=True)
+    admin1 = models.ForeignKey(CapFeedAdmin1, models.DO_NOTHING)
     alert = models.ForeignKey(CapFeedAlert, models.DO_NOTHING)
-    district = models.ForeignKey('CapFeedDistrict', models.DO_NOTHING)
 
     class Meta:
         managed = False
-        db_table = 'cap_feed_alertdistrict'
+        db_table = 'cap_feed_alertadmin1'
 
 class CapFeedAlertInfo(models.Model):
     id = models.BigAutoField(primary_key=True)
@@ -244,34 +261,44 @@ class CapFeedAlertInfoParameter(models.Model):
         return alert_info_parameter_dict
 
 class CapFeedFeed(models.Model):
-    url = models.CharField(primary_key=True, max_length=255)
+    id = models.BigAutoField(primary_key=True)
+    url = models.CharField(unique=True, max_length=255)
     format = models.CharField()
     polling_interval = models.IntegerField()
-    country = models.ForeignKey(CapFeedCountry, models.DO_NOTHING)
-    notes = models.TextField()
-    author_email = models.CharField()
-    author_name = models.CharField()
-    id = models.CharField(unique=True, max_length=255)
+    official = models.BooleanField()
     status = models.CharField()
+    author_name = models.CharField()
+    author_email = models.CharField()
+    notes = models.TextField()
+    country = models.ForeignKey(CapFeedCountry, models.DO_NOTHING)
 
     class Meta:
         managed = False
         db_table = 'cap_feed_feed'
 
-class CapFeedRegion(models.Model):
+class CapFeedFeedlog(models.Model):
     id = models.BigAutoField(primary_key=True)
-    name = models.CharField(max_length=255)
-    polygon = models.TextField()
-    centroid = models.CharField(max_length=255)
+    exception = models.CharField(max_length=255)
+    error_message = models.TextField()
+    description = models.TextField()
+    response = models.TextField()
+    alert_url = models.CharField(max_length=255)
+    timestamp = models.DateTimeField()
+    notes = models.TextField()
+    feed = models.ForeignKey(CapFeedFeed, models.DO_NOTHING)
 
     class Meta:
         managed = False
-        db_table = 'cap_feed_region'
+        db_table = 'cap_feed_feedlog'
+        unique_together = (('alert_url', 'description'),)
 
-    def to_dict(self):
-        region_dict = dict()
-        region_dict['id'] = self.id
-        region_dict['name'] = self.name
-        region_dict['polygon'] = self.polygon
-        region_dict['centroid'] = self.centroid
-        return region_dict
+class CapFeedLanguageInfo(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    name = models.CharField(max_length=255)
+    language = models.CharField()
+    logo = models.CharField(max_length=255, blank=True, null=True)
+    feed = models.ForeignKey(CapFeedFeed, models.DO_NOTHING)
+
+    class Meta:
+        managed = False
+        db_table = 'cap_feed_languageinfo'

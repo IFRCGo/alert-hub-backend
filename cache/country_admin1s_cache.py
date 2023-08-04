@@ -9,11 +9,11 @@ def initialise_country_cache():
         country_data = {
             'country_id' : country.id,
             'country_name' : country.name,
-            'districts' : []
+            'admin1s' : []
             }
-        for district in country.capfeeddistrict_set.all():
-            if district.capfeedalertdistrict_set.count() > 0:
-                country_data['districts'].append(district.to_dict())
+        for admin1 in country.capfeedadmin1_set.all():
+            if admin1.capfeedalertadmin1_set.count() > 0:
+                country_data['admin1s'].append(admin1.to_dict())
         
         cache.set("country" + str(country.id), country_data, timeout = None)
 

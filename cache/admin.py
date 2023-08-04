@@ -2,9 +2,8 @@ from django.contrib import admin
 
 # Register your models here.
 from django.contrib import admin
-from .models import CapFeedAlert, CapFeedAlertInfo, CapFeedAlertInfoParameter, CapFeedAlertInfoArea, \
-    CapFeedAlertInfoAreaGeocode, CapFeedAlertInfoAreaPolygon, CapFeedAlertInfoAreaCircle, CapFeedContinent, \
-    CapFeedRegion, CapFeedCountry, CapFeedFeed, CapFeedDistrict, CapFeedAlertDistrict
+from .models import CapFeedAlert, CapFeedAlertInfo, CapFeedContinent, \
+    CapFeedRegion, CapFeedCountry, CapFeedFeed, CapFeedAdmin1, CapFeedAlertAdmin1
 
 from django_celery_beat.models import CrontabSchedule, ClockedSchedule, SolarSchedule, IntervalSchedule
 
@@ -65,5 +64,5 @@ admin.site.register(CapFeedContinent)
 admin.site.register(CapFeedRegion)
 admin.site.register(CapFeedCountry, CapFeedCountryAdmin)
 admin.site.register(CapFeedFeed, CapFeedFeedAdmin)
-admin.site.register(CapFeedAlertDistrict)
-admin.site.register(CapFeedDistrict)
+admin.site.register(CapFeedAlertAdmin1)
+admin.site.register(CapFeedAdmin1)

@@ -11,8 +11,8 @@ class CacheConfig(AppConfig):
 
     def ready(self):
         from .region_countries_cache import initialise_region_cache
-        from .country_districts_cache import initialise_country_cache
-        from .district_alerts_cache import initialise_district_cache
+        from .country_admin1s_cache import initialise_country_cache
+        from .admin1_alerts_cache import initialise_admin1_cache
         from .info_areas_cache import initialise_info_cache
         from django.core.cache import cache
         #For local
@@ -23,10 +23,10 @@ class CacheConfig(AppConfig):
                     and 'runserver' in sys.argv):
                 print('Initialising region_countries cache...')
                 initialise_region_cache()
-                print('Initialising country_districts cache...')
+                print('Initialising country_admin1s cache...')
                 initialise_country_cache()
-                print('Initialising district_alerts cache...')
-                initialise_district_cache()
+                print('Initialising admin1_alerts cache...')
+                initialise_admin1_cache()
                 print('Initialising info_areas cache...')
                 initialise_info_cache()
                 
