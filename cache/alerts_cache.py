@@ -15,10 +15,14 @@ def initialise_alerts_cache():
             alert = alert_district.alert
             alert_data = alert.to_dict()
             alert_data['info'] = []
-            district_data['alerts'].append(alert_data)
             for alert_info in alert.capfeedalertinfo_set.all():
                 info = alert_info.to_dict()
+                info['areas'] = []
+                for area in alert_info.capfeedalertinfoarea_set.all():
+                    area_data = area.to_dict()
+                    info['areas'].append(area_data)
                 alert_data['info'].append(info)
+            district_data['alerts'].append(alert_data)
         cache.set("district" + str(district.id), district_data, timeout = None)
 
 def get_alerts_by_district(district_id):
