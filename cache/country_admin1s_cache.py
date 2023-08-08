@@ -28,6 +28,7 @@ def initialise_country_cache():
                 admin1_data = admin1.to_dict()
                 admin1_data['filters'] = filters
                 country_data['admin1s'].append(admin1_data)
+                
         # Compute for alerts that were not matched to any admin1
         filters = {'urgency': set(), 'severity': set(), 'certainty': set()}
         for alert_id in country_alerts:

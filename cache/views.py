@@ -1,5 +1,5 @@
 from cache import admin1_alerts_cache, country_admin1s_cache, info_areas_cache, region_countries_cache, alerts_cache
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse, HttpResponseNotFound
 from django.template import loader
 from django.core.cache import cache
 
@@ -19,6 +19,10 @@ def get_country(request, country_id):
     return JsonResponse(response, json_dumps_params={'indent': 2, 'ensure_ascii': False})
 
 def get_admin1(request, admin1_id):
+    try:
+        admin1_id = int(admin1_id)
+    except ValueError:
+        return HttpResponseNotFound("Invalid admin1_id")
     response = admin1_alerts_cache.get_admin1(admin1_id)
     return JsonResponse(response, json_dumps_params={'indent': 2, 'ensure_ascii': False})
 
