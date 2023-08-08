@@ -27,11 +27,11 @@ def get_info(request, info_id):
     return JsonResponse(response, json_dumps_params={'indent': 2, 'ensure_ascii': False})
 
 def refresh_cache(request):
-    from django.core.cache import cache
     from .region_countries_cache import initialise_region_cache
     from .country_admin1s_cache import initialise_country_cache
     from .admin1_alerts_cache import initialise_admin1_cache
     from .info_areas_cache import initialise_info_cache
+    cache.clear()
     print('Initialising region_countries cache...')
     initialise_region_cache()
     print(len(cache.keys('*')))
