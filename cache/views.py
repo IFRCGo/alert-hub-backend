@@ -1,7 +1,14 @@
 from cache import admin1_alerts_cache, country_admin1s_cache, info_areas_cache, region_countries_cache
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
+from django.template import loader
+from django.core.cache import cache
 
 
+
+def index(request):
+    context = {}
+    template = loader.get_template("cache/index.html")
+    return HttpResponse(template.render(context, request))
 
 def get_regions(request):
     response = region_countries_cache.get_regions()
@@ -20,23 +27,27 @@ def get_info(request, info_id):
     return JsonResponse(response, json_dumps_params={'indent': 2, 'ensure_ascii': False})
 
 def refresh_cache(request):
+    from django.core.cache import cache
     from .region_countries_cache import initialise_region_cache
     from .country_admin1s_cache import initialise_country_cache
     from .admin1_alerts_cache import initialise_admin1_cache
     from .info_areas_cache import initialise_info_cache
     print('Initialising region_countries cache...')
     initialise_region_cache()
+    print(len(cache.keys('*')))
     print('Initialising country_admin1s cache...')
     initialise_country_cache()
+    print(len(cache.keys('*')))
     print('Initialising admin1_alerts cache...')
     initialise_admin1_cache()
+    print(len(cache.keys('*')))
     print('Initialising info_areas cache...')
     initialise_info_cache()
+    print(len(cache.keys('*')))
     response = {'status': 'success'}
     return JsonResponse(response, json_dumps_params={'indent': 2, 'ensure_ascii': False})
 
 def clear_cache(request):
-    from django.core.cache import cache
     cache.clear()
     response = {'status': 'success'}
     return JsonResponse(response, json_dumps_params={'indent': 2, 'ensure_ascii': False})

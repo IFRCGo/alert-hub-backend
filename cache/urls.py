@@ -9,4 +9,5 @@ urlpatterns = [
     path('infos/<int:info_id>/', views.get_info, name='Get areas by info'),
     path('refresh/', views.refresh_cache, name='Refresh cache'),
     path('clear/', views.clear_cache, name='Clear cache'),
+    path('', views.index, name='Index'),
 ]

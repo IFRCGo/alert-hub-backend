@@ -11,10 +11,9 @@ def initialise_region_cache():
         region_data['countries'] = []
         countries = region.capfeedcountry_set.all()
         for country in countries:
-            for admin1 in country.capfeedadmin1_set.all():
-                if admin1.capfeedalertadmin1_set.count() > 0:
-                    region_data['countries'].append(country.to_dict())
-                    break
+            if country.capfeedalert_set.count() > 0:
+                country_data = country.to_dict()
+                region_data['countries'].append(country_data)
         if len(region_data['countries']) > 0:
             regions_data['regions'].append(region_data)
 
