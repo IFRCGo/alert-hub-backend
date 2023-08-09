@@ -45,7 +45,7 @@ def initialise_country_cache():
             unknown_admin1_data['filters'] = filters
             country_data['admin1s'].append(unknown_admin1_data)
             
-            cache.set("country" + str(country.id), country_data, timeout = None)
+        cache.set("country" + str(country.id), country_data, timeout = None)
 
 def get_country(country_id):
     country_cache_key = "country" + str(country_id)

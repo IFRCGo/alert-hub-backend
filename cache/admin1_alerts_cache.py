@@ -5,7 +5,6 @@ from .models import CapFeedAdmin1, CapFeedCountry, CapFeedAlert
 
 def initialise_admin1_cache():
     countries = CapFeedCountry.objects.all()
-    admin1s = CapFeedAdmin1.objects.all()
     for country in countries:
         country_alerts = set(country.capfeedalert_set.all().values_list('id', flat=True))
         for admin1 in country.capfeedadmin1_set.all():
@@ -18,6 +17,7 @@ def initialise_admin1_cache():
                 alert = alert_admin1.alert
                 country_alerts.discard(alert.id)
                 alert_data = alert.to_dict()
+                alert_data['admin1_known'] = True
                 alert_data['info'] = []
                 for info in alert.capfeedalertinfo_set.all():
                     info_data = info.to_dict()
@@ -41,6 +41,7 @@ def initialise_admin1_cache():
             for alert_id in country_alerts:
                 alert = CapFeedAlert.objects.get(id=alert_id)
                 alert_data = alert.to_dict()
+                alert_data['admin1_known'] = False
                 alert_data['info'] = []
                 for info in alert.capfeedalertinfo_set.all():
                     info_data = info.to_dict()
