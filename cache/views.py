@@ -10,6 +10,10 @@ def index(request):
     template = loader.get_template("cache/index.html")
     return HttpResponse(template.render(context, request))
 
+def get_region(request, region_id):
+    response = region_countries_cache.get_region(region_id)
+    return JsonResponse(response, json_dumps_params={'indent': 2, 'ensure_ascii': False})
+
 def get_regions(request):
     response = region_countries_cache.get_regions()
     return JsonResponse(response, json_dumps_params={'indent': 2, 'ensure_ascii': False})

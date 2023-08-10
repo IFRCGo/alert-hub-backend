@@ -265,6 +265,8 @@ class CapFeedFeed(models.Model):
     url = models.CharField(unique=True, max_length=255)
     format = models.CharField()
     polling_interval = models.IntegerField()
+    enable_polling = models.BooleanField()
+    enable_rebroadcast = models.BooleanField()
     official = models.BooleanField()
     status = models.CharField()
     author_name = models.CharField()

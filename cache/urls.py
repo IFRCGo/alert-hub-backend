@@ -3,6 +3,7 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
+    path('regions/<int:region_id>/', views.get_region, name='Get countries by region'),
     path('regions/', views.get_regions, name='Get countries by regions'),
     path('countries/<int:country_id>/', views.get_country, name='Get admin1s by country'),
     path('admin1s/<str:admin1_id>/', views.get_admin1, name='Get alerts by admin1'),
