@@ -3,6 +3,23 @@ from .models import CapFeedRegion
 
 
 
+def calculate_country(region_data, country):
+    filters = {'urgency': set(), 'severity': set(), 'certainty': set()}
+    for alert in country.capfeedalert_set.all():
+        for info in alert.capfeedalertinfo_set.all():
+            filters['urgency'].add(info.urgency)
+            filters['severity'].add(info.severity)
+            filters['certainty'].add(info.certainty)
+    filters['urgency'] = list(filters['urgency'])
+    filters['severity'] = list(filters['severity'])
+    filters['certainty'] = list(filters['certainty'])
+    if country.capfeedalert_set.count() > 0:
+        country_data = country.to_dict()
+        country_data['filters'] = filters
+        region_data['countries'].append(country_data)
+    return region_data
+
+
 def initialise_region_cache():
     regions_data = {'regions': []}
     regions = CapFeedRegion.objects.all()
@@ -11,19 +28,7 @@ def initialise_region_cache():
         region_data['countries'] = []
         countries = region.capfeedcountry_set.all()
         for country in countries:
-            filters = {'urgency': set(), 'severity': set(), 'certainty': set()}
-            for alert in country.capfeedalert_set.all():
-                for info in alert.capfeedalertinfo_set.all():
-                    filters['urgency'].add(info.urgency)
-                    filters['severity'].add(info.severity)
-                    filters['certainty'].add(info.certainty)
-            filters['urgency'] = list(filters['urgency'])
-            filters['severity'] = list(filters['severity'])
-            filters['certainty'] = list(filters['certainty'])
-            if country.capfeedalert_set.count() > 0:
-                country_data = country.to_dict()
-                country_data['filters'] = filters
-                region_data['countries'].append(country_data)
+            region_data = calculate_country(region_data, country)
         if len(region_data['countries']) > 0:
             regions_data['regions'].append(region_data)
         
@@ -38,3 +43,6 @@ def get_region(region_id):
 def get_regions():
     regions_cache_key = "regions"
     return cache.get(regions_cache_key, {})
+
+def update_region_cache():
+    initialise_region_cache()
