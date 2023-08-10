@@ -37,7 +37,6 @@ def get_country(country_id):
     country_cache_key = "country" + str(country_id)
     return cache.get(country_cache_key, {})
 
-def update_country_cache(alert_id):
-    alert = CapFeedAlert.objects.get(id = alert_id)
-    country = alert.country
+def update_country_cache(country_id):
+    country = CapFeedCountry.objects.get(id=country_id)
     calculate_country(country)
