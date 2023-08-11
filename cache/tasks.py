@@ -10,12 +10,12 @@ from django.utils import timezone
 @shared_task(bind=True)
 def cache_incoming_alert(self, alert_id, country_id, admin1_ids, info_ids):
     # Skip if cache has been updated in the last 1 seconds
-    last_cache_update = cache.get("cache_update", None)
-    if last_cache_update and last_cache_update > timezone.now() - timezone.timedelta(seconds = 1):
-        return "Skipped, cache updated recently"
+    # last_cache_update = cache.get("cache_update", None)
+    # if last_cache_update and last_cache_update > timezone.now() - timezone.timedelta(seconds = 1):
+    #     return "Skipped, cache updated recently"
     
-    # Record cache update time
-    cache.set("cache_update", timezone.now(), timeout = None)
+    # # Record cache update time
+    # cache.set("cache_update", timezone.now(), timeout = None)
     
     # Update cache
     region_countries_cache.update_region_cache()
