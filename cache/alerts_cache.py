@@ -52,10 +52,10 @@ def get_alerts():
     return cache.get(alerts_cache_key, {})
 
 def update_alerts_cache(alert_id, update):
-    alert = CapFeedAlert.objects.get(id=alert_id)
     alerts_cache_key = "alerts"
     alerts_data = cache.get(alerts_cache_key, {})
     if update:
+        alert = CapFeedAlert.objects.get(id=alert_id)
         alert_data = calculate_alert(alert)
         alerts_data['alerts'].append(alert_data)
         cache.set("alerts", alerts_data, timeout = None)

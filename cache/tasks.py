@@ -23,6 +23,8 @@ def cache_incoming_alert(self, alert_id, country_id, admin1_ids, info_ids):
     admin1_alerts_cache.update_admin1_cache(country_id)
     info_areas_cache.update_info_cache(info_ids, True)
 
+    alerts_cache.update_alerts_cache(alert_id, True)
+
     return "Updated cache for added alert"
 
 
@@ -41,5 +43,7 @@ def remove_cached_alert(self, alert_id, country_id, admin1_ids, info_ids):
     country_admin1s_cache.update_country_cache(country_id)
     admin1_alerts_cache.update_admin1_cache(country_id)
     info_areas_cache.update_info_cache(info_ids, False)
+
+    alerts_cache.update_alerts_cache(alert_id, False)
 
     return "Updated cache for removed alert"
