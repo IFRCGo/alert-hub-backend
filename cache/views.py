@@ -2,6 +2,7 @@ from cache import admin1_alerts_cache, country_admin1s_cache, info_areas_cache, 
 from django.http import HttpResponse, JsonResponse, HttpResponseNotFound
 from django.template import loader
 from django.core.cache import cache
+from django.utils import timezone
 
 
 
@@ -48,24 +49,31 @@ def get_admin1s(request):
 
 def refresh_cache(request):
     cache.clear()
+    print(timezone.now())
     print('Initialising region_countries cache...')
     region_countries_cache.initialise_region_cache()
     print(len(cache.keys('*')))
+    print(timezone.now())
     print('Initialising country_admin1s cache...')
     country_admin1s_cache.initialise_country_cache()
     print(len(cache.keys('*')))
+    print(timezone.now())
     print('Initialising admin1_alerts cache...')
     admin1_alerts_cache.initialise_admin1_cache()
     print(len(cache.keys('*')))
+    print(timezone.now())
     print('Initialising info_areas cache...')
     info_areas_cache.initialise_info_cache()
     print(len(cache.keys('*')))
+    print(timezone.now())
     print('Initialising alerts cache...')
     alerts_cache.initialise_alerts_cache()
     print(len(cache.keys('*')))
+    print(timezone.now())
     print('Initialising admin1s cache...')
     admin1s_cache.initialise_admin1s_cache()
     print(len(cache.keys('*')))
+    print(timezone.now())
     response = {'status': 'success'}
     return JsonResponse(response, json_dumps_params={'indent': 2, 'ensure_ascii': False})
 
