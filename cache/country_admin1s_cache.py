@@ -28,15 +28,15 @@ def calculate_country(country):
     cache.set("country" + str(country.id), country_data, timeout = None)
 
 
-def initialise_country_cache():
-    countries = CapFeedCountry.objects.all()
-    for country in countries:
+def update_country_cache():
+    print('Updating country_admin1s cache...')
+
+    updated_countries = cache.get('countryset_country', set())
+    for country_id in updated_countries:
+        country = CapFeedCountry.objects.get(id=country_id)
         calculate_country(country)
+    cache.set('countryset_country', set(), timeout = None)
 
 def get_country(country_id):
     country_cache_key = "country" + str(country_id)
     return cache.get(country_cache_key, {})
-
-def update_country_cache(country_id):
-    country = CapFeedCountry.objects.get(id=country_id)
-    calculate_country(country)

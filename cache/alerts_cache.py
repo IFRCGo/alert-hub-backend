@@ -35,13 +35,24 @@ def calculate_alert(alert):
     cache.set("alert" + str(alert.id), alert_data, timeout = None)
     return alert_data
 
-def initialise_alerts_cache():
-    alerts_data = {'alerts': []}
-    alerts = CapFeedAlert.objects.all()
-    for alert in alerts:
+def update_alerts_cache():
+    print('Updating alerts cache...')
+    alerts_data = cache.get('alerts', {'alerts': []})
+    existing_alert_set = cache.get('alertset', set())
+    alert_set = set(CapFeedAlert.objects.all().values_list('id', flat=True))
+    old_alerts = existing_alert_set.difference(alert_set)
+    new_alerts = alert_set.difference(existing_alert_set)
+    for old_id in old_alerts:
+        for index, alert_data in enumerate(alerts_data['alerts']):
+            if alert_data['id'] == old_id:
+                alerts_data['alerts'].pop(index)
+                cache.delete("alert" + str(old_id))
+    for new_id in new_alerts:
+        alert = CapFeedAlert.objects.get(id=new_id)
         alert_data = calculate_alert(alert)
         alerts_data['alerts'].append(alert_data)
     cache.set("alerts", alerts_data, timeout = None)
+    cache.set('alertset', alert_set, timeout = None)
 
 def get_alert(alert_id):
     alert_cache_key = "alert" + str(alert_id)
@@ -50,18 +61,3 @@ def get_alert(alert_id):
 def get_alerts():
     alerts_cache_key = "alerts"
     return cache.get(alerts_cache_key, {})
-
-def update_alerts_cache(alert_id, update):
-    alerts_cache_key = "alerts"
-    alerts_data = cache.get(alerts_cache_key, {})
-    if update:
-        alert = CapFeedAlert.objects.get(id=alert_id)
-        alert_data = calculate_alert(alert)
-        alerts_data['alerts'].append(alert_data)
-        cache.set("alerts", alerts_data, timeout = None)
-    else:
-        for index, alert_data in enumerate(alerts_data['alerts']):
-            if alert_data['id'] == alert_id:
-                alerts_data['alerts'].pop(index)
-                cache.set("alerts", alerts_data, timeout = None)
-                break

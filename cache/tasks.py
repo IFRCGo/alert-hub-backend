@@ -9,21 +9,19 @@ from django.utils import timezone
 # Add the incoming alerts in cache
 @shared_task(bind=True)
 def cache_incoming_alert(self, alert_id, country_id, admin1_ids, info_ids):
-    # Skip if cache has been updated in the last 1 seconds
-    # last_cache_update = cache.get("cache_update", None)
-    # if last_cache_update and last_cache_update > timezone.now() - timezone.timedelta(seconds = 1):
-    #     return "Skipped, cache updated recently"
-    
-    # # Record cache update time
-    # cache.set("cache_update", timezone.now(), timeout = None)
-    
-    # Update cache
-    region_countries_cache.update_region_cache()
-    country_admin1s_cache.update_country_cache(country_id)
-    admin1_alerts_cache.update_admin1_cache(country_id)
-    info_areas_cache.update_info_cache(info_ids, True)
+    updated_countries = cache.get('countryset_country', set())
+    updated_countries.add(country_id)
+    cache.set('countryset_country', updated_countries, timeout = None)
+    updated_countries = cache.get('countryset_admin1', set())
+    updated_countries.add(country_id)
+    cache.set('countryset_admin1', updated_countries, timeout = None)
 
-    alerts_cache.update_alerts_cache(alert_id, True)
+    region_countries_cache.update_region_cache()
+    country_admin1s_cache.update_country_cache()
+    admin1_alerts_cache.update_admin1_cache()
+    info_areas_cache.update_info_cache()
+
+    alerts_cache.update_alerts_cache()
 
     return "Updated cache for added alert"
 
@@ -31,19 +29,18 @@ def cache_incoming_alert(self, alert_id, country_id, admin1_ids, info_ids):
 # Delete the removed alerts in cache
 @shared_task(bind=True)
 def remove_cached_alert(self, alert_id, country_id, admin1_ids, info_ids):
-    # Skip if cache has been updated in the last 1 seconds
-    last_cache_update = cache.get("cache_update", None)
-    if last_cache_update and last_cache_update > timezone.now() - timezone.timedelta(seconds = 1):
-        return "Skipped, cache updated recently"
-    
-    # Record cache update time
-    cache.set("cache_update", timezone.now(), timeout = None)
+    updated_countries = cache.get('countryset_country', set())
+    updated_countries.add(country_id)
+    cache.set('countryset_country', updated_countries, timeout = None)
+    updated_countries = cache.get('countryset_admin1', set())
+    updated_countries.add(country_id)
+    cache.set('countryset_admin1', updated_countries, timeout = None)
 
     region_countries_cache.update_region_cache()
-    country_admin1s_cache.update_country_cache(country_id)
-    admin1_alerts_cache.update_admin1_cache(country_id)
-    info_areas_cache.update_info_cache(info_ids, False)
+    country_admin1s_cache.update_country_cache()
+    admin1_alerts_cache.update_admin1_cache()
+    info_areas_cache.update_info_cache()
 
-    alerts_cache.update_alerts_cache(alert_id, False)
+    alerts_cache.update_alerts_cache()
 
     return "Updated cache for removed alert"

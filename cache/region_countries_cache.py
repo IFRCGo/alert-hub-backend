@@ -20,7 +20,8 @@ def calculate_country(region_data, country):
     return region_data
 
 
-def initialise_region_cache():
+def update_region_cache():
+    print('Updating region_countries cache...')
     regions_data = {'regions': []}
     regions = CapFeedRegion.objects.all()
     for region in regions:
@@ -43,6 +44,3 @@ def get_region(region_id):
 def get_regions():
     regions_cache_key = "regions"
     return cache.get(regions_cache_key, {})
-
-def update_region_cache():
-    initialise_region_cache()

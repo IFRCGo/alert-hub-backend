@@ -31,21 +31,20 @@ def calculate_info(info):
     cache.set("info" + str(info.id), info_data, timeout = None)
 
 
-def initialise_info_cache():
-    infos = CapFeedAlertInfo.objects.all()
-    for info in infos:
+def update_info_cache():
+    print('Updating info_areas cache...')
+    
+    existing_info_set = cache.get('infoset', set())
+    info_set = set(CapFeedAlertInfo.objects.all().values_list('id', flat=True))
+    old_infos = existing_info_set.difference(info_set)
+    new_infos = info_set.difference(existing_info_set)
+    for old_id in old_infos:
+        cache.delete("info" + str(old_id))
+    for new_id in new_infos:
+        info = CapFeedAlertInfo.objects.get(id=new_id)
         calculate_info(info)
+    cache.set('infoset', info_set, timeout = None)
 
 def get_info(info_id):
     info_cache_key = "info" + str(info_id)
     return cache.get(info_cache_key, {})
-
-def update_info_cache(info_ids, update):
-    if update:
-        for info_id in info_ids:
-            info = CapFeedAlertInfo.objects.get(id=info_id)
-            calculate_info(info)
-    else:
-        for info_id in info_ids:
-            info_cache_key = "info" + str(info_id)
-            cache.delete(info_cache_key)
