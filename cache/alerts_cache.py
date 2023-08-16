@@ -5,6 +5,12 @@ from .models import CapFeedAlert
 
 def calculate_alert(alert):
     alert_data = alert.to_dict()
+    alert_data['region'] = alert.country.region.name
+    alert_data['country'] = alert.country.name
+    alert_data['admin1'] = []
+    alertadmin1s = alert.capfeedalertadmin1_set.all()
+    for alertadmin1 in alertadmin1s:
+        alert_data['admin1'].append(alertadmin1.admin1.name)
     alert_data['info'] = []
     for info in alert.capfeedalertinfo_set.all():
         info_data = info.to_dict()
@@ -64,10 +70,10 @@ def update_alerts_cache():
         alert_data.pop('incidents', None)
         alert_data.pop('restriction', None)
         alert_data.pop('addresses', None)
-        alertadmin1s = alert.capfeedalertadmin1_set.all()
         alert_data['region'] = alert.country.region.name
         alert_data['country'] = alert.country.name
         alert_data['admin1'] = []
+        alertadmin1s = alert.capfeedalertadmin1_set.all()
         for alertadmin1 in alertadmin1s:
             alert_data['admin1'].append(alertadmin1.admin1.name)
         alerts_data['alerts'].append(alert_data)
