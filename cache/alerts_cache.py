@@ -33,6 +33,11 @@ def calculate_alert(alert):
         alert_data['info'].append(info_data)
 
     cache.set("alert" + str(alert.id), alert_data, timeout = None)
+    
+    alert_data['info'] = []
+    for info in alert.capfeedalertinfo_set.all():
+        info_data = {'category': info.category, 'event': info.event}
+        alert_data['info'].append(info_data)
     return alert_data
 
 def update_alerts_cache():
@@ -50,6 +55,21 @@ def update_alerts_cache():
     for new_id in new_alerts:
         alert = CapFeedAlert.objects.get(id=new_id)
         alert_data = calculate_alert(alert)
+        alert_data.pop('scope', None)
+        alert_data.pop('code', None)
+        alert_data.pop('note', None)
+        alert_data.pop('status', None)
+        alert_data.pop('msg_type', None)
+        alert_data.pop('references', None)
+        alert_data.pop('incidents', None)
+        alert_data.pop('restriction', None)
+        alert_data.pop('addresses', None)
+        alertadmin1s = alert.capfeedalertadmin1_set.all()
+        alert_data['region'] = alert.country.region.name
+        alert_data['country'] = alert.country.name
+        alert_data['admin1'] = []
+        for alertadmin1 in alertadmin1s:
+            alert_data['admin1'].append(alertadmin1.admin1.name)
         alerts_data['alerts'].append(alert_data)
     cache.set("alerts", alerts_data, timeout = None)
     cache.set('alertset', alert_set, timeout = None)

@@ -65,7 +65,7 @@ def refresh_cache(request):
     alerts_cache.update_alerts_cache()
     print(f'Time taken: {timezone.now() - start_time}')
     start_time = timezone.now()
-    admin1s_cache.initialise_admin1s_cache()
+    admin1s_cache.update_admin1s_cache()
     print(f'Time taken: {timezone.now() - start_time}')
     response = {'status': 'success'}
     return JsonResponse(response, json_dumps_params={'indent': 2, 'ensure_ascii': False})
