@@ -20,11 +20,11 @@ This is a Python web app using the Django framework and the Azure Database for P
     * <a href="#installation-and-setup">Installation and Setup</a>
     * <a href="#azure-deployment">Azure Deployment</a>
 
-## API Overview
-*An overview is provided for the available API endpoints. Refer to the API documentation for more detailed specifications.*
+## API Documentation
+*An description is provided for the available API endpoints.*
 
 ### For the Alert Map:
-For the alert map, data is provided in 4 levels of detail in JSON format to minimise page loading times. For example, it is not necessary to display the admin1 polygons of Russia when France is selected on the Alert Map.
+For the alert map, data is provided in 4 levels of detail in JSON format to minimise page loading times. For example, start with Level 1 to find out which countries have alerts. Then use Level 2 after a user selects a particular country on the Alert Map. Use Level 3 after the user selects a particular admin1.
 
 | Level | Route | Description |
 | --- | --- | --- |
