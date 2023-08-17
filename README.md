@@ -14,7 +14,7 @@ This is a Python web app using the Django framework and the Azure Database for P
 
 ## Table of Contents
 * Documentation
-    * <a href="#api-overview">API Overview</a>
+    * <a href="#api-documentation">API Documentation</a>
     * <a href="#alert-cachings">Alert Caching</a>
 * Development
     * <a href="#installation-and-setup">Installation and Setup</a>
