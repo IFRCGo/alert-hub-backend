@@ -16,7 +16,7 @@ app = Celery('alertmanager')
 app.conf.beat_schedule = {
     'update_cache':{
         'task': 'cache.tasks.update_cache',
-        'schedule': timedelta(seconds=30),
+        'schedule': timedelta(minutes=1),
         'options': {'queue': 'cache'}
     }
 }
