@@ -11,7 +11,5 @@ urlpatterns = [
     path('alerts/<int:alert_id>/', views.get_alert, name='Get alert by id'),
     path('alerts/', views.get_alerts, name='Get alerts'),
     path('admin1s/', views.get_admin1s, name='Get admin1s by country'),
-    path('refresh/', views.refresh_cache, name='Refresh cache'),
-    path('clear/', views.clear_cache, name='Clear cache'),
     path('', views.index, name='Index'),
 ]

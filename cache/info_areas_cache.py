@@ -41,7 +41,10 @@ def update_info_cache():
     for old_id in old_infos:
         cache.delete("info" + str(old_id))
     for new_id in new_infos:
-        info = CapFeedAlertInfo.objects.get(id=new_id)
+        try:
+            info = CapFeedAlertInfo.objects.get(id=new_id)
+        except CapFeedAlertInfo.DoesNotExist:
+            continue
         calculate_info(info)
     cache.set('infoset', info_set, timeout = None)
 

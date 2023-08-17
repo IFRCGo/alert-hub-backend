@@ -59,7 +59,10 @@ def update_alerts_cache():
                 alerts_data['alerts'].pop(index)
                 cache.delete("alert" + str(old_id))
     for new_id in new_alerts:
-        alert = CapFeedAlert.objects.get(id=new_id)
+        try:
+            alert = CapFeedAlert.objects.get(id=new_id)
+        except CapFeedAlert.DoesNotExist:
+            continue
         alert_data = calculate_alert(alert)
         alert_data.pop('scope', None)
         alert_data.pop('code', None)

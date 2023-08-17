@@ -33,7 +33,10 @@ def update_country_cache():
 
     updated_countries = cache.get('countryset_country', set())
     for country_id in updated_countries:
-        country = CapFeedCountry.objects.get(id=country_id)
+        try:
+            country = CapFeedCountry.objects.get(id=country_id)
+        except CapFeedCountry.DoesNotExist:
+            continue
         calculate_country(country)
     cache.set('countryset_country', set(), timeout = None)
 

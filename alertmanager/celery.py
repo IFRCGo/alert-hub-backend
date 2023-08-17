@@ -1,5 +1,6 @@
 import os
 from celery import Celery
+from datetime import timedelta
 from django.conf import settings
 from dotenv import load_dotenv
 from kombu import Queue
@@ -11,6 +12,14 @@ if 'WEBSITE_HOSTNAME' not in os.environ:
 else:
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'alertmanager.production')
 app = Celery('alertmanager')
+
+app.conf.beat_schedule = {
+    'update_cache':{
+        'task': 'cache.tasks.update_cache',
+        'schedule': timedelta(seconds=30),
+        'options': {'queue': 'cache'}
+    }
+}
 
 # Using a string here means the worker doesn't have to serialize
 # the configuration object to child processes.

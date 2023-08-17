@@ -43,7 +43,10 @@ def update_admin1_cache():
 
     updated_countries = cache.get('countryset_admin1', set())
     for country_id in updated_countries:
-        country = CapFeedCountry.objects.get(id=country_id)
+        try:
+            country = CapFeedCountry.objects.get(id=country_id)
+        except CapFeedCountry.DoesNotExist:
+            continue
         calculate_country(country)
     cache.set('countryset_admin1', set(), timeout = None)
 

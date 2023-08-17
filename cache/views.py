@@ -46,31 +46,3 @@ def get_alerts(request):
 def get_admin1s(request):
     response = admin1s_cache.get_admin1s()
     return JsonResponse(response, json_dumps_params={'indent': 2, 'ensure_ascii': False})
-
-def refresh_cache(request):
-    start_time = timezone.now()
-    region_countries_cache.update_region_cache()
-    print(f'Time taken: {timezone.now() - start_time}')
-    start_time = timezone.now()
-    country_admin1s_cache.update_country_cache()
-    print(f'Time taken: {timezone.now() - start_time}')
-    start_time = timezone.now()
-    admin1_alerts_cache.update_admin1_cache()
-    print(f'Time taken: {timezone.now() - start_time}')
-    start_time = timezone.now()
-    info_areas_cache.update_info_cache()
-    print(f'Time taken: {timezone.now() - start_time}')
-
-    start_time = timezone.now()
-    alerts_cache.update_alerts_cache()
-    print(f'Time taken: {timezone.now() - start_time}')
-    start_time = timezone.now()
-    admin1s_cache.update_admin1s_cache()
-    print(f'Time taken: {timezone.now() - start_time}')
-    response = {'status': 'success'}
-    return JsonResponse(response, json_dumps_params={'indent': 2, 'ensure_ascii': False})
-
-def clear_cache(request):
-    cache.clear()
-    response = {'status': 'success'}
-    return JsonResponse(response, json_dumps_params={'indent': 2, 'ensure_ascii': False})
