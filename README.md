@@ -48,6 +48,7 @@ For the subscription viewer and the individual region pages on the Alert Hub web
 | --- | --- | --- |
 | 1 | regions/region_id/ | Returns data (id and polygons) of all countries that currently have alerts within a region|
 | 1 | admin1s/ | Returns names of all admin1s and countries that have active feeds in the CAP Aggregator | 
+| 2 | alerts/alert_id/summary/ | Returns summarised alert data of an alert object |
 
 ## Alert Caching
 
