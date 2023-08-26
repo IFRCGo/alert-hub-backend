@@ -5,15 +5,25 @@ from .models import CapFeedAlert
 
 def calculate_alert(alert):
     alert_data = alert.to_dict()
+    alert_summary_data = dict()
+    alert_summary_data['id'] = alert.id
+    alert_summary_data['sent'] = alert.sent
+    alert_summary_data['category'] = ''
+    alert_summary_data['event'] = ''
     alert_data['region'] = alert.country.region.name
     alert_data['country'] = alert.country.name
     alert_data['admin1'] = []
     alertadmin1s = alert.capfeedalertadmin1_set.all()
     for alertadmin1 in alertadmin1s:
         alert_data['admin1'].append(alertadmin1.admin1.name)
+    alert_summary_data['admin1'] = alert_data['admin1']
     alert_data['info'] = []
     for info in alert.capfeedalertinfo_set.all():
         info_data = info.to_dict()
+        if alert_summary_data['category'] == '':
+            alert_summary_data['category'] = info_data['category']
+        if alert_summary_data['event'] == '':
+            alert_summary_data['event'] = info_data['event']
         info_data['parameter'] = []
         parameters = info.capfeedalertinfoparameter_set.all()
         for parameter in parameters:
@@ -39,6 +49,7 @@ def calculate_alert(alert):
         alert_data['info'].append(info_data)
 
     cache.set("alert" + str(alert.id), alert_data, timeout = None)
+    cache.set("alert_summary" + str(alert.id), alert_summary_data, timeout = None)
     
     alert_data['info'] = []
     for info in alert.capfeedalertinfo_set.all():
@@ -58,6 +69,7 @@ def update_alerts_cache():
             if alert_data['id'] == old_id:
                 alerts_data['alerts'].pop(index)
                 cache.delete("alert" + str(old_id))
+                cache.delete("alert_summary" + str(old_id))
     for new_id in new_alerts:
         try:
             alert = CapFeedAlert.objects.get(id=new_id)
@@ -82,6 +94,10 @@ def update_alerts_cache():
         alerts_data['alerts'].append(alert_data)
     cache.set("alerts", alerts_data, timeout = None)
     cache.set('alertset', alert_set, timeout = None)
+
+def get_alert_summary(alert_id):
+    alert_cache_key = "alert_summary" + str(alert_id)
+    return cache.get(alert_cache_key, {})
 
 def get_alert(alert_id):
     alert_cache_key = "alert" + str(alert_id)

@@ -35,6 +35,10 @@ def get_info(request, info_id):
     response = info_areas_cache.get_info(info_id)
     return JsonResponse(response, json_dumps_params={'indent': 2, 'ensure_ascii': False})
 
+def get_alert_summary(request, alert_id):
+    response = alerts_cache.get_alert_summary(alert_id)
+    return JsonResponse(response, json_dumps_params={'indent': 2, 'ensure_ascii': False})
+
 def get_alert(request, alert_id):
     response = alerts_cache.get_alert(alert_id)
     return JsonResponse(response, json_dumps_params={'indent': 2, 'ensure_ascii': False})
