@@ -50,6 +50,13 @@ def update_admin1_cache():
         calculate_country(country)
     cache.set('countryset_admin1', set(), timeout = None)
 
+    new_updated_countries = cache.get('countryset_admin1', dict())
+    for country_id in updated_countries:
+        if updated_countries[country_id] == new_updated_countries[country_id]:
+            new_updated_countries.pop(country_id)
+
+    cache.set('countryset_admin1', new_updated_countries, timeout = None)
+
 def get_admin1(admin1_id):
     admin1_cache_key = "admin1" + str(admin1_id)
     return cache.get(admin1_cache_key, {})

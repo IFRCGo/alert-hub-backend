@@ -9,11 +9,11 @@ from django.utils import timezone
 # Add instruction to update country in cache
 @shared_task(bind=True)
 def update_cache_instructions(self, country_id):
-    updated_countries = cache.get('countryset_country', set())
-    updated_countries.add(country_id)
+    updated_countries = cache.get('countryset_country', dict())
+    updated_countries[country_id] = timezone.now()
     cache.set('countryset_country', updated_countries, timeout = None)
-    updated_countries = cache.get('countryset_admin1', set())
-    updated_countries.add(country_id)
+    updated_countries = cache.get('countryset_admin1', dict())
+    updated_countries[country_id] = timezone.now()
     cache.set('countryset_admin1', updated_countries, timeout = None)
 
     return "Cache update instructions received"
