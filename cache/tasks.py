@@ -15,7 +15,6 @@ def update_cache_instructions(self, country_id):
     updated_countries[country_id] = timezone.now()
     cache.set('countryset_country', updated_countries, timeout = None)
 
-    cache.set('countryset_admin1', dict(), timeout = None)
     updated_countries = cache.get('countryset_admin1', dict())
     if type(updated_countries) == type(set()):
         updated_countries = dict()
