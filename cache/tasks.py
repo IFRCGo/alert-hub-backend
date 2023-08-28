@@ -24,7 +24,7 @@ def update_cache_instructions(self, country_id):
 
     return "Cache update instructions received"
 
-# Update cache
+# Update non-priority cache
 @shared_task(bind=True)
 def update_cache(self):
     region_countries_cache.update_region_cache()
@@ -32,7 +32,12 @@ def update_cache(self):
     admin1_alerts_cache.update_admin1_cache()
     info_areas_cache.update_info_cache()
 
-    alerts_cache.update_alerts_cache()
     admin1s_cache.update_admin1s_cache()
 
-    return "Updated cache"
+    return "Updated map alerts cache"
+
+# Update priority cache
+@shared_task(bind=True)
+def update_cache_fast(self):
+    alerts_cache.update_alerts_cache()
+    return "Updated alerts cache"

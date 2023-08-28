@@ -86,6 +86,13 @@ WSGI_APPLICATION = 'alertmanager.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': os.environ.get('CELERYDBNAME'),
+        'HOST': os.environ.get('DBHOST'),
+        'USER': os.environ.get('DBUSER'),
+        'PASSWORD': os.environ.get('DBPASS'),
+    },
+    'cap_aggregator': {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': os.environ.get('DBNAME'),
         'HOST': os.environ.get('DBHOST'),
         'USER': os.environ.get('DBUSER'),
@@ -93,6 +100,7 @@ DATABASES = {
     }
 }
 
+DATABASE_ROUTERS = ['alertmanager.db_router.CAPRouter']
 
 # Password validation
 # https://docs.djangoproject.com/en/4.0/ref/settings/#auth-password-validators

@@ -31,24 +31,22 @@ def calculate_country(country):
 def update_country_cache():
     print('Updating country_admin1s cache...')
 
+    removed_countries = set()
     updated_countries = cache.get('countryset_country', dict())
     for country_id in updated_countries:
         try:
             country = CapFeedCountry.objects.get(id=country_id)
         except CapFeedCountry.DoesNotExist:
-            continue
+            removed_countries.add(country_id)
         calculate_country(country)
 
     new_updated_countries = cache.get('countryset_country', dict())
     for country_id in updated_countries:
         if updated_countries[country_id] == new_updated_countries[country_id]:
-            print(f'finished {CapFeedCountry.objects.get(id=country_id).name}')
             new_updated_countries.pop(country_id)
-        else:
-            print(f'partly finished {CapFeedCountry.objects.get(id=country_id).name}')
-
-    if len(updated_countries) == 0:
-        print(f'finished 0 updates')
+    for country_id in removed_countries:
+        if country_id in new_updated_countries:
+            new_updated_countries.pop(country_id)
 
     cache.set('countryset_country', new_updated_countries, timeout = None)
 

@@ -41,18 +41,21 @@ def calculate_country(country):
 def update_admin1_cache():
     print('Updating admin1_alerts cache...')
 
-    updated_countries = cache.get('countryset_admin1', set())
+    removed_countries = set()
+    updated_countries = cache.get('countryset_admin1', dict())
     for country_id in updated_countries:
         try:
             country = CapFeedCountry.objects.get(id=country_id)
         except CapFeedCountry.DoesNotExist:
-            continue
+            removed_countries.add(country_id)
         calculate_country(country)
-    cache.set('countryset_admin1', set(), timeout = None)
 
     new_updated_countries = cache.get('countryset_admin1', dict())
     for country_id in updated_countries:
         if updated_countries[country_id] == new_updated_countries[country_id]:
+            new_updated_countries.pop(country_id)
+    for country_id in removed_countries:
+        if country_id in new_updated_countries:
             new_updated_countries.pop(country_id)
 
     cache.set('countryset_admin1', new_updated_countries, timeout = None)
