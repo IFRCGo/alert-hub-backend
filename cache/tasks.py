@@ -9,17 +9,9 @@ from django.utils import timezone
 # Add instruction to update country in cache
 @shared_task(bind=True)
 def update_cache_instructions(self, country_id):
-    updated_countries = cache.get('countryset_country', dict())
-    if type(updated_countries) == type(set()):
-        updated_countries = dict()
-    updated_countries[country_id] = timezone.now()
-    cache.set('countryset_country', updated_countries, timeout = None)
-
-    updated_countries = cache.get('countryset_admin1', dict())
-    if type(updated_countries) == type(set()):
-        updated_countries = dict()
-    updated_countries[country_id] = timezone.now()
-    cache.set('countryset_admin1', updated_countries, timeout = None)
+    update_records = cache.get('update_records', dict())
+    update_records[country_id] = timezone.now()
+    cache.set('update_records', update_records, timeout = None)
 
     return "Cache update instructions received"
 

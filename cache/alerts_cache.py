@@ -7,7 +7,7 @@ def calculate_alert(alert):
     alert_data = alert.to_dict()
     alert_summary_data = dict()
     alert_summary_data['id'] = alert.id
-    alert_summary_data['sent'] = alert.sent
+    alert_summary_data['sent'] = str(alert.sent)
     alert_summary_data['category'] = ''
     alert_summary_data['event'] = ''
     alert_data['region'] = alert.country.region.name
@@ -95,9 +95,12 @@ def update_alerts_cache():
     cache.set("alerts", alerts_data, timeout = None)
     cache.set('alertset', alert_set, timeout = None)
 
-def get_alert_summary(alert_id):
-    alert_cache_key = "alert_summary" + str(alert_id)
-    return cache.get(alert_cache_key, {})
+def get_alert_summary(alert_ids):
+    summaries = []
+    for alert_id in alert_ids:
+        alert_cache_key = "alert_summary" + str(alert_id)
+        summaries.append(cache.get(alert_cache_key, {}))
+    return summaries
 
 def get_alert(alert_id):
     alert_cache_key = "alert" + str(alert_id)

@@ -1,8 +1,9 @@
 from cache import admin1_alerts_cache, country_admin1s_cache, info_areas_cache, region_countries_cache, alerts_cache, admin1s_cache
 from django.http import HttpResponse, JsonResponse, HttpResponseNotFound
+from django.views.decorators.csrf import csrf_exempt
 from django.template import loader
 from django.core.cache import cache
-from django.utils import timezone
+import json
 
 
 
@@ -35,9 +36,17 @@ def get_info(request, info_id):
     response = info_areas_cache.get_info(info_id)
     return JsonResponse(response, json_dumps_params={'indent': 2, 'ensure_ascii': False})
 
-def get_alert_summary(request, alert_id):
-    response = alerts_cache.get_alert_summary(alert_id)
-    return JsonResponse(response, json_dumps_params={'indent': 2, 'ensure_ascii': False})
+@csrf_exempt
+def get_alert_summary(request):
+    try:
+        post_data = request.POST
+        alert_ids = json.loads(post_data['alert_ids'])
+        alert_summaries = alerts_cache.get_alert_summary(alert_ids)
+        response = json.dumps(alert_summaries)
+    except Exception as e:
+        error_message = "List of valid alert_ids must be present in http request body. 'alert_ids': []"
+        return HttpResponseNotFound(f"Invalid request. {error_message}     {e}")
+    return JsonResponse(response, json_dumps_params={'indent': 2, 'ensure_ascii': False}, safe=False)
 
 def get_alert(request, alert_id):
     response = alerts_cache.get_alert(alert_id)
@@ -52,5 +61,5 @@ def get_admin1s(request):
     return JsonResponse(response, json_dumps_params={'indent': 2, 'ensure_ascii': False})
 
 def clear(request):
-    cache.clear
+    cache.clear()
     return HttpResponse("Done")

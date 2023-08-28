@@ -1,5 +1,6 @@
 from django.core.cache import cache
-from .models import CapFeedCountry, CapFeedAlert
+from .models import CapFeedCountry
+from django.utils import timezone
 
 
 
@@ -31,24 +32,30 @@ def calculate_country(country):
 def update_country_cache():
     print('Updating country_admin1s cache...')
 
-    removed_countries = set()
-    updated_countries = cache.get('countryset_country', dict())
-    for country_id in updated_countries:
-        try:
-            country = CapFeedCountry.objects.get(id=country_id)
-        except CapFeedCountry.DoesNotExist:
-            removed_countries.add(country_id)
-        calculate_country(country)
+    update_records = cache.get('update_records', dict())
+    cache_records = cache.get('country_cache_records', dict())
+    old_country_ids = set()
+    for country_id in update_records:
+        cap_update_time = update_records[country_id]
+        cache_update_time = cache_records.get(country_id, None)
+        if (cache_update_time is None) or (cache_update_time > cap_update_time):
+            try:
+                country = CapFeedCountry.objects.get(id=country_id)
+                print(f'Updating country cache for {country.name}')
+                calculate_country(country)
+                cache_records[country_id] = timezone.now()
+            except:
+                old_country_ids.add(country_id)
+    cache.set('country_cache_records', cache_records, timeout = None)
 
-    new_updated_countries = cache.get('countryset_country', dict())
-    for country_id in updated_countries:
-        if updated_countries[country_id] == new_updated_countries[country_id]:
-            new_updated_countries.pop(country_id)
-    for country_id in removed_countries:
-        if country_id in new_updated_countries:
-            new_updated_countries.pop(country_id)
-
-    cache.set('countryset_country', new_updated_countries, timeout = None)
+    # Remove old country ids
+    update_records = cache.get('update_records', dict())
+    cache_records = cache.get('country_cache_records', dict())
+    for old_country_id in old_country_ids:
+        update_records.pop(old_country_id)
+        cache_records.pop(old_country_id)
+    cache.set('update_records', update_records, timeout = None)
+    cache.set('country_cache_records', cache_records, timeout = None)
 
 def get_country(country_id):
     country_cache_key = "country" + str(country_id)
