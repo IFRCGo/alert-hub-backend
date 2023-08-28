@@ -98,6 +98,7 @@ The Alert Manager and CAP Aggregator share the same database and Redis server as
 5. Create .env in the same directory as manage.py with your credentials. You can generate a secret key at https://djecrety.ir/.  
     Example:
     ```
+    CELERYDBNAME=alert_manager
     DBNAME=cap_aggregator
     DBHOST=localhost
     DBUSER=username
@@ -152,6 +153,7 @@ Ideally the celery worker and scheduler should be run on a separate instance sin
     Operating System: Linux
 2. Create a PostGreSQL server and Redis Cache  
     Create a database e.g., 'cap-aggregator'  
+    Create another database e.g., 'alert-manager'  
     Create a Redis Cache e.g., 'cap-aggregator' with private endpoint
 3. Create a Storage Account to store large data files  
     Create the account and add two containers: 'media' and 'static'.  
@@ -171,7 +173,7 @@ Ideally the celery worker and scheduler should be run on a separate instance sin
     Value: {storage_account_name}
 
     Name: AZURE_POSTGRESQL_CONNECTIONSTRING
-    Value: dbname={database name} host={server name}.postgres.database.azure.com port=5432 sslmode=require user={username} password={password}
+    Value: celerydbname={database name} dbname={database name} host={server name}.postgres.database.azure.com port=5432 sslmode=require user={username} password={password}
 
     Name: SCM_DO_BUILD_DURING_DEPLOYMENT
     Value: 1
