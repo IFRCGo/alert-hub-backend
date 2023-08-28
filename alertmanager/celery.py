@@ -41,7 +41,7 @@ app.conf.task_queues = (
 )
 app.conf.task_default_exchange = 'cache'
 app.conf.task_default_exchange_type = 'topic'
-app.conf.task_default_routing_key = 'cache.default'
+app.conf.task_default_routing_key = 'cache.#'
 
 task_routes = {
     'cache.tasks.*': {
