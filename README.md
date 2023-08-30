@@ -34,12 +34,14 @@ For the alert map, data is provided in 4 levels of detail in JSON format to mini
 | 4 | infos/info_id/ | Returns data (polygons and other fields) of an alert info object |
 
 ### For the Alert Table and external users:
-For the alert table and for other developers, alert data is provided in 2 levels of detail in JSON format.
+For the alert table and for other developers, alert data is provided in JSON format.
 
 | Level | Route | Description |
 | --- | --- | --- |
 | 1 | alerts/ | Returns all alerts aggregated by the CAP Aggregator with a minimal selection of fields | 
 | 2 | alerts/alert_id/ | Returns full alert data of an alert object |
+| 1 | country_feeds/ | Returns ISO3 codes and feeds polled for the country |
+| 2 | country_feeds/ISO3/ | Returns all alerts for a particular country |
 
 ### For the Subscription Viewer and other website functions:
 For the subscription viewer and the individual region pages on the Alert Hub website, available regions and admin1s to subscribe to are provided.

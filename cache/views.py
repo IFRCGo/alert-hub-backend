@@ -52,6 +52,10 @@ def get_alert(request, alert_id):
     response = alerts_cache.get_alert(alert_id)
     return JsonResponse(response, json_dumps_params={'indent': 2, 'ensure_ascii': False})
 
+def get_alerts(request):
+    response = alerts_cache.get_alerts()
+    return JsonResponse(response, json_dumps_params={'indent': 2, 'ensure_ascii': False})
+
 def get_country_feeds(request):
     response = alerts_cache.get_country_feeds()
     return JsonResponse(response, json_dumps_params={'indent': 2, 'ensure_ascii': False})

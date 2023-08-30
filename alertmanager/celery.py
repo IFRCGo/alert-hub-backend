@@ -24,8 +24,13 @@ app.conf.beat_schedule = {
         'schedule': timedelta(seconds=30),
         'options': {'queue': 'cache'}
     },
-    'update_cache_fast':{
-        'task': 'cache.tasks.update_cache_fast',
+    'update_cache_fast_1':{
+        'task': 'cache.tasks.update_cache_fast_1',
+        'schedule': timedelta(seconds=5),
+        'options': {'queue': 'cache'}
+    },
+    'update_cache_fast_2':{
+        'task': 'cache.tasks.update_cache_fast_2',
         'schedule': timedelta(seconds=5),
         'options': {'queue': 'cache'}
     }

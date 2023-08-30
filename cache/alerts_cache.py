@@ -1,6 +1,5 @@
 from django.core.cache import cache
 from .models import CapFeedAlert, CapFeedFeed
-import json
 
 
 
@@ -62,6 +61,34 @@ def calculate_country_alerts():
 def get_country_alerts(iso3):
     cache_key = 'country_alerts' + iso3
     return cache.get(cache_key, [])
+
+
+def update_alerts_cache():
+    print('Updating alerts cache...')
+    alerts_data = cache.get('alerts', {'alerts': []})
+    existing_alert_set = cache.get('alertset2', set())
+    alert_set = set(CapFeedAlert.objects.all().values_list('id', flat=True))
+    old_alerts = existing_alert_set.difference(alert_set)
+    new_alerts = alert_set.difference(existing_alert_set)
+    for old_id in old_alerts:
+        for index, alert_data in enumerate(alerts_data['alerts']):
+            if alert_data['id'] == old_id:
+                alerts_data['alerts'].pop(index)
+                cache.delete("alert" + str(old_id))
+                cache.delete("alert_summary" + str(old_id))
+    for new_id in new_alerts:
+        try:
+            alert = CapFeedAlert.objects.get(id=new_id)
+        except CapFeedAlert.DoesNotExist:
+            continue
+        alert_data = calculate_alert_data(alert)
+        alerts_data['alerts'].append(alert_data)
+    cache.set("alerts", alerts_data, timeout = None)
+    cache.set('alertset2', alert_set, timeout = None)
+
+def get_alerts():
+    alerts_cache_key = "alerts"
+    return cache.get(alerts_cache_key, {})
 
 
 def calculate_alert_data(alert):

@@ -34,10 +34,17 @@ def update_cache_2(self):
 
     return "Updated cache part 2"
 
-# Update priority cache
+# Update priority cache part 1
 @shared_task(bind=True)
-def update_cache_fast(self):
+def update_cache_fast_1(self):
     alerts_cache.calculate_country_feeds()
     alerts_cache.calculate_country_alerts()
 
-    return "Updated external alerts api cache"
+    return "Updated external alerts api cache part 1"
+
+# Update priority cache part 2
+@shared_task(bind=True)
+def update_cache_fast_2(self):
+    alerts_cache.update_alerts_cache()
+
+    return "Updated external alerts api cache part 2"
