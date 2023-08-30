@@ -38,7 +38,7 @@ def update_country_cache():
     for country_id in update_records:
         cap_update_time = update_records[country_id]
         cache_update_time = cache_records.get(country_id, None)
-        if (cache_update_time is None) or (cache_update_time > cap_update_time):
+        if (cache_update_time is None) or (cache_update_time < cap_update_time):
             try:
                 country = CapFeedCountry.objects.get(id=country_id)
                 print(f'Updating country cache for {country.name}')

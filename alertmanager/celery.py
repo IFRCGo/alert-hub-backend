@@ -14,9 +14,14 @@ else:
 app = Celery('alertmanager')
 
 app.conf.beat_schedule = {
-    'update_cache':{
-        'task': 'cache.tasks.update_cache',
-        'schedule': timedelta(minutes=1),
+    'update_cache_1':{
+        'task': 'cache.tasks.update_cache_1',
+        'schedule': timedelta(seconds=30),
+        'options': {'queue': 'cache'}
+    },
+    'update_cache_2':{
+        'task': 'cache.tasks.update_cache_2',
+        'schedule': timedelta(seconds=30),
         'options': {'queue': 'cache'}
     },
     'update_cache_fast':{

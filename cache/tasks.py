@@ -15,20 +15,28 @@ def update_cache_instructions(self, country_id):
 
     return "Cache update instructions received"
 
-# Update non-priority cache
+# Update non-priority cache part 1
 @shared_task(bind=True)
-def update_cache(self):
-    region_countries_cache.update_region_cache()
+def update_cache_1(self):
+    print('Updating cache part 1')
     country_admin1s_cache.update_country_cache()
     admin1_alerts_cache.update_admin1_cache()
-    info_areas_cache.update_info_cache()
 
+    return "Updated cache part 1"
+
+# Update non-priority cache part 2
+@shared_task(bind=True)
+def update_cache_2(self):
+    print('Updating cache part 2')
+    region_countries_cache.update_region_cache()
+    info_areas_cache.update_info_cache()
     admin1s_cache.update_admin1s_cache()
 
-    return "Updated map alerts cache"
+    return "Updated cache part 2"
 
 # Update priority cache
 @shared_task(bind=True)
 def update_cache_fast(self):
     alerts_cache.update_alerts_cache()
-    return "Updated alerts cache"
+
+    return "Updated external alerts api cache"
