@@ -6,7 +6,7 @@ from .models import CapFeedFeed, CapFeedCountry
 def update_admin1s_cache():
     print('Updating admin1s cache...')
     admin1s_data = {'countries': []}
-    country_ids = set(CapFeedFeed.objects.all().values_list('country', flat=True))
+    country_ids = set(CapFeedFeed.objects.values_list('country', flat=True))
     for country_id in country_ids:
         try:
             country = CapFeedCountry.objects.get(id=country_id)

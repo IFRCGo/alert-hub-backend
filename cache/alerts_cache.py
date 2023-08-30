@@ -27,7 +27,7 @@ def calculate_country_alerts():
     print('Updating country alerts cache...')
     existing_alert_set = cache.get('alertset', set())
     existing_alert_iso3 = cache.get('alertiso3', {})
-    alert_set = set(CapFeedAlert.objects.all().values_list('id', flat=True))
+    alert_set = set(CapFeedAlert.objects.values_list('id', flat=True))
     old_alerts = existing_alert_set.difference(alert_set)
     new_alerts = alert_set.difference(existing_alert_set)
     for old_id in old_alerts:
@@ -49,7 +49,6 @@ def calculate_country_alerts():
             alert = CapFeedAlert.objects.get(id=new_id)
             alert_data = calculate_alert_data(alert)
             iso3 = alert.country.iso3
-            print(iso3)
             cache_key = 'country_alerts' + iso3
             country_alerts = cache.get(cache_key, [])
             country_alerts.append(alert_data)
@@ -67,7 +66,7 @@ def update_alerts_cache():
     print('Updating alerts cache...')
     alerts_data = cache.get('alerts', {'alerts': []})
     existing_alert_set = cache.get('alertset2', set())
-    alert_set = set(CapFeedAlert.objects.all().values_list('id', flat=True))
+    alert_set = set(CapFeedAlert.objects.values_list('id', flat=True))
     old_alerts = existing_alert_set.difference(alert_set)
     new_alerts = alert_set.difference(existing_alert_set)
     for old_id in old_alerts:

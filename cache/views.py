@@ -4,6 +4,8 @@ from django.views.decorators.csrf import csrf_exempt
 from django.template import loader
 from django.core.cache import cache
 import json
+from django.utils import timezone
+from .models import CapFeedAlert
 
 
 
@@ -70,4 +72,10 @@ def get_admin1s(request):
 
 def clear(request):
     cache.clear()
+
+    # Prepare for reinitialisation of cache
+    update_records = dict()
+    for country_id in set(CapFeedAlert.objects.values_list('country', flat=True)):
+        update_records[country_id] = timezone.now()
+    cache.set('update_records', update_records)
     return HttpResponse("Done")

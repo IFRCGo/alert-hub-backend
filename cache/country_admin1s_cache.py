@@ -1,5 +1,5 @@
 from django.core.cache import cache
-from .models import CapFeedCountry
+from .models import CapFeedCountry, CapFeedAlert
 from django.utils import timezone
 
 

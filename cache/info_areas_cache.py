@@ -35,7 +35,7 @@ def update_info_cache():
     print('Updating info_areas cache...')
     
     existing_info_set = cache.get('infoset', set())
-    info_set = set(CapFeedAlertInfo.objects.all().values_list('id', flat=True))
+    info_set = set(CapFeedAlertInfo.objects.values_list('id', flat=True))
     old_infos = existing_info_set.difference(info_set)
     new_infos = info_set.difference(existing_info_set)
     for old_id in old_infos:
