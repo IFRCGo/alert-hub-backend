@@ -37,6 +37,7 @@ def update_cache_2(self):
 # Update priority cache
 @shared_task(bind=True)
 def update_cache_fast(self):
-    alerts_cache.update_alerts_cache()
+    alerts_cache.calculate_country_feeds()
+    alerts_cache.calculate_country_alerts()
 
     return "Updated external alerts api cache"
