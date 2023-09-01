@@ -47,7 +47,7 @@ def calculate_country_alerts():
     for new_id in new_alerts:
         try:
             alert = CapFeedAlert.objects.get(id=new_id)
-            alert_data = calculate_alert_data(alert)
+            alert_data = calculate_alert_data(alert, False)
             iso3 = alert.country.iso3
             cache_key = 'country_alerts' + iso3
             country_alerts = cache.get(cache_key, [])
@@ -90,7 +90,7 @@ def get_alerts():
     return cache.get(alerts_cache_key, {})
 
 
-def calculate_alert_data(alert):
+def calculate_alert_data(alert, full = True):
     alert_data = alert.to_dict()
     alert_data['region'] = alert.country.region.name
     alert_data['country'] = alert.country.name
@@ -162,7 +162,20 @@ def calculate_alert_data(alert):
     for alertadmin1 in alertadmin1s:
         alert_data['admin1'].append(alertadmin1.admin1.name)
 
-    return alert_data
+    if full:
+        return alert_data
+    else:
+        alert_data.pop('url', None)
+        alert_data.pop('sender', None)
+        alert_data.pop('sent', None)
+        alert_data.pop('identifier', None)
+        alert_data.pop('region', None)
+        alert_data.pop('source', None)
+        alert_data.pop('region', None)
+        alert_data.pop('country', None)
+        alert_data.pop('admin1', None)
+        alert_data.pop('region', None)
+        return alert_data
 
 
 def get_alert_summary(alert_ids):

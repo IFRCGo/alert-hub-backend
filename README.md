@@ -10,7 +10,7 @@ This is a Python web app using the Django framework and the Azure Database for P
 - Cache updates are scalable by updating only the necessary countries and alerts based on the updates from the CAP Aggregator.
 - Processing time of cache updates can be as low as milliseconds, eliminating celery queue bottlenecks.
 - API response times within milliseconds from efficient caching design.
-- The cache updates periodically (every minute), and the update frequency can be increased easily by using multiple celery workers.
+- The cache updates periodically (every 30s), and the update frequency can be increased easily by using more celery workers.
 
 ## Table of Contents
 * Documentation
@@ -62,7 +62,7 @@ Every time an alert is added or removed by the CAP Aggregator, the Alert Manager
  
 ## Installation and Setup
 
-*It is possible to develop and run a fully functional Alert Manager on Windows including the Django app, Celery, and Redis using Docker. However, Celery and Redis are not officially supported and certain features such as concurrent Celery workers will not work.*
+*It is possible to develop and run a fully functional Alert Manager on Windows including the Django app, Celery, and Redis using Docker. However, Celery and Redis are not officially supported and we strongly recommend using Linux to be able to run concurrent Celery workers.*
 
 The Alert Manager and CAP Aggregator share the same database and Redis server as a message broker. Most of the steps can be skipped if the CAP Aggregator has already been set up.
 
