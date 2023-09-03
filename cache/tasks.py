@@ -5,6 +5,9 @@ from django.core.cache import cache
 from django.utils import timezone
 
 
+# We separate cache updating into several parts so that
+# they can be run concurrently by Celery workers
+
 
 # Add instruction to update country in cache
 @shared_task(bind=True)

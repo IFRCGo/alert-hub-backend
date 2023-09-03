@@ -1,5 +1,8 @@
 from django.db import models
 
+# These use the same database as the CAP Aggregator
+# These models were generated to match,
+# Dont change these unless the models in CAP Aggregator are updated and the Alert Manager needs to change
 
 
 class CapFeedRegion(models.Model):

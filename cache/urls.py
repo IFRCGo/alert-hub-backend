@@ -14,6 +14,5 @@ urlpatterns = [
     path('country_feeds/', views.get_country_feeds, name='Get country iso3 with feed urls'),
     path('country_feeds/<str:iso3>/', views.get_country_alerts, name='Get country iso3 with feed urls'),
     path('admin1s/', views.get_admin1s, name='Get admin1s by country'),
-    path('', views.index, name='Index'),
-    path('clear/', views.clear, name='Clear')
+    path('', views.index, name='Index')
 ]

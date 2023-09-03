@@ -70,12 +70,12 @@ def get_admin1s(request):
     response = admin1s_cache.get_admin1s()
     return JsonResponse(response, json_dumps_params={'indent': 2, 'ensure_ascii': False})
 
-def clear(request):
-    cache.clear()
+# def clear(request):
+#     cache.clear()
 
-    # Prepare for reinitialisation of cache
-    update_records = dict()
-    for country_id in set(CapFeedAlert.objects.values_list('country', flat=True)):
-        update_records[country_id] = timezone.now()
-    cache.set('update_records', update_records)
-    return HttpResponse("Done")
+#     # Prepare for reinitialisation of cache
+#     update_records = dict()
+#     for country_id in set(CapFeedAlert.objects.values_list('country', flat=True)):
+#         update_records[country_id] = timezone.now()
+#     cache.set('update_records', update_records)
+#     return HttpResponse("Done")
