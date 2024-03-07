@@ -1,0 +1,40 @@
+[
+    {
+      "model": "cap_feed.continent",
+      "pk": 1,
+      "fields": {
+        "name": "test_continent"
+      }
+    },
+    {
+      "model": "cap_feed.region",
+      "pk": 1,
+      "fields": {
+        "name": "test_region",
+        "polygon": "",
+        "centroid": ""
+      }
+    },
+    {
+      "model": "cap_feed.country",
+      "pk": 1,
+      "fields": {
+        "name": "test_country",
+        "iso3": "ISO",
+        "polygon": "",
+        "multipolygon": "",
+        "region": 1,
+        "continent": 1,
+        "centroid": ""
+      }
+    },
+    {
+      "model": "cap_feed.feed",
+      "fields": {
+        "url": "test_feed",
+        "country": 1,
+        "format": "test_format",
+        "polling_interval": 10
+      }
+    }
+  ]

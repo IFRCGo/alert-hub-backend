@@ -1,0 +1,20 @@
+{% load static %}
+    <h2><a href="/admin">LINK: /admin</a></h2>
+    <hr>
+
+{% if latest_alert_list %}
+    <ul>
+    {% for alert in latest_alert_list %}
+        <h3>{{ alert.country }}</h3>
+        <h4>{{ alert.feed.url }}</h4>
+        <p>identifier: {{ alert.identifier }}</p>
+        <p>sender: {{ alert.sender }}</p>
+        <p>sent: {{ alert.sent }}</p>
+        <p>status: {{ alert.status }}</p>
+        <p>msg_type: {{ alert.msg_type }}</p>
+        <br><br>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No alerts are available.</p>
+{% endif %}
