@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<body>
+<h2>Hello {{ user.email }},</h2>
+
+<p>
+Here is your verification code to verify your new email address:
+</p>
+
+<p>
+<a href="{{ verification_token }}">{{ verification_token }}</a>
+</p>
+
+<p>
+If you did not request this email, you can ignore it.
+</p>
+
+<p>
+Best,<br>
+IFRC Alert hub
+</p>
+
+</body>
+</html>

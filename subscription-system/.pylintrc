@@ -1,0 +1,18 @@
+[MASTER]
+ignore=migrations
+
+disable=
+    C0114, # missing-module-docstring
+    C0115, # missing-class-docstring
+    C0116, # missing-function-docstring
+    R0903, # too-few-public-methods
+    R0913, # too-many-arguments
+    W0613, # unused-argument
+    W0201, # attribute-defined-outside-init
+    C0415, # import-outside-toplevel
+    W1201, # logging-not-lazy
+    R1722, # consider-using-sys-exit
+    W0246, # useless-parent-delegation
+    W1514, # unspecified-encoding
+    W0718, # broad-exception-caught
+    R0401, # cyclic-import

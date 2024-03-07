@@ -1,0 +1,18 @@
+version: '3'
+
+services:
+  master:
+    image: mylocustimage
+    ports:
+     - "8089:8089"
+    volumes:
+      - ./:/mnt/locust
+    command: -f /mnt/locust/locustfile_get_subscription_alerts.py --master -H http://master:8089
+
+  worker:
+    image: mylocustimage
+    volumes:
+      - ./:/mnt/locust
+    command: -f /mnt/locust/locustfile_get_subscription_alerts.py --worker --master-host master
+    depends_on:
+      - master

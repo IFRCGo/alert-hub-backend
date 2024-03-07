@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>[IFRC] New alert update from your subscriptions</title>
+    <style>
+        .field-style {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+<h2>Alert Update: Please visit your alert subscriptions to view details.</h2>
+
+<p>There are <span class="field-style">{{ count }}</span> new alerts matching your subscription
+    <span class="field-style">'{{ title }}'</span>.</p>
+<p>You can view this update by clicking <a href="{{ viewer_link }}">here</a>.</p>
+
+{% if alerts %}
+    <h2>Alert Summary</h2>
+    <ul style="list-style-type: none;">
+        {% for alert in alerts %}
+            <div style="margin-bottom: 20px;">
+                • Event: {{ alert.event }} <br>
+                • Country: {{ alert.country_name }} <br>
+                • Admin level1s: {{ alert.admin1s|join:", " }}<br>
+                • Sent Time: {{ alert.sent }}
+            </div>
+        {% endfor %}
+    </ul>
+{% endif %}
+
+</body>
+</html>
