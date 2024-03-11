@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 """
 import os
 from pathlib import Path
-
+from datetime import timedelta
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -35,8 +35,6 @@ if 'CODESPACE_NAME' in os.environ:
 
 INSTALLED_APPS = [
     # Native
-    'django_celery_results',
-    'django_celery_beat',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -44,11 +42,17 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     # External
+    'django_celery_results',
+    'django_celery_beat',
     'django_extensions',
+    'graphene_django',
     'corsheaders',
     'storages'
     # Internal
-    'apps.cap_feed.apps.CapFeedConfig',
+    'apps.user',
+    'apps.cap_feed',
+    'apps.subscription',
+    'apps.subscription_manager',
 ]
 
 MIDDLEWARE = [
@@ -61,6 +65,12 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'corsheaders.middleware.CorsMiddleware'
 ]
+
+AUTHENTICATION_BACKENDS = [
+    "django.contrib.auth.backends.ModelBackend",
+    "graphql_jwt.backends.JSONWebTokenBackend",
+]
+
 
 ROOT_URLCONF = 'main.urls'
 
@@ -141,7 +151,6 @@ USE_I18N = True
 USE_TZ = True
 
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.0/howto/static-files/
 
@@ -159,6 +168,10 @@ result_backend = 'django-db'
 cache_backend = 'django-cache'
 CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 
+CORS_ORIGIN_ALLOW_ALL = True
+
+CORS_ALLOW_CREDENTIALS = True
+
 CORS_ALLOWED_ORIGINS = [
 "http://localhost:3000",
 "http://localhost:8000",
@@ -175,3 +188,33 @@ CACHES = {
         }
     }
 }
+
+# Email - SMTP Settings
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_USE_TLS = True
+EMAIL_HOST = os.environ.get('EMAIL_HOST')
+EMAIL_PORT = os.environ.get('EMAIL_PORT', 587)
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL')
+
+# Graphql
+GRAPHENE = {
+    "SCHEMA": "main.schema.schema",
+    "MIDDLEWARE": [
+        "graphql_jwt.middleware.JSONWebTokenMiddleware",
+    ],
+}
+
+GRAPHQL_JWT = {
+    "JWT_PAYLOAD_HANDLER": "user.utils.jwt_payload",
+    "JWT_DECODE_HANDLER": "user.utils.jwt_decode",
+    "JWT_HIDE_TOKEN_FIELDS": True,
+    "JWT_VERIFY_EXPIRATION": True,
+    "JWT_EXPIRATION_DELTA": timedelta(days=30),
+    "JWT_REFRESH_EXPIRATION_DELTA": timedelta(days=30),
+    "JWT_COOKIE_SAMESITE": "None",
+    "JWT_COOKIE_SECURE": True,
+}
+
+# TODO: Add logging for DEVELOPMENT & PROD

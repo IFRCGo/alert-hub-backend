@@ -424,6 +424,3 @@ class Mutation(graphene.ObjectType):
     reset_email_confirm = ResetEmailConfirm.Field()
     send_new_verify_email = SendNewVerifyEmail.Field()
     new_email_confirm = NewEmailConfirm.Field()
-
-
-schema = graphene.Schema(query=Query, mutation=Mutation)

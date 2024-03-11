@@ -53,7 +53,7 @@ INSTALLED_APPS = [
     'graphene_django',
     'django_celery_results',
     'django_celery_beat',
-    "corsheaders",
+    'corsheaders',
     'health_check',
     'dbbackup',
 ]
@@ -73,14 +73,14 @@ MIDDLEWARE = [
 ]
 
 AUTHENTICATION_BACKENDS = [
-    "django.contrib.auth.backends.ModelBackend",
-    "graphql_jwt.backends.JSONWebTokenBackend",
+    'django.contrib.auth.backends.ModelBackend',
+    'graphql_jwt.backends.JSONWebTokenBackend',
 ]
 
 GRAPHENE = {
-    "SCHEMA": "user_dir.schema.schema",
-    "MIDDLEWARE": [
-        "graphql_jwt.middleware.JSONWebTokenMiddleware",
+    'SCHEMA': 'user_dir.schema.schema',
+    'MIDDLEWARE': [
+        'graphql_jwt.middleware.JSONWebTokenMiddleware',
     ],
 }
 
@@ -142,7 +142,7 @@ DATABASES = {
 
 DATABASE_ROUTERS = ['DBRouter.AlertDBRouter']
 
-if "Test_Environment" in os.environ and os.environ["Test_Environment"] == 'True':
+if 'Test_Environment' in os.environ and os.environ['Test_Environment'] == 'True':
     DATABASE_ROUTERS = ['TestDBRouter.TestDBRouter']
 
 if os.environ.get('GITHUB_WORKFLOW'):
@@ -196,9 +196,9 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-AUTH_USER_MODEL = 'user_dir.CustomUser'
+AUTH_USER_MODEL = 'apps.user.CustomUser'
 
-CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL")
+CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL')
 CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_TASK_SERIALIZER = 'json'
 
@@ -209,7 +209,7 @@ CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 # SMTP Settings
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_USE_TLS = True
-EMAIL_HOST = "smtp.gmail.com"
+EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_HOST_USER = 'alerthubsystem@gmail.com'
 EMAIL_HOST_PASSWORD = 'wpyffoymvnwfrkox'
@@ -218,7 +218,7 @@ DEFAULT_FROM_EMAIL = 'IFRC Alert Hub'
 CACHES = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': os.environ.get("REDIS_URL"),
+        'LOCATION': os.environ.get('REDIS_URL'),
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
         }
@@ -230,14 +230,14 @@ CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
 
 GRAPHQL_JWT = {
-    "JWT_PAYLOAD_HANDLER": "user_dir.utils.jwt_payload",
-    "JWT_DECODE_HANDLER": "user_dir.utils.jwt_decode",
-    "JWT_HIDE_TOKEN_FIELDS": True,
-    "JWT_VERIFY_EXPIRATION": True,
-    "JWT_EXPIRATION_DELTA": timedelta(days=30),
-    "JWT_REFRESH_EXPIRATION_DELTA": timedelta(days=30),
-    "JWT_COOKIE_SAMESITE": "None",
-    "JWT_COOKIE_SECURE": True,
+    'JWT_PAYLOAD_HANDLER': 'user_dir.utils.jwt_payload',
+    'JWT_DECODE_HANDLER': 'user_dir.utils.jwt_decode',
+    'JWT_HIDE_TOKEN_FIELDS': True,
+    'JWT_VERIFY_EXPIRATION': True,
+    'JWT_EXPIRATION_DELTA': timedelta(days=30),
+    'JWT_REFRESH_EXPIRATION_DELTA': timedelta(days=30),
+    'JWT_COOKIE_SAMESITE': 'None',
+    'JWT_COOKIE_SECURE': True,
 }
 
 LOGGING = {

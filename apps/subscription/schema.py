@@ -244,6 +244,3 @@ class Query(graphene.ObjectType):
 
     def resolve_get_subscription(self, info, subscription_id):
         return Subscription.objects.get(id=subscription_id)
-
-
-schema = graphene.Schema(query=Query, mutation=Mutation)
