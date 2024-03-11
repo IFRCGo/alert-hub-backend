@@ -1,5 +1,5 @@
 """
-ASGI config for capaggregator project.
+ASGI config for main project.
 
 It exposes the ASGI callable as a module-level variable named ``application``.
 
@@ -15,9 +15,9 @@ from dotenv import load_dotenv
 
 if 'WEBSITE_HOSTNAME' not in os.environ:
     load_dotenv(".env")
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'capaggregator.settings')
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'main.settings')
 else:
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'capaggregator.production')
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'main.production')
 
 # Initialize Django ASGI application early to ensure the AppRegistry
 # is populated before importing code that may import ORM models.

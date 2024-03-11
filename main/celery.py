@@ -11,10 +11,10 @@ from kombu import Queue
 if 'WEBSITE_HOSTNAME' not in os.environ:
     load_dotenv(".env")
     # Set the default Django settings module for the 'celery' program.
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'capaggregator.settings')
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'main.settings')
 else:
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'capaggregator.production')
-app = Celery('capaggregator')
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'main.production')
+app = Celery('main')
 
 app.conf.beat_schedule = {
     'remove_expired_alerts':{

@@ -22,8 +22,8 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware'
 ]
 
-DEFAULT_FILE_STORAGE = 'capaggregator.azure_storage.AzureMediaStorage'
-STATICFILES_STORAGE = 'capaggregator.azure_storage.AzureStaticStorage'
+DEFAULT_FILE_STORAGE = 'main.azure_storage.AzureMediaStorage'
+STATICFILES_STORAGE = 'main.azure_storage.AzureStaticStorage'
 
 AZURE_ACCOUNT_NAME = os.getenv('AZURE_ACCOUNT_NAME')
 AZURE_ACCOUNT_KEY = os.getenv('AZURE_ACCOUNT_KEY')

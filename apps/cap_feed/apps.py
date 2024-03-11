@@ -22,20 +22,20 @@ def delete_feed(sender, instance, *args, **kwargs):
     remove_task(instance)
 
 def notify_incoming_alert_for_subscription(sender, instance, *args, **kwargs):
-    from capaggregator.celery import app
+    from main.celery import app
     if instance.all_info_are_added():
         app.send_task('subscription_manager_dir.tasks.get_incoming_alert', args=[],
                       kwargs={'alert_id': instance.id}, queue='subscription_manager',
                       routing_key='subscription_manager.#', exchange='subscription_manager')
 
 def notify_removed_alert_for_subscription(sender, instance, *args, **kwargs):
-    from capaggregator.celery import app
+    from main.celery import app
     app.send_task('subscription_manager_dir.tasks.get_removed_alert', args=[],
                   kwargs={'alert_id': instance.id}, queue='subscription_manager',
                   routing_key='subscription_manager.#', exchange='subscription_manager')
 
 def update_cache_instructions(sender, instance, *args, **kwargs):
-    from capaggregator.celery import app
+    from main.celery import app
     if instance.all_info_are_added():
         alert_data = {'country_id': instance.country.id}
         app.send_task('cache.tasks.update_cache_instructions', args=[], kwargs=alert_data, queue='cache', routing_key='cache.#', exchange='cache')

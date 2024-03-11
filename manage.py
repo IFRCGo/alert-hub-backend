@@ -17,11 +17,11 @@ def main():
 
     # When running on Azure App Service you should use the production settings.
     if 'WEBSITE_HOSTNAME' in os.environ:
-        settings_module = "capaggregator.production"
+        settings_module = "main.production"
     elif 'test' in sys.argv:
-        settings_module = "capaggregator.testing"
+        settings_module = "main.testing"
     else:
-        settings_module = "capaggregator.settings"
+        settings_module = "main.settings"
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', settings_module)
 
     try:

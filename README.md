@@ -156,13 +156,13 @@ The CAP Aggregator provides a single route for rebroadcasters to directly fetch 
 12. Start Celery workers and the scheduler.  
     Windows:
     ```
-    celery -A capaggregator worker -l info --pool=solo
-    celery -A capaggregator beat -l info
+    celery -A main worker -l info --pool=solo
+    celery -A main beat -l info
     ```
     Linux: (-c [concurrent workers])
     ```
-    celery -A capaggregator worker -l info -c 4
-    celery -A capaggregator beat -l info
+    celery -A main worker -l info -c 4
+    celery -A main beat -l info
     ```
 13. Alerts are now being aggregated!  
     Check the index page or feed facade for alert entries.
@@ -229,16 +229,16 @@ Use the SSH console to interact with Celery services and create admin users for 
 
 Configure number of celery workers in startup.sh according to available core count. For example, '2' for low spec virtual machine, '12' for high spec local machine.
 ```
-celery -A capaggregator worker -l info -c 2
+celery -A main worker -l info -c 2
 ```
 
 Inspect active workers
 ```
-celery -A capaggregator inspect active
+celery -A main inspect active
 ```
 
 Start celery worker and scheduler on deployment:
 ```
-celery multi start w1 -A capaggregator -l info
-celery -A capaggregator beat --detach -l info
+celery multi start w1 -A main -l info
+celery -A main beat --detach -l info
 ```

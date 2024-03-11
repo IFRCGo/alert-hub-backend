@@ -43,7 +43,7 @@ jobs:
             flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
         - name: Make sure Python code is all compilable
           run: |
-            python -m compileall capaggregator -f
+            python -m compileall main -f
             python -m compileall cap_feed -f
         - name: Run Django server
           run: |

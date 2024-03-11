@@ -11,7 +11,7 @@ from .models import Continent, Region, Country, Admin1, Feed, LanguageInfo
 def inject_geographical_data():
     inject_path = None
     if 'WEBSITE_HOSTNAME' in os.environ:
-        from capaggregator.production import MEDIA_URL
+        from main.production import MEDIA_URL
         inject_path = MEDIA_URL
 
     if Continent.objects.count() == 0:
