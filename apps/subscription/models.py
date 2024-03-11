@@ -23,7 +23,7 @@ class Subscription(models.Model):
         return alerts_list
 
     def save(self, *args, force_insert=False, force_update=False, **kwargs):
-        from subscription_manager_dir.tasks import subscription_mapper
+        from apps.subscription_manager.tasks import subscription_mapper
         from django.core.cache import cache
         super().save(force_insert, force_update, *args, **kwargs)
         #Add the subscription id as a view lock, so user will not view the subscription during

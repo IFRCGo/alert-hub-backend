@@ -1,0 +1,111 @@
+version: '3.2'
+
+x-server: &base_server_setup
+  build:
+    context: ./
+  # To attach to container with stdin `docker attach <container_name>`
+  # Used for python debugging.
+  stdin_open: true
+  tty: true
+  extra_hosts:
+    - 'host.docker.internal:host-gateway'
+  env_file:
+    - .env
+  environment: &base_server_setup_environment
+    DJANGO_APP_TYPE: web
+    DJANGO_DEBUG: ${true:-DJANGO_DEBUG}
+    DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY?error},
+    DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-*}
+    # Database config
+    DB_HOST: ${DB_HOST:-db}
+    DB_PORT: ${DB_PORT:-5432}
+    DB_NAME: ${DB_NAME:-postgres}
+    DB_USER: ${DB_USER:-postgres}
+    DB_PASSWORD: ${DB_PASSWORD:-postgres}
+    # Redis config
+    CELERY_BROKER_URL: ${CELERY_BROKER_URL:-redis://redis:6379/0}
+    CACHE_REDIS_URL: ${CACHE_REDIS_URL:-redis://redis:6379/1}
+    # Email config
+    EMAIL_HOST: ${EMAIL_HOST:-mailpit}
+    EMAIL_PORT: ${EMAIL_PORT:-1025}
+    EMAIL_HOST_USER: ${EMAIL_HOST_USER:-mailpit}
+    EMAIL_HOST_PASSWORD: ${EMAIL_HOST_PASSWORD:-mailpit}
+    DEFAULT_FROM_EMAIL: ${DEFAULT_FROM_EMAIL:-alert-hub-dev <info@alert-hub.ifrc.org>}
+  volumes:
+    - ./:/code
+    - ipython_data_local:/root/.ipython/profile_default   # persist ipython data, including ipython history
+  depends_on:
+    - db
+    - redis
+
+
+x-worker: &base_worker_setup
+    <<: *base_server_setup
+    environment:
+      <<: *base_server_setup_environment
+      APP_TYPE: worker
+    healthcheck:
+      test: ["CMD-SHELL", "celery -A main inspect ping -d celery@$$HOSTNAME || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+
+services:
+  db:
+    image: postgis/postgis:13-3.1-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    volumes:
+      - postgres-data13:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:6-alpine
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mailpit:
+    image: axllent/mailpit
+    ports:
+      - 127.0.0.1:8025:8025 # HTTP
+    environment:
+      MP_MAX_MESSAGES: 5000
+      MP_DATA_FILE: /data/mailpit.db
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
+    volumes:
+      - mailpit-data:/data
+
+  web:
+    <<: *base_server_setup
+    command: bash -c 'wait-for-it $$DB_HOST:$$DB_PORT && ./manage.py runserver 0.0.0.0:8000'
+    ports:
+      - 127.0.0.1:8000:8000
+
+  worker:
+    <<: *base_worker_setup
+    command: bash -c 'celery -A alertmanager worker -l info --pool=solo'
+
+  worker-beat:
+    <<: *base_worker_setup
+    command: bash -c 'celery -A alertmanager beat -l info'
+
+
+volumes:
+  postgres-data13:
+  redis-data:
+  ipython_data_local:
+  mailpit-data:

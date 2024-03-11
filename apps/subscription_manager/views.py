@@ -2,7 +2,7 @@ import json
 
 from django.http import HttpResponse
 from django.core.cache import cache
-from subscription_dir.models import Subscription
+from apps.subscription.models import Subscription
 from .subscription_alert_mapping import get_subscription_alerts_without_mapping_records
 def get_subscirption_alerts(request, subscription_id):
     try:

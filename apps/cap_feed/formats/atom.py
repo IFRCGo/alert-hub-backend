@@ -1,10 +1,9 @@
 import requests
 import xml.etree.ElementTree as ET
 
-from cap_feed.models import Alert, ProcessedAlert
-from cap_feed.formats.cap_xml import get_alert
-from cap_feed.formats.utils import log_requestexception, log_attributeerror, log_valueerror
-
+from apps.cap_feed.models import Alert, ProcessedAlert
+from .cap_xml import get_alert
+from .utils import log_requestexception, log_attributeerror, log_valueerror
 
 
 # processing for atom format, example: https://feeds.meteoalarm.org/feeds/meteoalarm-legacy-atom-france
@@ -40,5 +39,4 @@ def get_alerts_atom(feed, ns):
             log_valueerror(feed, e, url)
         else:
             valid_poll = True
-    
     return alert_urls, polled_alerts_count, valid_poll

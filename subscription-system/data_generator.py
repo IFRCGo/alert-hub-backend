@@ -12,8 +12,8 @@ import random
 
 from django.db import IntegrityError, transaction
 from django.contrib.auth import get_user_model
-from subscription_dir.models import Subscription
-from subscription_manager_dir.external_alert_models import CapFeedCountry, CapFeedAdmin1
+from apps.subscription.models import Subscription
+from apps.subscription_manager.external_alert_models import CapFeedCountry, CapFeedAdmin1
 
 fake = Faker()
 User = get_user_model()

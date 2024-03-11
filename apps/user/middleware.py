@@ -14,7 +14,7 @@ from django.contrib.sessions.middleware import (
 from django.http import JsonResponse
 from graphql_jwt.settings import jwt_settings
 
-from user_dir.utils import InvalidJwtIdError
+from apps.user.utils import InvalidJwtIdError
 
 
 class _GraphqlDisabledMiddlewareMixin:

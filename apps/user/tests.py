@@ -95,7 +95,7 @@ class APITestCaseWithoutJWT(GraphQLTestCase):
 
     @patch('django.core.cache.cache.set')
     @patch('django.core.cache.cache.get')
-    @patch('user_dir.tasks.send_email.delay',
+    @patch('user.tasks.send_email.delay',
            side_effect=lambda email, subject, template, context: None)
     def test_register_mutation(self, mock_cache_set, mock_cache_get, mock_send_email):
         # Create a temporary "cache"
@@ -161,7 +161,7 @@ class APITestCaseWithoutJWT(GraphQLTestCase):
         self.assertFalse(content['data']['register']['success'])
         self.assertEqual(content['data']['register']['errors']['email'], 'Email already exists.')
 
-    @patch('user_dir.tasks.send_email.delay',
+    @patch('user.tasks.send_email.delay',
            side_effect=lambda email, subject, template, context: None)
     def test_send_verify_email_mutation(self, mock_send_email):
         # Test successful sending of verification email
@@ -226,7 +226,7 @@ class APITestCaseWithoutJWT(GraphQLTestCase):
         self.assertResponseNoErrors(response)
         self.assertTrue(content['data']['resetPassword']['success'])
 
-    @patch('user_dir.tasks.send_email.delay',
+    @patch('user.tasks.send_email.delay',
            side_effect=lambda email, subject, template, context: None)
     def test_reset_password_confirm_mutation(self, mock_send_email):
         # Create a user
@@ -291,7 +291,7 @@ class TestEmailChange(GraphQLTestCase):
         # Log in the user
         self.client.login(email='test@example.com', password='testpassword')
 
-    @patch('user_dir.tasks.send_email.delay',
+    @patch('user.tasks.send_email.delay',
            side_effect=lambda email, subject, template, context: None)
     @patch('django.core.cache.cache.set')
     @patch('django.core.cache.cache.get')
@@ -398,8 +398,8 @@ class UtilsTest(TestCase):
         self.assertEqual(payload['email'], self.user.email)
         self.assertEqual(payload['jti'], self.user.jti)
 
-    @patch('user_dir.utils.graphql_jwt_decode')
-    @patch('user_dir.utils.get_user_by_payload')
+    @patch('user.utils.graphql_jwt_decode')
+    @patch('user.utils.get_user_by_payload')
     def test_jwt_decode(self, mock_get_user_by_payload, mock_graphql_jwt_decode):
         # Set up the mock functions
         mock_get_user_by_payload.return_value = self.user

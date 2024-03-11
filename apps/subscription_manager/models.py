@@ -1,6 +1,6 @@
 # These files are used for storing required models of subscriptions and their correlated alerts
 from django.db import models
-from subscription_dir.models import Subscription
+from apps.subscription.models import Subscription
 
 
 class Alert(models.Model):

@@ -6,7 +6,7 @@ from django.apps import AppConfig
 
 class SubscriptionManagerConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'subscription_manager_dir'
+    name = 'apps.subscription_manager'
 
     def ready(self):
         if ('WEBSITE_HOSTNAME' in os.environ and 'migrate' not in sys.argv and 'collectstatic'

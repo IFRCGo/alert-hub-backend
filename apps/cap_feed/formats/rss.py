@@ -1,10 +1,9 @@
 import requests
 import xml.etree.ElementTree as ET
 
-from cap_feed.models import Alert, ProcessedAlert
-from cap_feed.formats.cap_xml import get_alert
-from cap_feed.formats.utils import log_requestexception, log_attributeerror, log_valueerror
-
+from apps.cap_feed.models import Alert, ProcessedAlert
+from apps.cap_feed.formats.cap_xml import get_alert
+from apps.cap_feed.formats.utils import log_requestexception, log_attributeerror, log_valueerror
 
 
 # processing for rss format, example: https://cap-sources.s3.amazonaws.com/mg-meteo-en/rss.xml

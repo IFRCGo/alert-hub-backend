@@ -15,7 +15,6 @@ from django.views.decorators.csrf import csrf_exempt
 
 from .models import CustomUser
 from .tasks import send_email
-from .utils import generate_jti
 
 
 class ErrorType(graphene.ObjectType):
@@ -120,16 +119,16 @@ class SendVerifyEmail(graphene.Mutation):
         return SendVerifyEmail(success=True)
 
 
-class ObtainJSONWebToken(graphql_jwt.JSONWebTokenMutation):
-    user = graphene.Field(UserType)
+# class ObtainJSONWebToken(graphql_jwt.JSONWebTokenMutation):
+#     user = graphene.Field(UserType)
 
-    @classmethod
-    def resolve(cls, root, info, **kwargs):
+#     @classmethod
+#     def resolve(cls, root, info, **kwargs):
 
-        info.context.user.jti = generate_jti()
-        info.context.user.save()
+#         info.context.user.jti = generate_jti()
+#         info.context.user.save()
 
-        return cls(user=info.context.user)
+#         return cls(user=info.context.user)
 
 
 class ResetEmail(graphene.Mutation):
@@ -411,7 +410,7 @@ class Mutation(graphene.ObjectType):
     register = Register.Field()
     send_verify_email = SendVerifyEmail.Field()
 
-    login = ObtainJSONWebToken.Field()
+    # login = ObtainJSONWebToken.Field()
     verify_token = graphql_jwt.Verify.Field()
     refresh_token = graphql_jwt.Refresh.Field()
     update_profile = UpdateProfile.Field()

@@ -1,15 +1,18 @@
 import json
-from cap_feed.models import Admin1, AlertAdmin1, Alert, AlertInfo, AlertInfoParameter, AlertInfoArea, AlertInfoAreaPolygon, AlertInfoAreaCircle, AlertInfoAreaGeocode, ProcessedAlert
 from django.utils import timezone
 from django.db import IntegrityError
-from cap_feed.formats.utils import convert_datetime, log_attributeerror, log_integrityerror, log_valueerror
 from shapely.geometry import Polygon, MultiPolygon
+
+from apps.cap_feed.models import Admin1, AlertAdmin1, Alert, AlertInfo, AlertInfoParameter, AlertInfoArea, AlertInfoAreaPolygon, AlertInfoAreaCircle, AlertInfoAreaGeocode, ProcessedAlert
+from apps.cap_feed.formats.utils import convert_datetime, log_attributeerror, log_integrityerror, log_valueerror
+
 
 def find_element(element, ns, tag):
     x = element.find(tag, ns)
     if x is not None and x.text:
         return x.text
     return None
+
 
 def get_alert(url, alert_root, feed, ns):
     try:
@@ -149,7 +152,7 @@ def get_alert(url, alert_root, feed, ns):
             alert.info_has_been_added()
             alert.save()
             return True
-    
+
     except AttributeError as e:
         log_attributeerror(feed, e, url)
     except IntegrityError as e:

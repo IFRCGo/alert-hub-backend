@@ -1,8 +1,7 @@
-from cap_feed.models import Alert
+from apps.cap_feed.models import Alert
 from .atom import get_alerts_atom
 from .rss import get_alerts_rss
 from .nws_us import get_alerts_nws_us
-
 
 
 def get_alerts(feed, all_alert_urls=set()):
@@ -13,9 +12,8 @@ def get_alerts(feed, all_alert_urls=set()):
     # track if poll was valid
     valid_poll = False
 
-    
     print(f'Processing feed: {feed}')
-    
+
     try:
         ns = {'atom': 'http://www.w3.org/2005/Atom', 'cap': 'urn:oasis:names:tc:emergency:cap:1.2'}
         match feed.format:

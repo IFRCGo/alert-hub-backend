@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand
-from subscription_manager_dir.subscription_alert_mapping import map_subscriptions_to_alert
+from apps.subscription_manager.subscription_alert_mapping import map_subscriptions_to_alert
 from django.core.cache import cache
 
 class Command(BaseCommand):

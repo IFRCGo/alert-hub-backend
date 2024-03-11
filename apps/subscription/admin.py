@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from subscription_manager_dir.models import SubscriptionAlerts
+from apps.subscription_manager.models import SubscriptionAlerts
 from .models import Subscription
 
 

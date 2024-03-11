@@ -5,7 +5,8 @@ from django.db.models.signals import post_delete, post_save, pre_delete
 
 class CapFeedConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'cap_feed'
+    name = 'apps.cap_feed'
+
     # Listen to the new registration event of feed
     def ready(self):
         Feed = self.get_model("Feed")
@@ -24,13 +25,13 @@ def delete_feed(sender, instance, *args, **kwargs):
 def notify_incoming_alert_for_subscription(sender, instance, *args, **kwargs):
     from main.celery import app
     if instance.all_info_are_added():
-        app.send_task('subscription_manager_dir.tasks.get_incoming_alert', args=[],
+        app.send_task('apps.subscription_manager.tasks.get_incoming_alert', args=[],
                       kwargs={'alert_id': instance.id}, queue='subscription_manager',
                       routing_key='subscription_manager.#', exchange='subscription_manager')
 
 def notify_removed_alert_for_subscription(sender, instance, *args, **kwargs):
     from main.celery import app
-    app.send_task('subscription_manager_dir.tasks.get_removed_alert', args=[],
+    app.send_task('apps.subscription_manager.tasks.get_removed_alert', args=[],
                   kwargs={'alert_id': instance.id}, queue='subscription_manager',
                   routing_key='subscription_manager.#', exchange='subscription_manager')
 

@@ -118,8 +118,8 @@ def initialise_task():
 
 @shared_task
 def subscription_mapper(subscription_id):
-    from subscription_dir.models import Subscription
-    from subscription_manager_dir.subscription_alert_mapping import map_subscription_to_alert
+    from apps.subscription.models import Subscription
+    from apps.subscription_manager.subscription_alert_mapping import map_subscription_to_alert
 
     try:
         map_subscription_to_alert(subscription_id)

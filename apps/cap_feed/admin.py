@@ -1,7 +1,6 @@
 from django.contrib import admin
 from .models import Alert, AlertInfo, AlertAdmin1, Continent, Region, Country, Admin1, LanguageInfo, Feed, FeedLog, ProcessedAlert
 from django_celery_beat.models import CrontabSchedule, ClockedSchedule, SolarSchedule, IntervalSchedule, PeriodicTask
-from django_celery_results.models import TaskResult, GroupResult
 
 class AlertInfoAreaGeocodeAdmin(admin.ModelAdmin):
     list_display = ["alert_info_area", "value_name", "value"]
@@ -108,8 +107,6 @@ admin.site.register(AlertAdmin1, AlertAdmin1Admin)
 admin.site.register(Feed, FeedAdmin)
 admin.site.register(FeedLog, FeedLogAdmin)
 
-admin.site.unregister(TaskResult)
-admin.site.unregister(GroupResult)
 admin.site.unregister(CrontabSchedule)
 admin.site.unregister(ClockedSchedule)
 admin.site.unregister(SolarSchedule)

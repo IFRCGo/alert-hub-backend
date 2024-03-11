@@ -2,7 +2,7 @@ from django.http import HttpResponse, JsonResponse
 from django.template import loader
 from .models import Alert, Feed, LanguageInfo
 
-from cap_feed.tasks import inject_data
+from apps.cap_feed.tasks import inject_data
 
 
 

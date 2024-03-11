@@ -1,7 +1,6 @@
 import pytz
 from datetime import datetime
-from cap_feed.models import FeedLog
-
+from apps.cap_feed.models import FeedLog
 
 
 # converts CAP1.2 iso format datetime string to datetime object in UTC timezone
@@ -9,6 +8,7 @@ def convert_datetime(original_datetime):
     if original_datetime is None:
         return None
     return datetime.fromisoformat(original_datetime).astimezone(pytz.timezone('UTC'))
+
 
 def log_requestexception(feed, e, url):
     log = FeedLog()
@@ -22,6 +22,7 @@ def log_requestexception(feed, e, url):
         log.alert_url = url
     log.save()
 
+
 def log_attributeerror(feed, e, url):
     log = FeedLog()
     log.feed = feed
@@ -33,6 +34,7 @@ def log_attributeerror(feed, e, url):
         log.alert_url = url
     log.save()
 
+
 def log_integrityerror(feed, e, url):
     log = FeedLog()
     log.feed = feed
@@ -43,6 +45,7 @@ def log_integrityerror(feed, e, url):
     + 'For example, the content of a <polygon> tag cannot be empty since the CAP aggregator expects valid data inside this optional tag if it is found.')
     log.alert_url = url
     log.save()
+
 
 def log_valueerror(feed, e, url):
     log = FeedLog()
