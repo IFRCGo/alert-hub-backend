@@ -31,7 +31,9 @@ pytest-django = "*"
 django-stubs = { version = "*", allow-prereleases = true }
 
 [tool.black]
+line-length = 125
 skip-string-normalization = true
+# NOTE: Update in .pre-commit-config.yaml as well
 extend-exclude = "(__pycache__|.*snap_test_.*\\.py|.+\\/.+\\/migrations\\/.*)"
 
 [tool.isort]
