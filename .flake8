@@ -1,7 +1,8 @@
 [flake8]
 ignore = C901, W504
 max-line-length = 125
-exclude = .git,__pycache__,old,build,dist,*/migrations/*.py,subscription-system,alert-manager,.venv
+# NOTE: Update in .pre-commit-config.yaml as well
+exclude = .git,__pycache__,old,build,dist,*/migrations/*.py,legacy/,.venv
 max-complexity = 10
 per-file-ignores =
     /**/tests/*_mock_data.py: E501

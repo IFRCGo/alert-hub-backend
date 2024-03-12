@@ -18,6 +18,9 @@ repos:
     rev: 7.0.0
     hooks:
       - id: flake8
+        args: ["--config", ".flake8"]
+        # NOTE: Update in .flake8 as well
+        exclude: ^(\.git|__pycache__|old|build|dist|.+/migrations/.+.py|legacy|\.venv)
 
   # - repo: https://github.com/RobertCraigie/pyright-python
   #   rev: v1.1.353
