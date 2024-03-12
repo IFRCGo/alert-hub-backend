@@ -38,27 +38,30 @@ def send_subscription_email(self, user_id, subject, template_name, context=None)
 
 @shared_task
 def process_immediate_alerts(subscription_id):
-    from .models import Subscription, SubscriptionAlerts
+    from .models import (
+        # Subscription,
+        SubscriptionAlerts,
+    )
 
-    subscription = Subscription.objects.get(id=subscription_id)
+    # subscription = Subscription.objects.get(id=subscription_id)
 
-    subscription_name = subscription.subscription_name
-    user_id = subscription.user_id  # pylint: disable=W0612
+    # subscription_name = subscription.subscription_name
+    # user_id = subscription.user_id  # pylint: disable=W0612
 
     related_alerts = SubscriptionAlerts.objects.filter(subscription=subscription_id, sent=False)
 
     if not related_alerts:
         return
 
-    related_alerts_count = related_alerts.count()
+    # related_alerts_count = related_alerts.count()
 
-    viewer_link = "https://alert-hub-frontend.azurewebsites.net/account/subscription"
+    # viewer_link = "https://alert-hub-frontend.azurewebsites.net/account/subscription"
 
-    context = {  # pylint: disable=W0612
-        'title': subscription_name,
-        'count': related_alerts_count,
-        'viewer_link': viewer_link,
-    }
+    # context = {  # pylint: disable=W0612
+    #     'title': subscription_name,
+    #     'count': related_alerts_count,
+    #     'viewer_link': viewer_link,
+    # }
 
     # send_subscription_email.delay(user_id, 'New Alerts Matching Your Subscription',
     #                               'subscription_email.html', context)
@@ -74,23 +77,23 @@ def process_non_immediate_alerts(sent_flag):
 
     for subscription in subscriptions:
         subscription_id = subscription.id
-        subscription_name = subscription.subscription_name
-        user_id = subscription.user_id  # pylint: disable=W0612
+        # subscription_name = subscription.subscription_name
+        # user_id = subscription.user_id  # pylint: disable=W0612
 
         related_alerts = SubscriptionAlerts.objects.filter(subscription=subscription_id, sent=False)
 
         if not related_alerts:
             continue
 
-        related_alerts_count = related_alerts.count()
+        # related_alerts_count = related_alerts.count()
 
-        viewer_link = "https://alert-hub-frontend.azurewebsites.net/account/subscription"
+        # viewer_link = "https://alert-hub-frontend.azurewebsites.net/account/subscription"
 
-        context = {  # pylint: disable=W0612
-            'title': subscription_name,
-            'count': related_alerts_count,
-            'viewer_link': viewer_link,
-        }
+        # context = {  # pylint: disable=W0612
+        #     'title': subscription_name,
+        #     'count': related_alerts_count,
+        #     'viewer_link': viewer_link,
+        # }
 
         # send_subscription_email.delay(user_id, 'New Alerts Matching Your Subscription',
         #                               'subscription_email.html', context)

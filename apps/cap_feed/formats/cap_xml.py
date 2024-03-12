@@ -3,8 +3,19 @@ from django.utils import timezone
 from django.db import IntegrityError
 from shapely.geometry import Polygon, MultiPolygon
 
-from apps.cap_feed.models import Admin1, AlertAdmin1, Alert, AlertInfo, AlertInfoParameter, AlertInfoArea, AlertInfoAreaPolygon, AlertInfoAreaCircle, AlertInfoAreaGeocode, ProcessedAlert
 from apps.cap_feed.formats.utils import convert_datetime, log_attributeerror, log_integrityerror, log_valueerror
+from apps.cap_feed.models import (
+    Admin1,
+    AlertAdmin1,
+    Alert,
+    AlertInfo,
+    AlertInfoParameter,
+    AlertInfoArea,
+    AlertInfoAreaPolygon,
+    AlertInfoAreaCircle,
+    AlertInfoAreaGeocode,
+    ProcessedAlert,
+)
 
 
 def find_element(element, ns, tag):
@@ -15,6 +26,7 @@ def find_element(element, ns, tag):
 
 
 def get_alert(url, alert_root, feed, ns):
+    alert = None
     try:
         # register alert
         alert = Alert()
@@ -95,13 +107,27 @@ def get_alert(url, alert_root, feed, ns):
                         alert_info_area_polygon.alert_info_area = alert_info_area
                         alert_info_area_polygon.value = alert_info_area_polygon_entry.text
                         alert_info_area_polygon.save()
-                        points = [point.split(',') for point in alert_info_area_polygon_entry.text.strip().split(' ')]
-                        polygons.append(Polygon([[point[1],point[0]] for point in points]))
+                        points = [
+                            point.split(',')
+                            for point in alert_info_area_polygon_entry.text.strip().split(' ')
+                        ]
+                        polygons.append(
+                            Polygon([
+                                [point[1], point[0]]
+                                for point in points
+                            ])
+                        )
 
                 # check polygon intersection with admin1s
                 for polygon in polygons:
                     (min_longitude, min_latitude, max_longitude, max_latitude) = polygon.bounds
-                    possible_admin1s = Admin1.objects.filter(country = alert.country, min_longitude__lte=max_longitude, max_longitude__gte=min_longitude, min_latitude__lte=max_latitude, max_latitude__gte=min_latitude)
+                    possible_admin1s = Admin1.objects.filter(
+                        country=alert.country,
+                        min_longitude__lte=max_longitude,
+                        max_longitude__gte=min_longitude,
+                        min_latitude__lte=max_latitude,
+                        max_latitude__gte=min_latitude,
+                    )
                     for admin1 in possible_admin1s:
                         admin1_polygon = None
                         if admin1.polygon:
@@ -116,7 +142,7 @@ def get_alert(url, alert_root, feed, ns):
                         else:
                             continue
                         if admin1_polygon.intersects(polygon):
-                            if AlertAdmin1.objects.filter(alert = alert, admin1 = admin1).exists():
+                            if AlertAdmin1.objects.filter(alert=alert, admin1=admin1).exists():
                                 continue
                             alert_admin1 = AlertAdmin1()
                             alert_admin1.alert = alert
@@ -141,7 +167,7 @@ def get_alert(url, alert_root, feed, ns):
 
         if alert_has_valid_info:
             if not alert_matched_admin1:
-                unknown_admin1 = Admin1.objects.filter(country = alert.country, name = 'Unknown').first()
+                unknown_admin1 = Admin1.objects.filter(country=alert.country, name='Unknown').first()
                 if unknown_admin1:
                     alert_admin1 = AlertAdmin1()
                     alert_admin1.alert = alert
@@ -156,14 +182,15 @@ def get_alert(url, alert_root, feed, ns):
     except AttributeError as e:
         log_attributeerror(feed, e, url)
     except IntegrityError as e:
-        if not 'duplicate key value' in str(e):
+        if 'duplicate key value' not in str(e):
             log_integrityerror(feed, e, url)
     except ValueError as e:
         log_valueerror(feed, e, url)
     finally:
-        processed_alert = ProcessedAlert()
-        processed_alert.url = alert.url
-        processed_alert.feed = alert.feed
-        processed_alert.save()
+        if alert is not None:
+            processed_alert = ProcessedAlert()
+            processed_alert.url = alert.url
+            processed_alert.feed = alert.feed
+            processed_alert.save()
 
     return False

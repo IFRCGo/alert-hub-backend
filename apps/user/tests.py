@@ -48,7 +48,7 @@ class APITestCaseWithJWT(GraphQLTestCase):
         response = self.query(
             '''
             mutation {
-                updateProfile(firstName: "NewFirstName", lastName: "NewLastName", 
+                updateProfile(firstName: "NewFirstName", lastName: "NewLastName",
                               country: "NewCountry", city: "NewCity", avatar: "NewAvatar") {
                     success
                     errors {
@@ -105,7 +105,7 @@ class APITestCaseWithoutJWT(GraphQLTestCase):
         mock_cache_get.side_effect = lambda key: cache.get(key, None)
 
         response = self.query(
-            '''mutation { register(email: "newuser@example.com", password: "newpassword", 
+            '''mutation { register(email: "newuser@example.com", password: "newpassword",
             verifyCode: "123456") { success errors { email verifyCode } } }'''
         )
         content = json.loads(response.content)
@@ -127,7 +127,7 @@ class APITestCaseWithoutJWT(GraphQLTestCase):
 
         # Test the register mutation with wrong code
         response = self.query(
-            '''mutation { register(email: "newuser@example.com", password: "newpassword", 
+            '''mutation { register(email: "newuser@example.com", password: "newpassword",
             verifyCode: "1234") { success errors { email verifyCode } } }'''
         )
         content = json.loads(response.content)
@@ -140,7 +140,7 @@ class APITestCaseWithoutJWT(GraphQLTestCase):
 
         # Test the register mutation
         response = self.query(
-            '''mutation { register(email: "newuser@example.com", password: "newpassword", 
+            '''mutation { register(email: "newuser@example.com", password: "newpassword",
             verifyCode: "123456") { success errors { email verifyCode } } }'''
         )
         content = json.loads(response.content)
@@ -152,7 +152,7 @@ class APITestCaseWithoutJWT(GraphQLTestCase):
 
         # Test registration with existing email
         response = self.query(
-            '''mutation { register(email: "newuser@example.com", password: "newpassword", 
+            '''mutation { register(email: "newuser@example.com", password: "newpassword",
             verifyCode: "123456") { success errors { email verifyCode } } }'''
         )
         content = json.loads(response.content)
@@ -262,7 +262,11 @@ class APITestCaseWithoutJWT(GraphQLTestCase):
         response = self.client.post(self.GRAPHQL_URL, {
             'query': f'''
                 mutation {{
-                    resetPasswordConfirm(email: "newuser@example.com", password: "newpassword", verifyCode: "{user.password_reset_token}") {{
+                    resetPasswordConfirm(
+                    email: "newuser@example.com",
+                    password: "newpassword",
+                    verifyCode: "{user.password_reset_token}"
+                ) {{
                         success
                         errors {{
                             verifyCode

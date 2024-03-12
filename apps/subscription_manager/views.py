@@ -4,6 +4,8 @@ from django.http import HttpResponse
 from django.core.cache import cache
 from apps.subscription.models import Subscription
 from .subscription_alert_mapping import get_subscription_alerts_without_mapping_records
+
+
 def get_subscirption_alerts(request, subscription_id):
     try:
         # Try to acquire the lock without waiting. If there is a lock, it means subscription is
@@ -18,11 +20,11 @@ def get_subscirption_alerts(request, subscription_id):
 
     alert_list = subscription.get_alert_id_list()
 
-    #if len(alert_list) == 0:
+    # if len(alert_list) == 0:
     #    return HttpResponse("[]", status=200)
 
     result = json.dumps(alert_list)
-    return HttpResponse(result,status=200)
+    return HttpResponse(result, status=200)
 
 
 def get_subscription_alerts_in_real_time(request, subscription_id):

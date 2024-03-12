@@ -18,4 +18,4 @@ class SubscriptionAdmin(admin.ModelAdmin):
 
 
 # Register your models here.
-admin.site.register(Subscription)#, SubscriptionAdmin)
+admin.site.register(Subscription)  # , SubscriptionAdmin)

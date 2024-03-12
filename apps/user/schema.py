@@ -319,13 +319,13 @@ class Logout(graphene.Mutation):
                 errors = ErrorType(user="User not authenticated.")
                 return cls(success=False, errors=errors)
 
-            user.jti = generate_jti()
+            # user.jti = generate_jti()
             user.save()
 
             context = info.context
             context.delete_jwt_cookie = (
-                    jwt_settings.JWT_COOKIE_NAME in context.COOKIES
-                    and getattr(context, "jwt_cookie", False)
+                jwt_settings.JWT_COOKIE_NAME in context.COOKIES and
+                getattr(context, "jwt_cookie", False)
             )
             info.context.user.should_logout = True
 

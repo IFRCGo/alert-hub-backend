@@ -1,6 +1,7 @@
 # This models is used for getting all alerts in the Alert Database
 from django.db import models
 
+
 class CapFeedCountry(models.Model):
     id = models.BigAutoField(primary_key=True)
     name = models.CharField(max_length=255)
@@ -8,6 +9,7 @@ class CapFeedCountry(models.Model):
     class Meta:
         managed = False
         db_table = 'cap_feed_country'
+
 
 class CapFeedAdmin1(models.Model):
     id = models.BigAutoField(primary_key=True)
@@ -44,6 +46,7 @@ class CapFeedAlert(models.Model):
         alert_dict["sent"] = str(self.sent)
 
         return alert_dict
+
 
 class CapFeedAlertadmin1(models.Model):
     id = models.BigAutoField(primary_key=True)

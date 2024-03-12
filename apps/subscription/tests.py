@@ -125,9 +125,9 @@ class TestCase(GraphQLTestCase):
         response = self.query(
             '''
             query {
-              listSubscription(countryIds: [2,3], 
+              listSubscription(countryIds: [2,3],
                 admin1Ids: [],
-                urgencyArray: [], 
+                urgencyArray: [],
                 severityArray: [],
                 certaintyArray: []
               ) {
@@ -155,9 +155,9 @@ class TestCase(GraphQLTestCase):
         response = self.query(
             '''
             query {
-              listSubscription(countryIds: [], 
+              listSubscription(countryIds: [],
                 admin1Ids: [2,3],
-                urgencyArray: [], 
+                urgencyArray: [],
                 severityArray: [],
                 certaintyArray: []
               ) {
@@ -185,9 +185,9 @@ class TestCase(GraphQLTestCase):
         response = self.query(
             '''
             query {
-              listSubscription(countryIds: [], 
+              listSubscription(countryIds: [],
                 admin1Ids: [],
-                urgencyArray: ["immediate"], 
+                urgencyArray: ["immediate"],
                 severityArray: [],
                 certaintyArray: []
               ) {
@@ -213,9 +213,9 @@ class TestCase(GraphQLTestCase):
         response = self.query(
             '''
             query {
-              listSubscription(countryIds: [], 
+              listSubscription(countryIds: [],
                 admin1Ids: [],
-                urgencyArray: ["immediate", "expected"], 
+                urgencyArray: ["immediate", "expected"],
                 severityArray: [],
                 certaintyArray: []
               ) {
@@ -241,9 +241,9 @@ class TestCase(GraphQLTestCase):
         response = self.query(
             '''
             query {
-              listSubscription(countryIds: [], 
+              listSubscription(countryIds: [],
                 admin1Ids: [],
-                urgencyArray: ["hello_world"], 
+                urgencyArray: ["hello_world"],
                 severityArray: [],
                 certaintyArray: []
               ) {
@@ -271,9 +271,9 @@ class TestCase(GraphQLTestCase):
         response = self.query(
             '''
             query {
-              listSubscription(countryIds: [], 
+              listSubscription(countryIds: [],
                 admin1Ids: [],
-                urgencyArray: [], 
+                urgencyArray: [],
                 severityArray: ["severe"],
                 certaintyArray: []
               ) {
@@ -299,9 +299,9 @@ class TestCase(GraphQLTestCase):
         response = self.query(
             '''
             query {
-              listSubscription(countryIds: [], 
+              listSubscription(countryIds: [],
                 admin1Ids: [],
-                urgencyArray: [], 
+                urgencyArray: [],
                 severityArray: ["severe", "extreme"],
                 certaintyArray: []
               ) {
@@ -327,9 +327,9 @@ class TestCase(GraphQLTestCase):
         response = self.query(
             '''
             query {
-              listSubscription(countryIds: [], 
+              listSubscription(countryIds: [],
                 admin1Ids: [],
-                urgencyArray: [], 
+                urgencyArray: [],
                 severityArray: ["hello_world"],
                 certaintyArray: []
               ) {
@@ -357,9 +357,9 @@ class TestCase(GraphQLTestCase):
         response = self.query(
             '''
             query {
-              listSubscription(countryIds: [], 
+              listSubscription(countryIds: [],
                 admin1Ids: [],
-                urgencyArray: [], 
+                urgencyArray: [],
                 severityArray: [],
                 certaintyArray: ["observed"]
               ) {
@@ -385,9 +385,9 @@ class TestCase(GraphQLTestCase):
         response = self.query(
             '''
             query {
-              listSubscription(countryIds: [], 
+              listSubscription(countryIds: [],
                 admin1Ids: [],
-                urgencyArray: [], 
+                urgencyArray: [],
                 severityArray: [],
                 certaintyArray: ["observed", "likely"]
               ) {
@@ -413,9 +413,9 @@ class TestCase(GraphQLTestCase):
         response = self.query(
             '''
             query {
-              listSubscription(countryIds: [], 
+              listSubscription(countryIds: [],
                 admin1Ids: [],
-                urgencyArray: [], 
+                urgencyArray: [],
                 severityArray: [],
                 certaintyArray: ["hello_world"]
               ) {
@@ -443,9 +443,9 @@ class TestCase(GraphQLTestCase):
         response = self.query(
             '''
             query {
-              listSubscription(countryIds: [], 
+              listSubscription(countryIds: [],
                 admin1Ids: [2,3],
-                urgencyArray: ["immediate", "expected"], 
+                urgencyArray: ["immediate", "expected"],
                 severityArray: ["severe"],
                 certaintyArray: ["observed"]
               ) {

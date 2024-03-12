@@ -11,17 +11,18 @@ def map_subscriptions_to_alert():
     for subscription in subscriptions:
         map_subscription_to_alert(subscription.id)
 
+
 # pylint: disable=too-many-nested-blocks
 # pylint: disable=too-many-branches
 def map_subscription_to_alert(subscription_id):
     updated_alerts = []
-    #Only if the subscription finished its last mapping, we start to map the new one.
-    update_subscription_locked = cache.lock(subscription_id,timeout=None)
+    # Only if the subscription finished its last mapping, we start to map the new one.
+    update_subscription_locked = cache.lock(subscription_id, timeout=None)
     try:
         update_subscription_locked.acquire(blocking=True)
         # Make sure that in the process of second update,
         # the user still cannot view subscription alerts.
-        cache.set("v"+str(subscription_id), True, timeout=None)
+        cache.set("v" + str(subscription_id), True, timeout=None)
         subscription = Subscription.objects.filter(id=subscription_id).first()
 
         if subscription is None:
@@ -71,15 +72,15 @@ def map_subscription_to_alert(subscription_id):
         subscription.alert_set.add(*updated_alerts)
         # print([alert.id for alert in subscription.alert_set.all()])
         # Subscription Locks For Testing
-        #time.sleep(20)
+        # time.sleep(20)
 
     except Exception as exception:
         print(f"Creation Exception: {exception}")
 
     finally:
-        lock = cache.get("v"+str(subscription_id))
+        lock = cache.get("v" + str(subscription_id))
         if lock is not None and lock is True:
-            cache.delete("v"+str(subscription_id))
+            cache.delete("v" + str(subscription_id))
 
         update_subscription_locked.release()
 

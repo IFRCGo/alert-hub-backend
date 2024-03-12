@@ -1,10 +1,17 @@
 import os
-import csv
 import json
 import requests
-module_dir = os.path.dirname(__file__)  # get current directory
-from .models import Continent, Region, Country, Admin1, Feed, LanguageInfo
 
+from .models import (
+    Continent,
+    Region,
+    Country,
+    Admin1,
+    Feed,
+    LanguageInfo,
+)
+
+module_dir = os.path.dirname(__file__)  # get current directory
 
 
 # inject region and country data if not already present
@@ -26,6 +33,7 @@ def inject_geographical_data():
         print('Injecting admin1s...')
         inject_admin1s(inject_path)
 
+
 # inject continent data
 def inject_continents(inject_path):
     def process_continents():
@@ -44,6 +52,7 @@ def inject_continents(inject_path):
         with open(file_path) as file:
             continent_data = json.load(file)
             process_continents()
+
 
 # inject region data
 def inject_regions(inject_path):
@@ -69,6 +78,7 @@ def inject_regions(inject_path):
             region_data = json.load(file)
             process_regions()
 
+
 # inject country data
 def inject_countries(inject_path):
     def process_regions():
@@ -76,7 +86,7 @@ def inject_countries(inject_path):
             name = region_entry["region_name"]
             region_id = region_entry["id"]
             region_names[region_id] = name
-        
+
     def process_countries_ifrc():
         for feature in country_data:
             name = feature["name"]
@@ -93,23 +103,23 @@ def inject_countries(inject_path):
             country.iso3 = feature['properties']['iso3']
             status = feature['properties']['status']
             if status == 'Occupied Territory (under review)' or status == 'PT Territory':
-                    continue
-            if not country.iso3 in ifrc_countries:
                 continue
-            country.region = Region.objects.filter(name = ifrc_countries[country.iso3]).first()
-            country.continent = Continent.objects.filter(name = feature['properties']['continent']).first()
+            if country.iso3 not in ifrc_countries:
+                continue
+            country.region = Region.objects.filter(name=ifrc_countries[country.iso3]).first()
+            country.continent = Continent.objects.filter(name=feature['properties']['continent']).first()
             coordinates = feature['geometry']['coordinates']
-            type = feature['geometry']['type']
-            if type == 'Polygon':
+            geometry_type = feature['geometry']['type']
+            if geometry_type == 'Polygon':
                 country.polygon = coordinates
-            elif type == 'MultiPolygon':
+            elif geometry_type == 'MultiPolygon':
                 country.multipolygon = coordinates
-            
+
             latitude = feature['properties']['geo_point_2d']['lat']
             longitude = feature['properties']['geo_point_2d']['lon']
             country.centroid = f'[{longitude}, {latitude}]'
-            
-            if not Country.objects.filter(iso3 = country.iso3).first():
+
+            if not Country.objects.filter(iso3=country.iso3).first():
                 country.save()
             processed_iso3.add(country.iso3)
 
@@ -136,7 +146,7 @@ def inject_countries(inject_path):
         with open(file_path) as file:
             country_data = json.load(file)
             process_countries_ifrc()
-    
+
     processed_iso3 = set()
     if inject_path:
         file_path = os.path.join(inject_path, 'geographical/opendatasoft-countries-and-territories.geojson')
@@ -149,26 +159,27 @@ def inject_countries(inject_path):
             country_data = json.load(file)
             process_countries_opendatasoft()
 
+
 # inject admin1 data
 def inject_admin1s(inject_path):
     def process_admin1s():
         for feature in admin1_data['features']:
             admin1 = Admin1()
             # Skip unparsable features
-            if not 'shapeName' in feature['properties']:
+            if 'shapeName' not in feature['properties']:
                 continue
             admin1.name = feature['properties']['shapeName']
             iso3 = feature['properties']['shapeGroup']
-            country = Country.objects.filter(iso3 = iso3).first()
+            country = Country.objects.filter(iso3=iso3).first()
             # Skip ISO3 codes that do not match existing countries
             if not country:
                 continue
             admin1.country = country
             coordinates = feature['geometry']['coordinates']
-            type = feature['geometry']['type']
-            if type == 'Polygon':
+            geometry_type = feature['geometry']['type']
+            if geometry_type == 'Polygon':
                 admin1.polygon = coordinates
-            elif type == 'MultiPolygon':
+            elif geometry_type == 'MultiPolygon':
                 admin1.multipolygon = coordinates
             admin1.save()
     if inject_path:
@@ -181,7 +192,7 @@ def inject_admin1s(inject_path):
         with open(file_path, encoding='utf-8') as f:
             admin1_data = json.load(f)
             process_admin1s()
-            
+
 
 # inject feed configurations if not already present
 def inject_feeds():
@@ -195,10 +206,10 @@ def inject_feeds():
             try:
                 feed = Feed()
                 feed.url = feed_entry['capAlertFeed']
-                feed.country = Country.objects.get(iso3 = feed_entry['iso3'])
+                feed.country = Country.objects.get(iso3=feed_entry['iso3'])
                 feed_counter += 1
                 unique_countries.add(feed_entry['iso3'])
-                if Feed.objects.filter(url = feed.url).first():
+                if Feed.objects.filter(url=feed.url).first():
                     continue
                 feed.format = feed_entry['format']
                 feed.polling_interval = 60
@@ -213,9 +224,9 @@ def inject_feeds():
                 language_info.language = feed_entry['language']
                 language_info.logo = feed_entry['picUrl']
                 language_info.save()
-                
+
             except Exception as e:
                 print(feed_entry['name'])
                 print(f'Error injecting feed: {e}')
-        
+
         print(f'Injected {feed_counter} feeds for {len(unique_countries)} unique countries')

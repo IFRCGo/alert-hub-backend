@@ -6,10 +6,8 @@ from django.dispatch import receiver
 from django.db import models, IntegrityError
 from django.utils import timezone
 from django_celery_beat.models import IntervalSchedule, PeriodicTask
-from django_celery_beat.models import PeriodicTask
 from shapely.geometry import Polygon, MultiPolygon
-from iso639 import Lang, iter_langs
-
+from iso639 import iter_langs
 
 
 class Continent(models.Model):
@@ -18,6 +16,7 @@ class Continent(models.Model):
     def __str__(self):
         return self.name
 
+
 class Region(models.Model):
     name = models.CharField()
     polygon = models.TextField(blank=True, null=True)
@@ -25,6 +24,7 @@ class Region(models.Model):
 
     def __str__(self):
         return self.name
+
 
 class Country(models.Model):
     name = models.CharField()
@@ -37,12 +37,14 @@ class Country(models.Model):
 
     def __str__(self):
         return self.iso3 + ' ' + self.name
-    
+
+
 @receiver(post_save, sender=Country)
 def create_unknown_admin1(sender, instance, created, **kwargs):
     if created:
         Admin1.objects.get_or_create(id=-instance.id, name='Unknown', country=instance)
-    
+
+
 class Admin1(models.Model):
     name = models.CharField()
     country = models.ForeignKey(Country, on_delete=models.CASCADE)
@@ -55,7 +57,7 @@ class Admin1(models.Model):
 
     def __str__(self):
         return self.name
-    
+
     def save(self, *args, **kwargs):
         if self.polygon:
             polygon_string = '{"coordinates": ' + str(self.polygon) + '}'
@@ -68,6 +70,7 @@ class Admin1(models.Model):
             self.min_longitude, self.min_latitude, self.max_longitude, self.max_latitude = MultiPolygon(polygons).bounds
         super(Admin1, self).save(*args, **kwargs)
 
+
 class LanguageInfo(models.Model):
     LANGUAGE_CHOICES = [(lg.pt1, lg.pt1 + ' - ' + lg.name) for lg in iter_langs() if lg.pt1]
 
@@ -75,6 +78,7 @@ class LanguageInfo(models.Model):
     name = models.CharField()
     language = models.CharField(blank=True, null=True, choices=LANGUAGE_CHOICES, default='en-US')
     logo = models.CharField(blank=True, null=True)
+
 
 class Feed(models.Model):
     INTERVAL_CHOICES = []
@@ -106,7 +110,7 @@ class Feed(models.Model):
     author_email = models.CharField(default='')
 
     notes = models.TextField(blank=True, default='')
-    
+
     __old_polling_interval = None
     __old_url = None
 
@@ -125,18 +129,21 @@ class Feed(models.Model):
             update_task(self, self.__old_url, self.__old_polling_interval)
         super(Feed, self).save(force_insert, force_update, *args, **kwargs)
 
+
 class ProcessedAlert(models.Model):
     # Set expire time to 1 week
+    @staticmethod
     def default_expire():
         return timezone.now() + timedelta(weeks=1)
-    
+
     url = models.CharField(unique=True)
     feed = models.ForeignKey(Feed, on_delete=models.CASCADE)
     expires = models.DateTimeField(default=default_expire)
 
     def __str__(self):
         return self.url
-    
+
+
 class Alert(models.Model):
     STATUS_CHOICES = [
         ('Actual', 'Actual'),
@@ -168,8 +175,8 @@ class Alert(models.Model):
     identifier = models.CharField()
     sender = models.CharField()
     sent = models.DateTimeField()
-    status = models.CharField(choices = STATUS_CHOICES)
-    msg_type = models.CharField(choices = MSG_TYPE_CHOICES)
+    status = models.CharField(choices=STATUS_CHOICES)
+    msg_type = models.CharField(choices=MSG_TYPE_CHOICES)
     source = models.CharField(blank=True, null=True, default=None)
     scope = models.CharField(blank=True, null=True, default=None)
     restriction = models.CharField(blank=True, null=True, default=None)
@@ -193,13 +200,16 @@ class Alert(models.Model):
 
     def all_info_are_added(self):
         return self.__all_info_added
-    
+
+
 class AlertAdmin1(models.Model):
     alert = models.ForeignKey(Alert, on_delete=models.CASCADE)
     admin1 = models.ForeignKey(Admin1, on_delete=models.CASCADE)
-    
+
+
 class AlertInfo(models.Model):
     # To dynamically set default expire time
+    @staticmethod
     def default_expire():
         return timezone.now() + timedelta(days=1)
 
@@ -255,17 +265,17 @@ class AlertInfo(models.Model):
     ]
 
     alert = models.ForeignKey(Alert, on_delete=models.CASCADE, related_name='infos')
-    
+
     language = models.CharField(blank=True, default='en-US')
-    category = models.CharField(choices = CATEGORY_CHOICES)
+    category = models.CharField(choices=CATEGORY_CHOICES)
     event = models.CharField()
-    response_type = models.CharField(choices = RESPONSE_TYPE_CHOICES, blank=True, null=True, default=None)
-    urgency = models.CharField(choices = URGENCY_CHOICES)
-    severity = models.CharField(choices = SEVERITY_CHOICES)
-    certainty = models.CharField(choices = CERTAINTY_CHOICES)
+    response_type = models.CharField(choices=RESPONSE_TYPE_CHOICES, blank=True, null=True, default=None)
+    urgency = models.CharField(choices=URGENCY_CHOICES)
+    severity = models.CharField(choices=SEVERITY_CHOICES)
+    certainty = models.CharField(choices=CERTAINTY_CHOICES)
     audience = models.CharField(blank=True, null=True, default=None)
     event_code = models.CharField(blank=True, null=True, default=None)
-    #effective = models.DateTimeField(default=Alert.objects.get(pk=alert).sent)
+    # effective = models.DateTimeField(default=Alert.objects.get(pk=alert).sent)
     effective = models.DateTimeField(blank=True, default=timezone.now)
     onset = models.DateTimeField(blank=True, null=True)
     expires = models.DateTimeField(blank=True, null=True, default=default_expire)
@@ -280,6 +290,7 @@ class AlertInfo(models.Model):
     def __str__(self):
         return str(self.alert) + ' ' + self.language
 
+
 class AlertInfoParameter(models.Model):
     alert_info = models.ForeignKey(AlertInfo, on_delete=models.CASCADE)
 
@@ -292,6 +303,7 @@ class AlertInfoParameter(models.Model):
         alert_info_parameter_dict['value'] = self.value
         return alert_info_parameter_dict
 
+
 class AlertInfoArea(models.Model):
     alert_info = models.ForeignKey(AlertInfo, on_delete=models.CASCADE)
 
@@ -301,6 +313,7 @@ class AlertInfoArea(models.Model):
 
     def __str__(self):
         return str(self.alert_info) + ' ' + self.area_desc
+
 
 class AlertInfoAreaPolygon(models.Model):
     alert_info_area = models.ForeignKey(AlertInfoArea, on_delete=models.CASCADE)
@@ -312,6 +325,7 @@ class AlertInfoAreaPolygon(models.Model):
         alert_info_area_ploygon_dict['value'] = self.value
         return alert_info_area_ploygon_dict
 
+
 class AlertInfoAreaCircle(models.Model):
     alert_info_area = models.ForeignKey(AlertInfoArea, on_delete=models.CASCADE)
 
@@ -321,6 +335,7 @@ class AlertInfoAreaCircle(models.Model):
         alert_info_area_circle_dict = dict()
         alert_info_area_circle_dict['value'] = self.value
         return alert_info_area_circle_dict
+
 
 class AlertInfoAreaGeocode(models.Model):
     alert_info_area = models.ForeignKey(AlertInfoArea, on_delete=models.CASCADE)
@@ -333,7 +348,8 @@ class AlertInfoAreaGeocode(models.Model):
         alert_info_area_geocode_dict['value_name'] = self.value_name
         alert_info_area_geocode_dict['value'] = self.value
         return alert_info_area_geocode_dict
-    
+
+
 class FeedLog(models.Model):
     feed = models.ForeignKey(Feed, on_delete=models.CASCADE)
     exception = models.CharField(default='exception')
@@ -356,6 +372,7 @@ class FeedLog(models.Model):
         except IntegrityError:
             pass
 
+
 # Add task to poll feed
 def add_task(feed):
     interval = feed.polling_interval
@@ -366,15 +383,16 @@ def add_task(feed):
     # Create a new PeriodicTask
     try:
         new_task = PeriodicTask.objects.create(
-            interval = interval_schedule,
-            name = 'poll_feed_' + feed.url,
-            task = 'cap_feed.tasks.poll_feed',
-            start_time = timezone.now(),
-            kwargs = json.dumps({"url": feed.url}),
+            interval=interval_schedule,
+            name='poll_feed_' + feed.url,
+            task='cap_feed.tasks.poll_feed',
+            start_time=timezone.now(),
+            kwargs=json.dumps({"url": feed.url}),
         )
         new_task.save()
     except Exception as e:
         print('Error while adding new PeriodicTask', e)
+
 
 # Removes task to poll feed
 def remove_task(feed):
@@ -383,6 +401,7 @@ def remove_task(feed):
         existing_task.delete()
     except PeriodicTask.DoesNotExist as e:
         print('Error while removing unknown PeriodicTask', e)
+
 
 # Update task to poll feed
 def update_task(feed, old_url, old_interval):

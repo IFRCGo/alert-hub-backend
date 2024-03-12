@@ -1,12 +1,12 @@
 from django.core.management.base import BaseCommand
-from apps.subscription_manager.subscription_alert_mapping import map_subscriptions_to_alert
 from django.core.cache import cache
+
 
 class Command(BaseCommand):
     help = "This commands helps to clear cache"
 
     def handle(self, *args, **options):
-        import time
+        # import time
         all_keys = cache.keys("*")
         print(f"previous keys: {all_keys}")
         cache.clear()
@@ -28,4 +28,3 @@ class Command(BaseCommand):
         # cache.set("anything", alert_dict, timeout=None)
         # cache.get("anything")
         # print(f"time taken 2: {time.time() - start_time}")
-

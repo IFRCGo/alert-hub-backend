@@ -21,6 +21,7 @@ psycopg2-binary = "^2.9.6"
 shapely = "^2.0.1"
 pytz = "*"
 colorlog = "*"
+requests = "*"
 
 [tool.poetry.dev-dependencies]
 pytest = "*"
@@ -29,6 +30,13 @@ pytest-ordering = "*"
 pytest-django = "*"
 django-stubs = { version = "*", allow-prereleases = true }
 
+[tool.black]
+skip-string-normalization = true
+extend-exclude = "(__pycache__|.*snap_test_.*\\.py|.+\\/.+\\/migrations\\/.*)"
+
+[tool.isort]
+profile = "black"
+
 [tool.pyright]
 exclude = [
     "**/__pycache__",
@@ -36,7 +44,8 @@ exclude = [
 ]
 reportMissingImports = true
 reportMissingTypeStubs = false
-
+venvPath = "."
+venv = ".venv"
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "main.settings"

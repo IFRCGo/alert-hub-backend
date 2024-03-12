@@ -5,11 +5,11 @@ from io import StringIO
 from django.test import TestCase
 from django.utils import timezone
 
-from .models import Alert, AlertInfo, Country, Feed
-import cap_feed.tasks as tasks
-from cap_feed.formats.utils import convert_datetime
-from cap_feed.formats.format_handler import get_alerts
+from apps.cap_feed import tasks
+from apps.cap_feed.formats.utils import convert_datetime
+from apps.cap_feed.formats.format_handler import get_alerts
 
+from .models import Alert, AlertInfo, Country, Feed
 
 
 class AlertModelTests(TestCase):
@@ -34,7 +34,7 @@ class AlertModelTests(TestCase):
         alert_info.urgency = 'Immediate'
         alert_info.severity = 'Extreme'
         alert_info.certainty = 'Observed'
-        alert_info.expires = timezone.now() + timezone.timedelta(days = days)
+        alert_info.expires = timezone.now() + timezone.timedelta(days=days)
 
         alert.save()
         alert_info.save()
@@ -103,7 +103,7 @@ class AlertModelTests(TestCase):
         self.create_alert(url='test_url', days=1)
         previous_alert_count = Alert.objects.count()
         previous_alert_info_count = AlertInfo.objects.count()
-        with mock.patch('sys.stdout', new = StringIO()) as std_out:
+        with mock.patch('sys.stdout', new=StringIO()):
             get_alerts(Feed.objects.get(url="test_feed"), set())
         assert Alert.objects.count() == previous_alert_count - 1
         assert AlertInfo.objects.count() == previous_alert_info_count - 1
@@ -115,8 +115,7 @@ class AlertModelTests(TestCase):
         self.create_alert(url='test_url', days=1)
         previous_alert_count = Alert.objects.count()
         previous_alert_info_count = AlertInfo.objects.count()
-        with mock.patch('sys.stdout', new = StringIO()) as std_out:
+        with mock.patch('sys.stdout', new=StringIO()):
             get_alerts(Feed.objects.get(url="test_feed"), {'test_url'})
         assert Alert.objects.count() == previous_alert_count
         assert AlertInfo.objects.count() == previous_alert_info_count
-        

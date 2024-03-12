@@ -14,8 +14,6 @@ class AlertInfoInline(admin.StackedInline):
     extra = 0
 
 
-
-
 class AlertAdmin(admin.ModelAdmin):
     # using = 'AlertDB'
     list_display = ["id", "sent"]

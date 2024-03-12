@@ -13,7 +13,6 @@ import os
 from pathlib import Path
 
 
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -27,9 +26,6 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 DEBUG = True
 
 ALLOWED_HOSTS = ['*']
-
-if 'CODESPACE_NAME' in os.environ:
-    CSRF_TRUSTED_ORIGINS = [f'https://{os.getenv("CODESPACE_NAME")}-8000.{os.getenv("GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN")}']
 
 # Application definition
 
@@ -139,7 +135,6 @@ USE_I18N = True
 USE_TZ = True
 
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.0/howto/static-files/
 
@@ -160,9 +155,9 @@ CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 ASGI_APPLICATION = "main.asgi.application"
 
 CORS_ALLOWED_ORIGINS = [
-"http://localhost:3000",
-"http://localhost:8000",
-"http://127.0.0.1:9000"
+    "http://localhost:3000",
+    "http://localhost:8000",
+    "http://127.0.0.1:9000"
 ]
 
 CHANNEL_LAYERS = {

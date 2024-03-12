@@ -30,7 +30,8 @@ def get_alerts(feed, all_alert_urls=set()):
         print(f'Error getting alerts from {feed.url}: {e}')
     else:
         if valid_poll:
-            # alerts that are in the database and have not expired but are no longer available on the feed must have been deleted by the alerting authority
+            # alerts that are in the database and have not expired but are no longer available -
+            # - on the feed must have been deleted by the alerting authority
             # remove these alerts from the database
             all_alert_urls.update(alert_urls)
             deleted_alerts = Alert.objects.filter(feed=feed).exclude(url__in=all_alert_urls)
