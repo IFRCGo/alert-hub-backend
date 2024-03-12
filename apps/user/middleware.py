@@ -43,9 +43,7 @@ def django_logout(request):
     pass
 
 
-class AuthenticationMiddleware(
-    _GraphqlDisabledMiddlewareMixin, DjangoAuthenticationMiddleware
-):
+class AuthenticationMiddleware(_GraphqlDisabledMiddlewareMixin, DjangoAuthenticationMiddleware):
     def process_request(self, request):
         if self.is_graphql_request(request):
             if request.user.should_logout:
@@ -75,27 +73,23 @@ class DeleteJWTMiddleware:
             if hasattr(request, 'COOKIES') and jwt_settings.JWT_COOKIE_NAME in request.COOKIES:
                 request.delete_jwt_cookie = True
                 self.my_delete_cookie(response, jwt_settings.JWT_COOKIE_NAME)
-            response = JsonResponse({'error': 'Invalid token provided. Please login again.'},
-                                    status=401)
+            response = JsonResponse({'error': 'Invalid token provided. Please login again.'}, status=401)
         # type: ignore
         except Exception as exeception:
             if "NoneType object has no attribute 'is_authenticated'" in str(exeception):
                 if hasattr(request, 'COOKIES') and jwt_settings.JWT_COOKIE_NAME in request.COOKIES:
                     request.delete_jwt_cookie = True
                     self.my_delete_cookie(response, jwt_settings.JWT_COOKIE_NAME)
-                response = JsonResponse({'error': 'Invalid token provided. Please login again.'},
-                                        status=401)
+                response = JsonResponse({'error': 'Invalid token provided. Please login again.'}, status=401)
             if "Invalid token" in str(exeception):
                 if hasattr(request, 'COOKIES') and jwt_settings.JWT_COOKIE_NAME in request.COOKIES:
                     request.delete_jwt_cookie = True
                     self.my_delete_cookie(response, jwt_settings.JWT_COOKIE_NAME)
-                response = JsonResponse({'error': 'Invalid token provided. Please login again.'},
-                                        status=401)
+                response = JsonResponse({'error': 'Invalid token provided. Please login again.'}, status=401)
             if "Invalid token" in str(exeception):
                 if hasattr(request, 'COOKIES') and jwt_settings.JWT_COOKIE_NAME in request.COOKIES:
                     request.delete_jwt_cookie = True
-                response = JsonResponse({'error': 'Invalid token provided. Please login again.'},
-                                        status=401)
+                response = JsonResponse({'error': 'Invalid token provided. Please login again.'}, status=401)
 
         if response is None:
             response = JsonResponse({'error': 'Unknown error'}, status=500)

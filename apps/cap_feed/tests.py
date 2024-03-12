@@ -1,13 +1,14 @@
-import pytz
 from datetime import datetime
-from unittest import mock
 from io import StringIO
+from unittest import mock
+
+import pytz
 from django.test import TestCase
 from django.utils import timezone
 
 from apps.cap_feed import tasks
-from apps.cap_feed.formats.utils import convert_datetime
 from apps.cap_feed.formats.format_handler import get_alerts
+from apps.cap_feed.formats.utils import convert_datetime
 
 from .models import Alert, AlertInfo, Country, Feed
 

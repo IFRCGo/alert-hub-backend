@@ -1,7 +1,7 @@
 import graphene
 
-from apps.user import schema as user_schema
 from apps.subscription import schema as subscription_schema
+from apps.user import schema as user_schema
 
 
 class Query(

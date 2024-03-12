@@ -19,26 +19,40 @@ class CapFeedConfig(AppConfig):
 
 def delete_feed(sender, instance, *args, **kwargs):
     from .models import remove_task
+
     remove_task(instance)
 
 
 def notify_incoming_alert_for_subscription(sender, instance, *args, **kwargs):
     from main.celery import app
+
     if instance.all_info_are_added():
-        app.send_task('apps.subscription_manager.tasks.get_incoming_alert', args=[],
-                      kwargs={'alert_id': instance.id}, queue='subscription_manager',
-                      routing_key='subscription_manager.#', exchange='subscription_manager')
+        app.send_task(
+            'apps.subscription_manager.tasks.get_incoming_alert',
+            args=[],
+            kwargs={'alert_id': instance.id},
+            queue='subscription_manager',
+            routing_key='subscription_manager.#',
+            exchange='subscription_manager',
+        )
 
 
 def notify_removed_alert_for_subscription(sender, instance, *args, **kwargs):
     from main.celery import app
-    app.send_task('apps.subscription_manager.tasks.get_removed_alert', args=[],
-                  kwargs={'alert_id': instance.id}, queue='subscription_manager',
-                  routing_key='subscription_manager.#', exchange='subscription_manager')
+
+    app.send_task(
+        'apps.subscription_manager.tasks.get_removed_alert',
+        args=[],
+        kwargs={'alert_id': instance.id},
+        queue='subscription_manager',
+        routing_key='subscription_manager.#',
+        exchange='subscription_manager',
+    )
 
 
 def update_cache_instructions(sender, instance, *args, **kwargs):
     from main.celery import app
+
     if instance.all_info_are_added():
         alert_data = {'country_id': instance.country.id}
         app.send_task(

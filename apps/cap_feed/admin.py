@@ -1,23 +1,24 @@
 from django.contrib import admin
 from django_celery_beat.models import (
-    CrontabSchedule,
     ClockedSchedule,
-    SolarSchedule,
+    CrontabSchedule,
     IntervalSchedule,
     PeriodicTask,
+    SolarSchedule,
 )
+
 from .models import (
-    Alert,
-    AlertInfo,
-    AlertAdmin1,
-    Continent,
-    Region,
-    Country,
     Admin1,
-    LanguageInfo,
+    Alert,
+    AlertAdmin1,
+    AlertInfo,
+    Continent,
+    Country,
     Feed,
     FeedLog,
+    LanguageInfo,
     ProcessedAlert,
+    Region,
 )
 
 
@@ -48,7 +49,8 @@ class AlertInfoAdmin(admin.ModelAdmin):
     fieldsets = [
         ('Administration', {'fields': ['alert']}),
         (
-            'Alert Info', {
+            'Alert Info',
+            {
                 'fields': [
                     'language',
                     'category',
@@ -69,7 +71,7 @@ class AlertInfoAdmin(admin.ModelAdmin):
                     'web',
                     'contact',
                 ]
-            }
+            },
         ),
     ]
 
@@ -86,7 +88,8 @@ class AlertAdmin(admin.ModelAdmin):
     fieldsets = [
         ('Administration', {'fields': ['country', 'feed']}),
         (
-            'Alert Header', {
+            'Alert Header',
+            {
                 'fields': [
                     'identifier',
                     'sender',
@@ -102,7 +105,7 @@ class AlertAdmin(admin.ModelAdmin):
                     'references',
                     'incidents',
                 ]
-            }
+            },
         ),
     ]
     inlines = [AlertInfoInline]

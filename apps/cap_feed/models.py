@@ -1,13 +1,14 @@
 import json
 from datetime import timedelta
+
 from django.core.validators import MaxValueValidator, MinValueValidator
+from django.db import IntegrityError, models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from django.db import models, IntegrityError
 from django.utils import timezone
 from django_celery_beat.models import IntervalSchedule, PeriodicTask
-from shapely.geometry import Polygon, MultiPolygon
 from iso639 import iter_langs
+from shapely.geometry import MultiPolygon, Polygon
 
 
 class Continent(models.Model):
@@ -85,18 +86,9 @@ class Feed(models.Model):
     for interval in range(5, 65, 5):
         INTERVAL_CHOICES.append((interval, f"{interval} seconds"))
 
-    FORMAT_CHOICES = [
-        ('atom', 'atom'),
-        ('rss', 'rss'),
-        ('nws_us', 'nws_us')
-    ]
+    FORMAT_CHOICES = [('atom', 'atom'), ('rss', 'rss'), ('nws_us', 'nws_us')]
 
-    STATUS_CHOICES = [
-        ('active', 'active'),
-        ('testing', 'testing'),
-        ('inactive', 'inactive'),
-        ('unusable', 'unusable')
-    ]
+    STATUS_CHOICES = [('active', 'active'), ('testing', 'testing'), ('inactive', 'inactive'), ('unusable', 'unusable')]
 
     url = models.CharField(unique=True)
     country = models.ForeignKey(Country, on_delete=models.CASCADE)
@@ -150,22 +142,12 @@ class Alert(models.Model):
         ('Exercise', 'Exercise'),
         ('System', 'System'),
         ('Test', 'Test'),
-        ('Draft', 'Draft')
+        ('Draft', 'Draft'),
     ]
 
-    MSG_TYPE_CHOICES = [
-        ('Alert', 'Alert'),
-        ('Update', 'Update'),
-        ('Cancel', 'Cancel'),
-        ('Ack', 'Ack'),
-        ('Error', 'Error')
-    ]
+    MSG_TYPE_CHOICES = [('Alert', 'Alert'), ('Update', 'Update'), ('Cancel', 'Cancel'), ('Ack', 'Ack'), ('Error', 'Error')]
 
-    SCOPE_CHOICES = [
-        ('Public', 'Public'),
-        ('Restricted', 'Restricted'),
-        ('Private', 'Private')
-    ]
+    SCOPE_CHOICES = [('Public', 'Public'), ('Restricted', 'Restricted'), ('Private', 'Private')]
 
     country = models.ForeignKey(Country, on_delete=models.CASCADE)
     admin1s = models.ManyToManyField(Admin1, through='AlertAdmin1')
@@ -225,7 +207,7 @@ class AlertInfo(models.Model):
         ('Transport', 'Transport'),
         ('Infra', 'Infra'),
         ('CBRNE', 'CBRNE'),
-        ('Other', 'Other')
+        ('Other', 'Other'),
     ]
 
     RESPONSE_TYPE_CHOICES = [
@@ -237,7 +219,7 @@ class AlertInfo(models.Model):
         ('Monitor', 'Monitor'),
         ('Assess', 'Assess'),
         ('AllClear', 'AllClear'),
-        ('None', 'None')
+        ('None', 'None'),
     ]
 
     URGENCY_CHOICES = [
@@ -245,7 +227,7 @@ class AlertInfo(models.Model):
         ('Expected', 'Expected'),
         ('Future', 'Future'),
         ('Past', 'Past'),
-        ('Unknown', 'Unknown')
+        ('Unknown', 'Unknown'),
     ]
 
     SEVERITY_CHOICES = [
@@ -253,7 +235,7 @@ class AlertInfo(models.Model):
         ('Severe', 'Severe'),
         ('Moderate', 'Moderate'),
         ('Minor', 'Minor'),
-        ('Unknown', 'Unknown')
+        ('Unknown', 'Unknown'),
     ]
 
     CERTAINTY_CHOICES = [
@@ -261,7 +243,7 @@ class AlertInfo(models.Model):
         ('Likely', 'Likely'),
         ('Possible', 'Possible'),
         ('Unlikely', 'Unlikely'),
-        ('Unknown', 'Unknown')
+        ('Unknown', 'Unknown'),
     ]
 
     alert = models.ForeignKey(Alert, on_delete=models.CASCADE, related_name='infos')

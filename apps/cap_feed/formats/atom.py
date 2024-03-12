@@ -1,9 +1,11 @@
-import requests
 import xml.etree.ElementTree as ET
 
+import requests
+
 from apps.cap_feed.models import Alert, ProcessedAlert
+
 from .cap_xml import get_alert
-from .utils import log_requestexception, log_attributeerror, log_valueerror
+from .utils import log_attributeerror, log_requestexception, log_valueerror
 
 
 # processing for atom format, example: https://feeds.meteoalarm.org/feeds/meteoalarm-legacy-atom-france

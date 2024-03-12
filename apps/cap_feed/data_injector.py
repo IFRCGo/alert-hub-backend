@@ -1,15 +1,9 @@
-import os
 import json
+import os
+
 import requests
 
-from .models import (
-    Continent,
-    Region,
-    Country,
-    Admin1,
-    Feed,
-    LanguageInfo,
-)
+from .models import Admin1, Continent, Country, Feed, LanguageInfo, Region
 
 module_dir = os.path.dirname(__file__)  # get current directory
 
@@ -19,6 +13,7 @@ def inject_geographical_data():
     inject_path = None
     if 'WEBSITE_HOSTNAME' in os.environ:
         from main.production import MEDIA_URL
+
         inject_path = MEDIA_URL
 
     if Continent.objects.count() == 0:
@@ -182,6 +177,7 @@ def inject_admin1s(inject_path):
             elif geometry_type == 'MultiPolygon':
                 admin1.multipolygon = coordinates
             admin1.save()
+
     if inject_path:
         file_path = os.path.join(inject_path, 'geographical/geoBoundariesCGAZ_ADM1.geojson')
         response = requests.get(file_path)

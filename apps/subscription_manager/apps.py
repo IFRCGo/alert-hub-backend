@@ -9,10 +9,9 @@ class SubscriptionManagerConfig(AppConfig):
     name = 'apps.subscription_manager'
 
     def ready(self):
-        if ('WEBSITE_HOSTNAME' in os.environ and 'migrate' not in sys.argv and 'collectstatic'
-            not in sys.argv) \
-                or \
-                ('WEBSITE_HOSTNAME' not in os.environ and 'runserver' in sys.argv):
+        if ('WEBSITE_HOSTNAME' in os.environ and 'migrate' not in sys.argv and 'collectstatic' not in sys.argv) or (
+            'WEBSITE_HOSTNAME' not in os.environ and 'runserver' in sys.argv
+        ):
             pass
             # Used for testing locks
             # from .subscription_alert_mapping import map_subscription_to_alert, \

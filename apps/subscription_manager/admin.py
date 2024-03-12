@@ -1,7 +1,13 @@
 from django.contrib import admin
-from .models import SubscriptionAlerts, Alert
-from .external_alert_models import CapFeedAdmin1, CapFeedAlert, CapFeedAlertadmin1, \
-    CapFeedAlertinfo, CapFeedCountry
+
+from .external_alert_models import (
+    CapFeedAdmin1,
+    CapFeedAlert,
+    CapFeedAlertadmin1,
+    CapFeedAlertinfo,
+    CapFeedCountry,
+)
+from .models import Alert, SubscriptionAlerts
 
 
 class AlertAdmin1Inline(admin.StackedInline):

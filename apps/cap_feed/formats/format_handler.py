@@ -1,7 +1,8 @@
 from apps.cap_feed.models import Alert
+
 from .atom import get_alerts_atom
-from .rss import get_alerts_rss
 from .nws_us import get_alerts_nws_us
+from .rss import get_alerts_rss
 
 
 def get_alerts(feed, all_alert_urls=set()):

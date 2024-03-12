@@ -2,6 +2,7 @@ from django.http import HttpResponse, JsonResponse
 from django.template import loader
 
 from apps.cap_feed.tasks import inject_data
+
 from .models import Alert, Feed, LanguageInfo
 
 
@@ -29,13 +30,7 @@ def get_feeds(request):
 
         language_set = []
         for info in LanguageInfo.objects.filter(feed=feed):
-            language_set.append(
-                {
-                    'name': info.name,
-                    'code': info.language,
-                    'logo': info.logo
-                }
-            )
+            language_set.append({'name': info.name, 'code': info.language, 'logo': info.logo})
 
         response['sources'].append(
             {

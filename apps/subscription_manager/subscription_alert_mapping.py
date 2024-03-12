@@ -1,8 +1,10 @@
 import json
-from django.db import transaction
+
 from django.core.cache import cache
-from .external_alert_models import CapFeedAlert, CapFeedAdmin1
-from .models import Subscription, Alert
+from django.db import transaction
+
+from .external_alert_models import CapFeedAdmin1, CapFeedAlert
+from .models import Alert, Subscription
 from .tasks import process_immediate_alerts
 
 
@@ -53,9 +55,11 @@ def map_subscription_to_alert(subscription_id):
                     # alert can be delayed.
                     deleted_alert_lock.acquire(blocking=True)
                     for info in alert.capfeedalertinfo_set.all():
-                        if info.severity in subscription.severity_array and \
-                                info.certainty in subscription.certainty_array and \
-                                info.urgency in subscription.urgency_array:
+                        if (
+                            info.severity in subscription.severity_array
+                            and info.certainty in subscription.certainty_array
+                            and info.urgency in subscription.urgency_array
+                        ):
 
                             internal_alert = Alert.objects.filter(id=alert.id).first()
                             if internal_alert is None:
@@ -88,8 +92,7 @@ def map_subscription_to_alert(subscription_id):
 
 
 def map_alert_to_subscription(alert_id):
-    alert = CapFeedAlert.objects.filter(id=alert_id). \
-        prefetch_related('admin1s', 'capfeedalertinfo_set').first()
+    alert = CapFeedAlert.objects.filter(id=alert_id).prefetch_related('admin1s', 'capfeedalertinfo_set').first()
 
     if alert is None:
         return f"Alert with id {alert_id} is not existed"
@@ -103,16 +106,17 @@ def map_alert_to_subscription(alert_id):
     updated_subscriptions = []
 
     alert_admin1_ids = [admin1.id for admin1 in alert.admin1s.all()]
-    subscriptions = Subscription.objects.filter(
-        admin1_ids__overlap=alert_admin1_ids)
+    subscriptions = Subscription.objects.filter(admin1_ids__overlap=alert_admin1_ids)
 
     with transaction.atomic():
         for subscription in subscriptions:
             matching_info = None
             for info in alert.capfeedalertinfo_set.all():
-                if info.severity in subscription.severity_array and \
-                        info.certainty in subscription.certainty_array and \
-                        info.urgency in subscription.urgency_array:
+                if (
+                    info.severity in subscription.severity_array
+                    and info.certainty in subscription.certainty_array
+                    and info.urgency in subscription.urgency_array
+                ):
                     matching_info = info
                     break
 
@@ -131,8 +135,7 @@ def map_alert_to_subscription(alert_id):
 
     if updated_subscriptions:
         subscription_ids = [subscription.id for subscription in updated_subscriptions]
-        return f"Incoming Alert {alert_id} is successfully converted. " \
-               f"Mapped Subscription id are {subscription_ids}."
+        return f"Incoming Alert {alert_id} is successfully converted. " f"Mapped Subscription id are {subscription_ids}."
 
     return f"Incoming Alert {alert_id} is not mapped with any subscription."
 
@@ -157,9 +160,11 @@ def delete_alert_to_subscription(alert_id):
         alert_lock.release()
 
     if len(updated_subscription_ids) != 0:
-        return f"Alert {alert_id} is successfully deleted from subscription database. " \
-               f"Updated Subscription id are " \
-               f"{updated_subscription_ids}."
+        return (
+            f"Alert {alert_id} is successfully deleted from subscription database. "
+            f"Updated Subscription id are "
+            f"{updated_subscription_ids}."
+        )
 
     return f"Alert {alert_id} is successfully deleted from subscription database. "
 

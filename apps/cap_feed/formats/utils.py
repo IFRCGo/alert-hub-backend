@@ -1,5 +1,7 @@
-import pytz
 from datetime import datetime
+
+import pytz
+
 from apps.cap_feed.models import FeedLog
 
 

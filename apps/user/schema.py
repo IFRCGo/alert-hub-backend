@@ -1,17 +1,15 @@
 import random
 from datetime import timedelta
-
 from uuid import uuid4
 
 import graphene
 import graphql_jwt
+from django.core.cache import cache
+from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
+from graphene_django import DjangoObjectType
 from graphql_jwt.decorators import login_required
 from graphql_jwt.settings import jwt_settings
-from graphene_django import DjangoObjectType
-
-from django.utils import timezone
-from django.core.cache import cache
-from django.views.decorators.csrf import csrf_exempt
 
 from .models import CustomUser
 from .tasks import send_email
@@ -26,7 +24,7 @@ class ErrorType(graphene.ObjectType):
 
 
 class UserType(DjangoObjectType):
-    """ User type object """
+    """User type object"""
 
     class Meta:
         model = CustomUser
@@ -54,7 +52,7 @@ class Query(graphene.ObjectType):
 
 
 class Register(graphene.Mutation):
-    """ Mutation to register a user """
+    """Mutation to register a user"""
 
     success = graphene.Boolean()
     errors = graphene.Field(ErrorType)
@@ -92,7 +90,7 @@ class Register(graphene.Mutation):
 
 
 class SendVerifyEmail(graphene.Mutation):
-    """ Mutation for sending email verification for first registration"""
+    """Mutation for sending email verification for first registration"""
 
     success = graphene.Boolean()
     errors = graphene.Field(ErrorType)
@@ -113,8 +111,7 @@ class SendVerifyEmail(graphene.Mutation):
             'verification_token': email_verification_token,
         }
 
-        send_email.delay(email, 'Activate your account.', 'email_verification.html',
-                         context)
+        send_email.delay(email, 'Activate your account.', 'email_verification.html', context)
 
         return SendVerifyEmail(success=True)
 
@@ -132,7 +129,7 @@ class SendVerifyEmail(graphene.Mutation):
 
 
 class ResetEmail(graphene.Mutation):
-    """ Mutation to request to reset an email """
+    """Mutation to request to reset an email"""
 
     success = graphene.Boolean()
     errors = graphene.Field(ErrorType)
@@ -154,14 +151,13 @@ class ResetEmail(graphene.Mutation):
             'reset_token': verification_code,
         }
 
-        send_email.delay(user.email, 'Confirmation for resetting email.', 'email_reset.html',
-                         context)
+        send_email.delay(user.email, 'Confirmation for resetting email.', 'email_reset.html', context)
 
         return ResetEmail(success=True)
 
 
 class ResetEmailConfirm(graphene.Mutation):
-    """ Mutation for confirm requesting a email reset """
+    """Mutation for confirm requesting a email reset"""
 
     success = graphene.Boolean()
     errors = graphene.Field(ErrorType)
@@ -197,7 +193,7 @@ class ResetEmailConfirm(graphene.Mutation):
 
 
 class SendNewVerifyEmail(graphene.Mutation):
-    """ Mutation for requesting a password reset email """
+    """Mutation for requesting a password reset email"""
 
     success = graphene.Boolean()
     errors = graphene.Field(ErrorType)
@@ -236,14 +232,13 @@ class SendNewVerifyEmail(graphene.Mutation):
             'verification_token': email_verification_token,
         }
 
-        send_email.delay(new_email, '[IFRC] Verify your email address',
-                         'email_verification.html', context)
+        send_email.delay(new_email, '[IFRC] Verify your email address', 'email_verification.html', context)
 
         return SendNewVerifyEmail(success=True)
 
 
 class NewEmailConfirm(graphene.Mutation):
-    """ Mutation to confirm the new email. """
+    """Mutation to confirm the new email."""
 
     success = graphene.Boolean()
     errors = graphene.Field(ErrorType)
@@ -281,7 +276,7 @@ class NewEmailConfirm(graphene.Mutation):
 
 
 class UpdateProfile(graphene.Mutation):
-    """ Mutation to update a user's profile information """
+    """Mutation to update a user's profile information"""
 
     success = graphene.Boolean()
     errors = graphene.Field(ErrorType)
@@ -323,9 +318,8 @@ class Logout(graphene.Mutation):
             user.save()
 
             context = info.context
-            context.delete_jwt_cookie = (
-                jwt_settings.JWT_COOKIE_NAME in context.COOKIES and
-                getattr(context, "jwt_cookie", False)
+            context.delete_jwt_cookie = jwt_settings.JWT_COOKIE_NAME in context.COOKIES and getattr(
+                context, "jwt_cookie", False
             )
             info.context.user.should_logout = True
 
@@ -335,7 +329,7 @@ class Logout(graphene.Mutation):
 
 
 class ResetPassword(graphene.Mutation):
-    """ Mutation for requesting a password reset email """
+    """Mutation for requesting a password reset email"""
 
     success = graphene.Boolean()
     errors = graphene.Field(ErrorType)
@@ -367,7 +361,7 @@ class ResetPassword(graphene.Mutation):
 
 
 class ResetPasswordConfirm(graphene.Mutation):
-    """ Mutation for requesting a password reset email """
+    """Mutation for requesting a password reset email"""
 
     success = graphene.Boolean()
     errors = graphene.Field(ErrorType)

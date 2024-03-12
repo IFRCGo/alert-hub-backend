@@ -2,9 +2,11 @@ import os
 import random
 import string
 from unittest.mock import patch
+
 import graphene
 from graphene_django import DjangoObjectType
 from graphql_jwt.decorators import login_required
+
 from .models import Subscription
 
 URGENCY_ARRAY = ["immediate", "expected", "future", "past", "unknown"]
@@ -49,21 +51,42 @@ def get_random_string_array(candicates):
 class SubscriptionType(DjangoObjectType):
     class Meta:
         model = Subscription
-        fields = ["id", "subscription_name", "user_id", "country_ids", "admin1_ids",
-                  "urgency_array", "severity_array", "certainty_array", "subscribe_by", "sent_flag"]
+        fields = [
+            "id",
+            "subscription_name",
+            "user_id",
+            "country_ids",
+            "admin1_ids",
+            "urgency_array",
+            "severity_array",
+            "certainty_array",
+            "subscribe_by",
+            "sent_flag",
+        ]
 
 
-def create_subscription(user_id, subscription_name, country_ids, admin1_ids,
-                        urgency_array, severity_array, certainty_array, subscribe_by, sent_flag):
-    subscription = Subscription(user_id=user_id,
-                                subscription_name=subscription_name,
-                                country_ids=country_ids,
-                                admin1_ids=admin1_ids,
-                                urgency_array=urgency_array,
-                                severity_array=severity_array,
-                                certainty_array=certainty_array,
-                                subscribe_by=subscribe_by,
-                                sent_flag=sent_flag)
+def create_subscription(
+    user_id,
+    subscription_name,
+    country_ids,
+    admin1_ids,
+    urgency_array,
+    severity_array,
+    certainty_array,
+    subscribe_by,
+    sent_flag,
+):
+    subscription = Subscription(
+        user_id=user_id,
+        subscription_name=subscription_name,
+        country_ids=country_ids,
+        admin1_ids=admin1_ids,
+        urgency_array=urgency_array,
+        severity_array=severity_array,
+        certainty_array=certainty_array,
+        subscribe_by=subscribe_by,
+        sent_flag=sent_flag,
+    )
     subscription.save()
     return subscription
 
@@ -82,17 +105,29 @@ class CreateSubscription(graphene.Mutation):
     subscription = graphene.Field(SubscriptionType)
 
     @login_required
-    def mutate(self, info, subscription_name, country_ids, admin1_ids,
-               urgency_array, severity_array, certainty_array, subscribe_by, sent_flag):
-        subscription = create_subscription(info.context.user.id,
-                                           subscription_name,
-                                           country_ids,
-                                           admin1_ids,
-                                           urgency_array,
-                                           severity_array,
-                                           certainty_array,
-                                           subscribe_by,
-                                           sent_flag)
+    def mutate(
+        self,
+        info,
+        subscription_name,
+        country_ids,
+        admin1_ids,
+        urgency_array,
+        severity_array,
+        certainty_array,
+        subscribe_by,
+        sent_flag,
+    ):
+        subscription = create_subscription(
+            info.context.user.id,
+            subscription_name,
+            country_ids,
+            admin1_ids,
+            urgency_array,
+            severity_array,
+            certainty_array,
+            subscribe_by,
+            sent_flag,
+        )
         return CreateSubscription(subscription=subscription)
 
 
@@ -110,17 +145,30 @@ class CreateSubscriptionTest(graphene.Mutation):
 
     subscription = graphene.Field(SubscriptionType)
 
-    def mutate(self, info, user_id, subscription_name, country_ids, admin1_ids,
-               urgency_array, severity_array, certainty_array, subscribe_by, sent_flag):
-        subscription = create_subscription(user_id,
-                                           subscription_name,
-                                           country_ids,
-                                           admin1_ids,
-                                           urgency_array,
-                                           severity_array,
-                                           certainty_array,
-                                           subscribe_by,
-                                           sent_flag)
+    def mutate(
+        self,
+        info,
+        user_id,
+        subscription_name,
+        country_ids,
+        admin1_ids,
+        urgency_array,
+        severity_array,
+        certainty_array,
+        subscribe_by,
+        sent_flag,
+    ):
+        subscription = create_subscription(
+            user_id,
+            subscription_name,
+            country_ids,
+            admin1_ids,
+            urgency_array,
+            severity_array,
+            certainty_array,
+            subscribe_by,
+            sent_flag,
+        )
         return CreateSubscriptionTest(subscription=subscription)
 
 
@@ -136,9 +184,7 @@ class DeleteSubscription(graphene.Mutation):
         subscription = Subscription.objects.get(id=subscription_id)
         login_user_id = info.context.user.id
         if subscription.user_id != login_user_id:
-            return DeleteSubscription(success=False,
-                                      error_message='Delete operation is not authorized '
-                                                    'to this user.')
+            return DeleteSubscription(success=False, error_message='Delete operation is not authorized ' 'to this user.')
         subscription.delete()
         return DeleteSubscription(success=True)
 
@@ -158,15 +204,23 @@ class UpdateSubscription(graphene.Mutation):
     success = graphene.Boolean()
     error_message = graphene.String()
 
-    def mutate(self, info, subscription_id, subscription_name,
-               country_ids, admin1_ids,
-               urgency_array, severity_array, certainty_array, subscribe_by, sent_flag):
+    def mutate(
+        self,
+        info,
+        subscription_id,
+        subscription_name,
+        country_ids,
+        admin1_ids,
+        urgency_array,
+        severity_array,
+        certainty_array,
+        subscribe_by,
+        sent_flag,
+    ):
         subscription = Subscription.objects.get(id=subscription_id)
         login_user_id = info.context.user.id
         if subscription.user_id != login_user_id:
-            return UpdateSubscription(success=False,
-                                      error_message='Update operation is not authorized '
-                                                    'to this user.')
+            return UpdateSubscription(success=False, error_message='Update operation is not authorized ' 'to this user.')
         subscription.subscription_name = subscription_name
         subscription.country_ids = country_ids
         subscription.admin1_ids = admin1_ids
@@ -191,20 +245,22 @@ class GenerateTestSubscriptions(graphene.Mutation):
     @login_required
     def mutate(self, info, user_id, case_numbers):
         if case_numbers > 10000:
-            return GenerateTestSubscriptions(success=False,
-                                             error_message='You should not be add cases '
-                                                           'more than 10000 at one time.')
+            return GenerateTestSubscriptions(
+                success=False, error_message='You should not be add cases ' 'more than 10000 at one time.'
+            )
         with patch.object(Subscription, 'save', mock_save):
             for _ in range(0, case_numbers):
-                subscription = create_subscription(user_id + random.randint(-10, 10),
-                                                   "test_case_" + get_random_string(10),
-                                                   get_random_integer_array(100000, 100100),
-                                                   get_random_integer_array(1000000, 1001000),
-                                                   get_random_string_array(URGENCY_ARRAY),
-                                                   get_random_string_array(SEVERITY_ARRAY),
-                                                   get_random_string_array(CERTAINTY_ARRAY),
-                                                   ["email"],
-                                                   0)
+                subscription = create_subscription(
+                    user_id + random.randint(-10, 10),
+                    "test_case_" + get_random_string(10),
+                    get_random_integer_array(100000, 100100),
+                    get_random_integer_array(1000000, 1001000),
+                    get_random_string_array(URGENCY_ARRAY),
+                    get_random_string_array(SEVERITY_ARRAY),
+                    get_random_string_array(CERTAINTY_ARRAY),
+                    ["email"],
+                    0,
+                )
                 subscription.save()
         return GenerateTestSubscriptions(success=True)
 
@@ -220,27 +276,28 @@ class Mutation(graphene.ObjectType):
 
 class Query(graphene.ObjectType):
     list_all_subscription = graphene.List(SubscriptionType)
-    list_subscription = graphene.List(SubscriptionType,
-                                      country_ids=graphene.List(graphene.Int),
-                                      admin1_ids=graphene.List(graphene.Int),
-                                      urgency_array=graphene.List(graphene.String),
-                                      severity_array=graphene.List(graphene.String),
-                                      certainty_array=graphene.List(graphene.String))
-    get_subscription = graphene.Field(SubscriptionType,
-                                      subscription_id=graphene.Int())
+    list_subscription = graphene.List(
+        SubscriptionType,
+        country_ids=graphene.List(graphene.Int),
+        admin1_ids=graphene.List(graphene.Int),
+        urgency_array=graphene.List(graphene.String),
+        severity_array=graphene.List(graphene.String),
+        certainty_array=graphene.List(graphene.String),
+    )
+    get_subscription = graphene.Field(SubscriptionType, subscription_id=graphene.Int())
 
     @login_required
     def resolve_list_all_subscription(self, info):
         return Subscription.objects.filter(user_id=info.context.user.id).order_by('-id')
 
-    def resolve_list_subscription(self, info, country_ids, admin1_ids,
-                                  urgency_array, severity_array, certainty_array):
-        return Subscription.objects.filter(country_ids__contains=country_ids,
-                                           admin1_ids__contains=admin1_ids,
-                                           urgency_array__contains=urgency_array,
-                                           severity_array__contains=severity_array,
-                                           certainty_array__contains=certainty_array) \
-            .order_by('-id')
+    def resolve_list_subscription(self, info, country_ids, admin1_ids, urgency_array, severity_array, certainty_array):
+        return Subscription.objects.filter(
+            country_ids__contains=country_ids,
+            admin1_ids__contains=admin1_ids,
+            urgency_array__contains=urgency_array,
+            severity_array__contains=severity_array,
+            certainty_array__contains=certainty_array,
+        ).order_by('-id')
 
     def resolve_get_subscription(self, info, subscription_id):
         return Subscription.objects.get(id=subscription_id)

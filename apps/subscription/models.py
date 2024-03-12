@@ -4,8 +4,7 @@ from django.db import models
 
 class Subscription(models.Model):
     id = models.AutoField(primary_key=True)
-    subscription_name = models.CharField(default="", verbose_name="subscription_name",
-                                         max_length=512)
+    subscription_name = models.CharField(default="", verbose_name="subscription_name", max_length=512)
     user_id = models.IntegerField(default=0, verbose_name="user_id")
     country_ids = ArrayField(models.IntegerField(verbose_name='country_ids'), default=list)
     admin1_ids = ArrayField(models.IntegerField(verbose_name='admin1_ids'), default=list)
@@ -24,8 +23,10 @@ class Subscription(models.Model):
         return alerts_list
 
     def save(self, *args, force_insert=False, force_update=False, **kwargs):
-        from apps.subscription_manager.tasks import subscription_mapper
         from django.core.cache import cache
+
+        from apps.subscription_manager.tasks import subscription_mapper
+
         super().save(force_insert, force_update, *args, **kwargs)
         # Add the subscription id as a view lock, so user will not view the subscription during
         # mappings.

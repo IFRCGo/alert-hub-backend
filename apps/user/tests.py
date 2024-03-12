@@ -1,15 +1,14 @@
 import json
 from datetime import timedelta
 from unittest.mock import patch
-from jwt import MissingRequiredClaimError, InvalidTokenError
-from graphene_django.utils.testing import GraphQLTestCase
 
-from django.test import TestCase
-from django.utils import timezone
-from django.test import Client
 from django.contrib.auth import get_user_model
+from django.test import Client, TestCase
+from django.utils import timezone
+from graphene_django.utils.testing import GraphQLTestCase
+from jwt import InvalidTokenError, MissingRequiredClaimError
 
-from .utils import generate_jti, jwt_payload, jwt_decode, _validate_jti
+from .utils import _validate_jti, generate_jti, jwt_decode, jwt_payload
 
 
 class APITestCaseWithJWT(GraphQLTestCase):
@@ -69,15 +68,18 @@ class APITestCaseWithJWT(GraphQLTestCase):
         old_jwt = self.client.cookies.get('JWT')
 
         # Test successful logout
-        response = self.client.post(self.GRAPHQL_URL, {
-            'query': '''
+        response = self.client.post(
+            self.GRAPHQL_URL,
+            {
+                'query': '''
                 mutation {
                     logout {
                         success
                     }
                 }
             '''
-        })
+            },
+        )
         self.assertEqual(response.status_code, 200)
 
         # Check that a new JWT has been generated
@@ -95,8 +97,7 @@ class APITestCaseWithoutJWT(GraphQLTestCase):
 
     @patch('django.core.cache.cache.set')
     @patch('django.core.cache.cache.get')
-    @patch('user.tasks.send_email.delay',
-           side_effect=lambda email, subject, template, context: None)
+    @patch('user.tasks.send_email.delay', side_effect=lambda email, subject, template, context: None)
     def test_register_mutation(self, mock_cache_set, mock_cache_get, mock_send_email):
         # Create a temporary "cache"
         cache = {}
@@ -113,8 +114,7 @@ class APITestCaseWithoutJWT(GraphQLTestCase):
 
         # Check that registration was successful
         self.assertFalse(content['data']['register']['success'])
-        self.assertEqual(content['data']['register']['errors']['verifyCode'],
-                         "Verify code has expired.")
+        self.assertEqual(content['data']['register']['errors']['verifyCode'], "Verify code has expired.")
 
         # Generate a verify code and save it to the "cache"
         verify_code = '123456'
@@ -135,8 +135,7 @@ class APITestCaseWithoutJWT(GraphQLTestCase):
 
         # Check that registration was successful
         self.assertFalse(content['data']['register']['success'])
-        self.assertEqual(content['data']['register']['errors']['verifyCode'],
-                         "Wrong verify code.")
+        self.assertEqual(content['data']['register']['errors']['verifyCode'], "Wrong verify code.")
 
         # Test the register mutation
         response = self.query(
@@ -161,8 +160,7 @@ class APITestCaseWithoutJWT(GraphQLTestCase):
         self.assertFalse(content['data']['register']['success'])
         self.assertEqual(content['data']['register']['errors']['email'], 'Email already exists.')
 
-    @patch('user.tasks.send_email.delay',
-           side_effect=lambda email, subject, template, context: None)
+    @patch('user.tasks.send_email.delay', side_effect=lambda email, subject, template, context: None)
     def test_send_verify_email_mutation(self, mock_send_email):
         # Test successful sending of verification email
         response = self.query(
@@ -203,35 +201,35 @@ class APITestCaseWithoutJWT(GraphQLTestCase):
 
         self.assertResponseNoErrors(response)
         self.assertFalse(content['data']['sendVerifyEmail']['success'])
-        self.assertEqual(content['data']['sendVerifyEmail']['errors']['email'],
-                         'Email already exists.')
+        self.assertEqual(content['data']['sendVerifyEmail']['errors']['email'], 'Email already exists.')
 
     def test_reset_password_mutation(self):
         # Create a user
         get_user_model().objects.create_user(email='newuser@example.com', password='oldpassword')
 
         # Test request to reset password
-        response = self.client.post(self.GRAPHQL_URL, {
-            'query': '''
+        response = self.client.post(
+            self.GRAPHQL_URL,
+            {
+                'query': '''
                     mutation {
                         resetPassword(email: "newuser@example.com") {
                             success
                         }
                     }
                 '''
-        })
+            },
+        )
 
         content = json.loads(response.content)
 
         self.assertResponseNoErrors(response)
         self.assertTrue(content['data']['resetPassword']['success'])
 
-    @patch('user.tasks.send_email.delay',
-           side_effect=lambda email, subject, template, context: None)
+    @patch('user.tasks.send_email.delay', side_effect=lambda email, subject, template, context: None)
     def test_reset_password_confirm_mutation(self, mock_send_email):
         # Create a user
-        user = get_user_model().objects.create_user(email='newuser@example.com',
-                                                    password='oldpassword')
+        user = get_user_model().objects.create_user(email='newuser@example.com', password='oldpassword')
 
         # Request password reset
         user.password_reset_token = '123456'
@@ -239,8 +237,10 @@ class APITestCaseWithoutJWT(GraphQLTestCase):
         user.save()
 
         # Test with wrong verify code
-        response = self.client.post(self.GRAPHQL_URL, {
-            'query': '''
+        response = self.client.post(
+            self.GRAPHQL_URL,
+            {
+                'query': '''
                 mutation {
                     resetPasswordConfirm(email: "newuser@example.com", password: "newpassword", verifyCode: "1234") {
                         success
@@ -250,17 +250,19 @@ class APITestCaseWithoutJWT(GraphQLTestCase):
                     }
                 }
             '''
-        })
+            },
+        )
 
         content = json.loads(response.content)
 
         self.assertFalse(content['data']['resetPasswordConfirm']['success'])
-        self.assertEqual(content['data']['resetPasswordConfirm']['errors']['verifyCode'],
-                         'Verify code is wrong.')
+        self.assertEqual(content['data']['resetPasswordConfirm']['errors']['verifyCode'], 'Verify code is wrong.')
 
         # Test confirmation of password reset
-        response = self.client.post(self.GRAPHQL_URL, {
-            'query': f'''
+        response = self.client.post(
+            self.GRAPHQL_URL,
+            {
+                'query': f'''
                 mutation {{
                     resetPasswordConfirm(
                     email: "newuser@example.com",
@@ -274,7 +276,8 @@ class APITestCaseWithoutJWT(GraphQLTestCase):
                     }}
                 }}
             '''
-        })
+            },
+        )
 
         content = json.loads(response.content)
 
@@ -295,8 +298,7 @@ class TestEmailChange(GraphQLTestCase):
         # Log in the user
         self.client.login(email='test@example.com', password='testpassword')
 
-    @patch('user.tasks.send_email.delay',
-           side_effect=lambda email, subject, template, context: None)
+    @patch('user.tasks.send_email.delay', side_effect=lambda email, subject, template, context: None)
     @patch('django.core.cache.cache.set')
     @patch('django.core.cache.cache.get')
     def test_email_change_process(self, mock_cache_get, mock_cache_set, mock_send_email):
@@ -308,15 +310,18 @@ class TestEmailChange(GraphQLTestCase):
         mock_cache_get.side_effect = cache.get
 
         # 1. Request email reset
-        response = self.client.post(self.GRAPHQL_URL, {
-            'query': '''
+        response = self.client.post(
+            self.GRAPHQL_URL,
+            {
+                'query': '''
                 mutation {
                     resetEmail {
                         success
                     }
                 }
             '''
-        })
+            },
+        )
         self.assertEqual(response.status_code, 200)
         content = json.loads(response.content)
         self.assertResponseNoErrors(response)
@@ -326,8 +331,10 @@ class TestEmailChange(GraphQLTestCase):
         verify_code = cache.get('test@example.com_email_reset')
 
         # 2. Confirm email reset
-        response = self.client.post(self.GRAPHQL_URL, {
-            'query': f'''
+        response = self.client.post(
+            self.GRAPHQL_URL,
+            {
+                'query': f'''
                 mutation {{
                     resetEmailConfirm(verifyCode: "{verify_code}") {{
                         success
@@ -335,7 +342,8 @@ class TestEmailChange(GraphQLTestCase):
                     }}
                 }}
             '''
-        })
+            },
+        )
         self.assertEqual(response.status_code, 200)
         content = json.loads(response.content)
         self.assertResponseNoErrors(response)
@@ -345,15 +353,18 @@ class TestEmailChange(GraphQLTestCase):
         token = content['data']['resetEmailConfirm']['token']
 
         # 3. Send new verify email
-        response = self.client.post(self.GRAPHQL_URL, {
-            'query': f'''
+        response = self.client.post(
+            self.GRAPHQL_URL,
+            {
+                'query': f'''
                 mutation {{
                     sendNewVerifyEmail(token: "{token}", newEmail: "newuser@example.com") {{
                         success
                     }}
                 }}
             '''
-        })
+            },
+        )
         self.assertEqual(response.status_code, 200)
         content = json.loads(response.content)
         self.assertResponseNoErrors(response)
@@ -363,8 +374,10 @@ class TestEmailChange(GraphQLTestCase):
         new_verify_code = cache.get('newuser@example.com_new_verify')
 
         # 4. Confirm new email
-        response = self.client.post(self.GRAPHQL_URL, {
-            'query': f'''
+        response = self.client.post(
+            self.GRAPHQL_URL,
+            {
+                'query': f'''
                 mutation {{
                     newEmailConfirm(newEmail: "newuser@example.com",
                      verifyCode: "{new_verify_code}") {{
@@ -372,7 +385,8 @@ class TestEmailChange(GraphQLTestCase):
                     }}
                 }}
             '''
-        })
+            },
+        )
 
         content = json.loads(response.content)
 
@@ -384,8 +398,7 @@ class UtilsTest(TestCase):
     @classmethod
     def setUpTestData(cls):
         # Create a test user
-        cls.user = get_user_model().objects.create_user(email='test@example.com',
-                                                        password='testpassword')
+        cls.user = get_user_model().objects.create_user(email='test@example.com', password='testpassword')
 
     def test_generate_jti(self):
         jti = generate_jti()

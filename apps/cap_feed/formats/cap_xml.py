@@ -1,19 +1,25 @@
 import json
-from django.utils import timezone
-from django.db import IntegrityError
-from shapely.geometry import Polygon, MultiPolygon
 
-from apps.cap_feed.formats.utils import convert_datetime, log_attributeerror, log_integrityerror, log_valueerror
+from django.db import IntegrityError
+from django.utils import timezone
+from shapely.geometry import MultiPolygon, Polygon
+
+from apps.cap_feed.formats.utils import (
+    convert_datetime,
+    log_attributeerror,
+    log_integrityerror,
+    log_valueerror,
+)
 from apps.cap_feed.models import (
     Admin1,
-    AlertAdmin1,
     Alert,
+    AlertAdmin1,
     AlertInfo,
-    AlertInfoParameter,
     AlertInfoArea,
-    AlertInfoAreaPolygon,
     AlertInfoAreaCircle,
     AlertInfoAreaGeocode,
+    AlertInfoAreaPolygon,
+    AlertInfoParameter,
     ProcessedAlert,
 )
 
@@ -107,16 +113,8 @@ def get_alert(url, alert_root, feed, ns):
                         alert_info_area_polygon.alert_info_area = alert_info_area
                         alert_info_area_polygon.value = alert_info_area_polygon_entry.text
                         alert_info_area_polygon.save()
-                        points = [
-                            point.split(',')
-                            for point in alert_info_area_polygon_entry.text.strip().split(' ')
-                        ]
-                        polygons.append(
-                            Polygon([
-                                [point[1], point[0]]
-                                for point in points
-                            ])
-                        )
+                        points = [point.split(',') for point in alert_info_area_polygon_entry.text.strip().split(' ')]
+                        polygons.append(Polygon([[point[1], point[0]] for point in points]))
 
                 # check polygon intersection with admin1s
                 for polygon in polygons:

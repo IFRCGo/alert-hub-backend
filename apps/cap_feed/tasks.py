@@ -1,10 +1,11 @@
 from __future__ import absolute_import, unicode_literals
+
 from celery import shared_task
 from django.utils import timezone
 
-from .models import Alert, AlertInfo, Feed, ProcessedAlert
-from .formats import format_handler as fh
 from . import data_injector as di
+from .formats import format_handler as fh
+from .models import Alert, AlertInfo, Feed, ProcessedAlert
 
 
 @shared_task

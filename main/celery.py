@@ -1,9 +1,9 @@
 import os
-from celery import Celery
 from datetime import timedelta
+
+from celery import Celery
 from django.conf import settings
 from kombu import Queue
-
 
 # TODO: Merge main.settings and main.production
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'main.settings')
@@ -14,13 +14,13 @@ app.conf.beat_schedule = {
     'remove_expired_alerts': {
         'task': 'apps.cap_feed.tasks.remove_expired_alerts',
         'schedule': timedelta(minutes=1),
-        'options': {'queue': 'default'}
+        'options': {'queue': 'default'},
     },
     'remove_expired_alert_records': {
         'task': 'apps.cap_feed.tasks.remove_expired_alert_records',
         'schedule': timedelta(days=1),
-        'options': {'queue': 'default'}
-    }
+        'options': {'queue': 'default'},
+    },
 }
 # Using a string here means the worker doesn't have to serialize
 # the configuration object to child processes.

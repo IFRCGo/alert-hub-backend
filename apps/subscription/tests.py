@@ -1,13 +1,17 @@
 import json
 from unittest.mock import patch
 
-from graphene_django.utils.testing import GraphQLTestCase
-from django.test import Client
 from django.contrib.auth import get_user_model
+from django.test import Client
+from graphene_django.utils.testing import GraphQLTestCase
 
 from .models import Subscription
-from .schema import create_subscription
-from .schema import get_random_string, get_random_integer_array, get_random_string_array
+from .schema import (
+    create_subscription,
+    get_random_integer_array,
+    get_random_string,
+    get_random_string_array,
+)
 
 
 def get_subscription(subscription_id):
@@ -37,43 +41,51 @@ class TestCase(GraphQLTestCase):
         cls.user = user.objects.create_user(email='test2@example.com', password='testpassword')
         with patch.object(Subscription, 'save', mock_save):
             # Create subscriptions for user 1
-            create_subscription(user_id=1,
-                                subscription_name="test_group1",
-                                country_ids=[1, 2, 3],
-                                admin1_ids=[1, 2, 3],
-                                urgency_array=["immediate"],
-                                severity_array=["severe"],
-                                certainty_array=["observed"],
-                                subscribe_by=["sms", "email"],
-                                sent_flag=0)
-            create_subscription(user_id=1,
-                                subscription_name="test_group1",
-                                country_ids=[1],
-                                admin1_ids=[1],
-                                urgency_array=["expected"],
-                                severity_array=["extreme"],
-                                certainty_array=["likely"],
-                                subscribe_by=["sms", "email"],
-                                sent_flag=0)
-            create_subscription(user_id=1,
-                                subscription_name="test_group1",
-                                country_ids=[2, 3],
-                                admin1_ids=[2, 3],
-                                urgency_array=["immediate", "expected"],
-                                severity_array=["severe", "extreme"],
-                                certainty_array=["observed", "likely"],
-                                subscribe_by=["sms", "email"],
-                                sent_flag=0)
+            create_subscription(
+                user_id=1,
+                subscription_name="test_group1",
+                country_ids=[1, 2, 3],
+                admin1_ids=[1, 2, 3],
+                urgency_array=["immediate"],
+                severity_array=["severe"],
+                certainty_array=["observed"],
+                subscribe_by=["sms", "email"],
+                sent_flag=0,
+            )
+            create_subscription(
+                user_id=1,
+                subscription_name="test_group1",
+                country_ids=[1],
+                admin1_ids=[1],
+                urgency_array=["expected"],
+                severity_array=["extreme"],
+                certainty_array=["likely"],
+                subscribe_by=["sms", "email"],
+                sent_flag=0,
+            )
+            create_subscription(
+                user_id=1,
+                subscription_name="test_group1",
+                country_ids=[2, 3],
+                admin1_ids=[2, 3],
+                urgency_array=["immediate", "expected"],
+                severity_array=["severe", "extreme"],
+                certainty_array=["observed", "likely"],
+                subscribe_by=["sms", "email"],
+                sent_flag=0,
+            )
             # Create a subscription for user 2
-            create_subscription(user_id=2,
-                                subscription_name="test_group2",
-                                country_ids=[1, 2, 3],
-                                admin1_ids=[1, 2, 3],
-                                urgency_array=["immediate", "expected"],
-                                severity_array=["severe", "extreme"],
-                                certainty_array=["observed", "likely"],
-                                subscribe_by=["sms", "email"],
-                                sent_flag=0)
+            create_subscription(
+                user_id=2,
+                subscription_name="test_group2",
+                country_ids=[1, 2, 3],
+                admin1_ids=[1, 2, 3],
+                urgency_array=["immediate", "expected"],
+                severity_array=["severe", "extreme"],
+                certainty_array=["observed", "likely"],
+                subscribe_by=["sms", "email"],
+                sent_flag=0,
+            )
 
     def setUp(self):
         # Log in the user
@@ -104,20 +116,13 @@ class TestCase(GraphQLTestCase):
         content = json.loads(response.content)
         self.assertEqual(len(content['data']['listAllSubscription']), 3)
         self.assertEqual(content['data']['listAllSubscription'][0]['id'], '3')
-        self.assertEqual(content['data']['listAllSubscription'][0]['subscriptionName'],
-                         'test_group1')
-        self.assertEqual(content['data']['listAllSubscription'][0]['countryIds'],
-                         [2, 3])
-        self.assertEqual(content['data']['listAllSubscription'][0]['admin1Ids'],
-                         [2, 3])
-        self.assertEqual(content['data']['listAllSubscription'][0]['urgencyArray'],
-                         ["immediate", "expected"])
-        self.assertEqual(content['data']['listAllSubscription'][0]['severityArray'],
-                         ["severe", "extreme"])
-        self.assertEqual(content['data']['listAllSubscription'][0]['certaintyArray'],
-                         ["observed", "likely"])
-        self.assertEqual(content['data']['listAllSubscription'][0]['subscribeBy'],
-                         ["sms", "email"])
+        self.assertEqual(content['data']['listAllSubscription'][0]['subscriptionName'], 'test_group1')
+        self.assertEqual(content['data']['listAllSubscription'][0]['countryIds'], [2, 3])
+        self.assertEqual(content['data']['listAllSubscription'][0]['admin1Ids'], [2, 3])
+        self.assertEqual(content['data']['listAllSubscription'][0]['urgencyArray'], ["immediate", "expected"])
+        self.assertEqual(content['data']['listAllSubscription'][0]['severityArray'], ["severe", "extreme"])
+        self.assertEqual(content['data']['listAllSubscription'][0]['certaintyArray'], ["observed", "likely"])
+        self.assertEqual(content['data']['listAllSubscription'][0]['subscribeBy'], ["sms", "email"])
         self.assertEqual(content['data']['listAllSubscription'][0]['sentFlag'], 0)
 
     # Test query for list subscriptions by countryId filters
@@ -493,20 +498,13 @@ class TestCase(GraphQLTestCase):
 
         content = json.loads(response.content)
         self.assertEqual(content['data']['getSubscription']['id'], '1')
-        self.assertEqual(content['data']['getSubscription']['subscriptionName'],
-                         'test_group1')
-        self.assertEqual(content['data']['getSubscription']['countryIds'],
-                         [1, 2, 3])
-        self.assertEqual(content['data']['getSubscription']['admin1Ids'],
-                         [1, 2, 3])
-        self.assertEqual(content['data']['getSubscription']['urgencyArray'],
-                         ["immediate"])
-        self.assertEqual(content['data']['getSubscription']['severityArray'],
-                         ["severe"])
-        self.assertEqual(content['data']['getSubscription']['certaintyArray'],
-                         ["observed"])
-        self.assertEqual(content['data']['getSubscription']['subscribeBy'],
-                         ["sms", "email"])
+        self.assertEqual(content['data']['getSubscription']['subscriptionName'], 'test_group1')
+        self.assertEqual(content['data']['getSubscription']['countryIds'], [1, 2, 3])
+        self.assertEqual(content['data']['getSubscription']['admin1Ids'], [1, 2, 3])
+        self.assertEqual(content['data']['getSubscription']['urgencyArray'], ["immediate"])
+        self.assertEqual(content['data']['getSubscription']['severityArray'], ["severe"])
+        self.assertEqual(content['data']['getSubscription']['certaintyArray'], ["observed"])
+        self.assertEqual(content['data']['getSubscription']['subscribeBy'], ["sms", "email"])
         self.assertEqual(content['data']['getSubscription']['sentFlag'], 0)
 
     # Test mutation for create subscription
@@ -544,20 +542,13 @@ class TestCase(GraphQLTestCase):
 
         content = json.loads(response.content)
         self.assertEqual(content['data']['createSubscription']['subscription']['id'], '5')
-        self.assertEqual(content['data']['createSubscription']['subscription']['subscriptionName'],
-                         'test_group3')
-        self.assertEqual(content['data']['createSubscription']['subscription']['countryIds'],
-                         [1, 2, 3])
-        self.assertEqual(content['data']['createSubscription']['subscription']['admin1Ids'],
-                         [1, 2, 3])
-        self.assertEqual(content['data']['createSubscription']['subscription']['urgencyArray'],
-                         ["immediate", "expected"])
-        self.assertEqual(content['data']['createSubscription']['subscription']['severityArray'],
-                         ["severe", "extreme"])
-        self.assertEqual(content['data']['createSubscription']['subscription']['certaintyArray'],
-                         ["observed", "likely"])
-        self.assertEqual(content['data']['createSubscription']['subscription']['subscribeBy'],
-                         ["sms", "email"])
+        self.assertEqual(content['data']['createSubscription']['subscription']['subscriptionName'], 'test_group3')
+        self.assertEqual(content['data']['createSubscription']['subscription']['countryIds'], [1, 2, 3])
+        self.assertEqual(content['data']['createSubscription']['subscription']['admin1Ids'], [1, 2, 3])
+        self.assertEqual(content['data']['createSubscription']['subscription']['urgencyArray'], ["immediate", "expected"])
+        self.assertEqual(content['data']['createSubscription']['subscription']['severityArray'], ["severe", "extreme"])
+        self.assertEqual(content['data']['createSubscription']['subscription']['certaintyArray'], ["observed", "likely"])
+        self.assertEqual(content['data']['createSubscription']['subscription']['subscribeBy'], ["sms", "email"])
         self.assertEqual(content['data']['createSubscription']['subscription']['sentFlag'], 0)
 
     # Test mutation for create subscription test
@@ -596,25 +587,16 @@ class TestCase(GraphQLTestCase):
 
         content = json.loads(response.content)
         self.assertEqual(content['data']['createSubscriptionTest']['subscription']['id'], '6')
+        self.assertEqual(content['data']['createSubscriptionTest']['subscription']['subscriptionName'], 'test_group3')
+        self.assertEqual(content['data']['createSubscriptionTest']['subscription']['userId'], 3)
+        self.assertEqual(content['data']['createSubscriptionTest']['subscription']['countryIds'], [1, 2, 3])
+        self.assertEqual(content['data']['createSubscriptionTest']['subscription']['admin1Ids'], [1, 2, 3])
         self.assertEqual(
-            content['data']['createSubscriptionTest']['subscription']['subscriptionName'],
-            'test_group3')
-        self.assertEqual(
-            content['data']['createSubscriptionTest']['subscription']['userId'],
-            3)
-        self.assertEqual(content['data']['createSubscriptionTest']['subscription']['countryIds'],
-                         [1, 2, 3])
-        self.assertEqual(content['data']['createSubscriptionTest']['subscription']['admin1Ids'],
-                         [1, 2, 3])
-        self.assertEqual(content['data']['createSubscriptionTest']['subscription']['urgencyArray'],
-                         ["immediate", "expected"])
-        self.assertEqual(content['data']['createSubscriptionTest']['subscription']['severityArray'],
-                         ["severe", "extreme"])
-        self.assertEqual(
-            content['data']['createSubscriptionTest']['subscription']['certaintyArray'],
-            ["observed", "likely"])
-        self.assertEqual(content['data']['createSubscriptionTest']['subscription']['subscribeBy'],
-                         ["sms", "email"])
+            content['data']['createSubscriptionTest']['subscription']['urgencyArray'], ["immediate", "expected"]
+        )
+        self.assertEqual(content['data']['createSubscriptionTest']['subscription']['severityArray'], ["severe", "extreme"])
+        self.assertEqual(content['data']['createSubscriptionTest']['subscription']['certaintyArray'], ["observed", "likely"])
+        self.assertEqual(content['data']['createSubscriptionTest']['subscription']['subscribeBy'], ["sms", "email"])
         self.assertEqual(content['data']['createSubscriptionTest']['subscription']['sentFlag'], 0)
 
     # Test mutation for update subscription
