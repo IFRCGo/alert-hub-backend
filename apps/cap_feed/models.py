@@ -1,5 +1,6 @@
 import json
 from datetime import timedelta
+from typing import TYPE_CHECKING
 
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import IntegrityError, models
@@ -9,6 +10,9 @@ from django.utils import timezone
 from django_celery_beat.models import IntervalSchedule, PeriodicTask
 from iso639 import iter_langs
 from shapely.geometry import MultiPolygon, Polygon
+
+if TYPE_CHECKING:
+    from django.db.models.fields.related_descriptors import ManyRelatedManager
 
 
 class Continent(models.Model):
@@ -56,6 +60,9 @@ class Admin1(models.Model):
     min_longitude = models.FloatField(editable=False, null=True)
     max_longitude = models.FloatField(editable=False, null=True)
 
+    if TYPE_CHECKING:
+        alert_set: ManyRelatedManager['Alert']
+
     def __str__(self):
         return self.name
 
@@ -86,18 +93,25 @@ class Feed(models.Model):
     for interval in range(5, 65, 5):
         INTERVAL_CHOICES.append((interval, f"{interval} seconds"))
 
-    FORMAT_CHOICES = [('atom', 'atom'), ('rss', 'rss'), ('nws_us', 'nws_us')]
+    class Format(models.TextChoices):
+        ATOM = ['atom', 'ATOM']
+        RSS = 'rss', 'RSS'
+        NWS_US = 'nws_us', 'NWS_US'
 
-    STATUS_CHOICES = [('active', 'active'), ('testing', 'testing'), ('inactive', 'inactive'), ('unusable', 'unusable')]
+    class Status(models.TextChoices):
+        ACTIVE = 'active', 'Active'
+        TESTING = 'testing', 'Testing'
+        INACTIVE = 'inactive', 'Inactive'
+        UNUSABLE = 'unusable', 'Unusable'
 
     url = models.CharField(unique=True)
     country = models.ForeignKey(Country, on_delete=models.CASCADE)
-    format = models.CharField(choices=FORMAT_CHOICES)
+    format = models.CharField(choices=Format.choices)
     polling_interval = models.IntegerField(choices=INTERVAL_CHOICES)
     enable_polling = models.BooleanField(default=False)
     enable_rebroadcast = models.BooleanField(default=False)
     official = models.BooleanField(default=False)
-    status = models.CharField(choices=STATUS_CHOICES, default='active')
+    status = models.CharField(choices=Status.choices, default=Status.ACTIVE)
     author_name = models.CharField(default='')
     author_email = models.CharField(default='')
 
@@ -137,17 +151,24 @@ class ProcessedAlert(models.Model):
 
 
 class Alert(models.Model):
-    STATUS_CHOICES = [
-        ('Actual', 'Actual'),
-        ('Exercise', 'Exercise'),
-        ('System', 'System'),
-        ('Test', 'Test'),
-        ('Draft', 'Draft'),
-    ]
+    class Status(models.TextChoices):
+        ACTUAL = 'Actual', 'Actual'
+        EXERCISE = 'Exercise', 'Exercise'
+        SYSTEM = 'System', 'System'
+        TEST = 'Test', 'Test'
+        DRAFT = 'Draft', 'Draft'
 
-    MSG_TYPE_CHOICES = [('Alert', 'Alert'), ('Update', 'Update'), ('Cancel', 'Cancel'), ('Ack', 'Ack'), ('Error', 'Error')]
+    class MsgType(models.TextChoices):
+        ALERT = 'Alert', 'Alert'
+        UPDATE = 'Update', 'Update'
+        CANCEL = 'Cancel', 'Cancel'
+        ACK = 'Ack', 'Ack'
+        ERROR = 'Error', 'Error'
 
-    SCOPE_CHOICES = [('Public', 'Public'), ('Restricted', 'Restricted'), ('Private', 'Private')]
+    class Scope(models.TextChoices):  # XXX: Not used, maybe we need to use this in scope field?
+        PUBLIC = 'Public', 'Public'
+        RESTRICTED = 'Restricted', 'Restricted'
+        PRIVATE = 'Private', 'Private'
 
     country = models.ForeignKey(Country, on_delete=models.CASCADE)
     admin1s = models.ManyToManyField(Admin1, through='AlertAdmin1')
@@ -157,8 +178,8 @@ class Alert(models.Model):
     identifier = models.CharField()
     sender = models.CharField()
     sent = models.DateTimeField()
-    status = models.CharField(choices=STATUS_CHOICES)
-    msg_type = models.CharField(choices=MSG_TYPE_CHOICES)
+    status = models.CharField(choices=Status.choices)
+    msg_type = models.CharField(choices=MsgType.choices)
     source = models.CharField(blank=True, null=True, default=None)
     scope = models.CharField(blank=True, null=True, default=None)
     restriction = models.CharField(blank=True, null=True, default=None)
@@ -168,6 +189,8 @@ class Alert(models.Model):
     references = models.TextField(blank=True, null=True, default=None)
     incidents = models.TextField(blank=True, null=True, default=None)
 
+    if TYPE_CHECKING:
+        alertinfo_set: ManyRelatedManager['AlertInfo']
     __all_info_added = None
 
     def __init__(self, *args, **kwargs):
@@ -195,66 +218,61 @@ class AlertInfo(models.Model):
     def default_expire():
         return timezone.now() + timedelta(days=1)
 
-    CATEGORY_CHOICES = [
-        ('Geo', 'Geo'),
-        ('Met', 'Met'),
-        ('Safety', 'Safety'),
-        ('Security', 'Security'),
-        ('Rescue', 'Rescue'),
-        ('Fire', 'Fire'),
-        ('Health', 'Health'),
-        ('Env', 'Env'),
-        ('Transport', 'Transport'),
-        ('Infra', 'Infra'),
-        ('CBRNE', 'CBRNE'),
-        ('Other', 'Other'),
-    ]
+    class Category(models.TextChoices):
+        GEO = 'Geo', 'Geo'
+        MET = 'Met', 'Met'
+        SAFETY = 'Safety', 'Safety'
+        SECURITY = 'Security', 'Security'
+        RESCUE = 'Rescue', 'Rescue'
+        FIRE = 'Fire', 'Fire'
+        HEALTH = 'Health', 'Health'
+        ENV = 'Env', 'Env'
+        TRANSPORT = 'Transport', 'Transport'
+        INFRA = 'Infra', 'Infra'
+        CBRNE = 'CBRNE', 'CBRNE'
+        OTHER = 'Other', 'Other'
 
-    RESPONSE_TYPE_CHOICES = [
-        ('Shelter', 'Shelter'),
-        ('Evacuate', 'Evacuate'),
-        ('Prepare', 'Prepare'),
-        ('Execute', 'Execute'),
-        ('Avoid', 'Avoid'),
-        ('Monitor', 'Monitor'),
-        ('Assess', 'Assess'),
-        ('AllClear', 'AllClear'),
-        ('None', 'None'),
-    ]
+    class ResponseType(models.TextChoices):
+        SHELTER = 'Shelter', 'Shelter'
+        EVACUATE = 'Evacuate', 'Evacuate'
+        PREPARE = 'Prepare', 'Prepare'
+        EXECUTE = 'Execute', 'Execute'
+        AVOID = 'Avoid', 'Avoid'
+        MONITOR = 'Monitor', 'Monitor'
+        ASSESS = 'Assess', 'Assess'
+        ALLCLEAR = 'AllClear', 'AllClear'
+        NONE = 'None', 'None'
 
-    URGENCY_CHOICES = [
-        ('Immediate', 'Immediate'),
-        ('Expected', 'Expected'),
-        ('Future', 'Future'),
-        ('Past', 'Past'),
-        ('Unknown', 'Unknown'),
-    ]
+    class Urgency(models.TextChoices):
+        IMMEDIATE = 'Immediate', 'Immediate'
+        EXPECTED = 'Expected', 'Expected'
+        FUTURE = 'Future', 'Future'
+        PAST = 'Past', 'Past'
+        UNKNOWN = 'Unknown', 'Unknown'
 
-    SEVERITY_CHOICES = [
-        ('Extreme', 'Extreme'),
-        ('Severe', 'Severe'),
-        ('Moderate', 'Moderate'),
-        ('Minor', 'Minor'),
-        ('Unknown', 'Unknown'),
-    ]
+    class Severity(models.TextChoices):
+        EXTREME = 'Extreme', 'Extreme'
+        SEVERE = 'Severe', 'Severe'
+        MODERATE = 'Moderate', 'Moderate'
+        MINOR = 'Minor', 'Minor'
+        UNKNOWN = 'Unknown', 'Unknown'
 
-    CERTAINTY_CHOICES = [
-        ('Observed', 'Observed'),
-        ('Likely', 'Likely'),
-        ('Possible', 'Possible'),
-        ('Unlikely', 'Unlikely'),
-        ('Unknown', 'Unknown'),
-    ]
+    class Certainty(models.TextChoices):
+        OBSERVED = 'Observed', 'Observed'
+        LIKELY = 'Likely', 'Likely'
+        POSSIBLE = 'Possible', 'Possible'
+        UNLIKELY = 'Unlikely', 'Unlikely'
+        UNKNOWN = 'Unknown', 'Unknown'
 
     alert = models.ForeignKey(Alert, on_delete=models.CASCADE, related_name='infos')
 
     language = models.CharField(blank=True, default='en-US')
-    category = models.CharField(choices=CATEGORY_CHOICES)
+    category = models.CharField(choices=Category.choices)
     event = models.CharField()
-    response_type = models.CharField(choices=RESPONSE_TYPE_CHOICES, blank=True, null=True, default=None)
-    urgency = models.CharField(choices=URGENCY_CHOICES)
-    severity = models.CharField(choices=SEVERITY_CHOICES)
-    certainty = models.CharField(choices=CERTAINTY_CHOICES)
+    response_type = models.CharField(choices=ResponseType.choices, blank=True, null=True, default=None)
+    urgency = models.CharField(choices=Urgency.choices)
+    severity = models.CharField(choices=Severity.choices)
+    certainty = models.CharField(choices=Certainty.choices)
     audience = models.CharField(blank=True, null=True, default=None)
     event_code = models.CharField(blank=True, null=True, default=None)
     # effective = models.DateTimeField(default=Alert.objects.get(pk=alert).sent)
@@ -342,7 +360,7 @@ class FeedLog(models.Model):
     timestamp = models.DateTimeField(default=timezone.now)
     notes = models.TextField(blank=True, default='')
 
-    class Meta:
+    class Meta:  # pyright: ignore [reportIncompatibleVariableOverride]
         constraints = [
             models.UniqueConstraint(fields=['alert_url', 'description'], name="unique_alert_error"),
         ]

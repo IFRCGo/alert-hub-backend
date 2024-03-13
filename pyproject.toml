@@ -9,7 +9,8 @@ package-mode = false
 [tool.poetry.dependencies]
 python = "^3.11"
 django = "^4.2"
-django-celery-beat = "^2.5.0"
+celery = "^5.3"
+django-celery-beat = "*"
 django-cors-headers = "^4.2.0"
 django-environ = "*"
 django-extensions = "^3.2.3"
@@ -25,10 +26,12 @@ requests = "*"
 
 [tool.poetry.dev-dependencies]
 pytest = "*"
+ipython = "*"
 pytest-profiling = "*"
 pytest-ordering = "*"
 pytest-django = "*"
-django-stubs = { version = "*", allow-prereleases = true }
+django-stubs = "^4.2.6"  # NOTE: 4.2.7 is messing with TextChoices/IntergerChoices
+celery-types = "*"
 
 [tool.black]
 line-length = 125
@@ -43,6 +46,7 @@ profile = "black"
 exclude = [
     "**/__pycache__",
     "**/snap_test_*.py",
+    ".venv/",
 ]
 reportMissingImports = true
 reportMissingTypeStubs = false

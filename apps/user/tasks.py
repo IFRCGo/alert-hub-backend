@@ -1,12 +1,12 @@
 from celery import shared_task
+from django.conf import settings
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
-from project import settings
 
 
-@shared_task(bind=True, queue='user_manager')
-def send_email(self, email, subject, template_name, context=None):
+@shared_task(queue='user_manager')
+def send_email(email, subject, template_name, context=None):
 
     message = render_to_string(template_name, context)
 

@@ -2,8 +2,6 @@ from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 from django.utils.translation import gettext as _
 
-# from apps.user.utils import generate_jti
-
 
 class CustomUserManager(BaseUserManager):
     def create_superuser(self, email, password=None, **extra_fields):
@@ -42,18 +40,11 @@ class CustomUser(AbstractUser):
 
     username = models.CharField(_('username'), max_length=150, unique=True, blank=True, null=True)
 
-    # jti = models.CharField(
-    #     _("jwt id"),
-    #     max_length=64,
-    #     blank=False,
-    #     null=False,
-    #     editable=False,
-    #     default=generate_jti,
-    #     help_text=_("JWT tokens for the user get revoked when JWT id has regenerated."),
-    # )
-
-    objects = CustomUserManager()
+    objects = CustomUserManager()  # pyright: ignore [reportAssignmentType,reportGeneralTypeIssues]
 
     USERNAME_FIELD = "email"
     EMAIL_FIELD = "email"
     REQUIRED_FIELDS = []
+
+
+User = CustomUser

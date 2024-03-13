@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from io import StringIO
 from unittest import mock
 
@@ -35,7 +35,7 @@ class AlertModelTests(TestCase):
         alert_info.urgency = 'Immediate'
         alert_info.severity = 'Extreme'
         alert_info.certainty = 'Observed'
-        alert_info.expires = timezone.now() + timezone.timedelta(days=days)
+        alert_info.expires = timezone.now() + timedelta(days=days)
 
         alert.save()
         alert_info.save()

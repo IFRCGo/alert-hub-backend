@@ -1,9 +1,10 @@
 import json
 from unittest.mock import patch
 
-from django.contrib.auth import get_user_model
 from django.test import Client
 from graphene_django.utils.testing import GraphQLTestCase
+
+from apps.user.models import User
 
 from .models import Subscription
 from .schema import (
@@ -18,11 +19,11 @@ def get_subscription(subscription_id):
     return Subscription.objects.get(id=subscription_id)
 
 
-def mock_save(self, *args, **kwargs):
+def mock_save(self: Subscription, *args, **kwargs):
     super(Subscription, self).save(*args, **kwargs)
 
 
-def mock_delete(self, *args, **kwargs):
+def mock_delete(self: Subscription, *args, **kwargs):
     super(Subscription, self).delete(*args, **kwargs)
 
 
@@ -35,10 +36,9 @@ class TestCase(GraphQLTestCase):
     @classmethod
     def setUpTestData(cls):
         # Create a test user
-        user = get_user_model()
-        cls.user = user.objects.create_user(email='test1@example.com', password='testpassword')
+        cls.user = User.objects.create_user(username='test1', email='test1@example.com', password='testpassword')
         # Create another user
-        cls.user = user.objects.create_user(email='test2@example.com', password='testpassword')
+        cls.user = User.objects.create_user(username='test2', email='test2@example.com', password='testpassword')
         with patch.object(Subscription, 'save', mock_save):
             # Create subscriptions for user 1
             create_subscription(

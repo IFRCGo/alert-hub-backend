@@ -17,7 +17,7 @@ def index(request):
 
 def inject(request):
     try:
-        inject_data.apply_async(args=[], kwargs={}, queue='inject')
+        inject_data.apply_async(args=(), kwargs={}, queue='inject')
     except Exception:
         print('Celery not running')
     return HttpResponse("Done")

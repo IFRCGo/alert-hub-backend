@@ -1,19 +1,17 @@
-# pylint: disable=R0801
-
 from celery import shared_task
-from django.contrib.auth import get_user_model
+from django.conf import settings
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
-from project import settings
+
+from apps.user.models import User
 
 
-@shared_task(bind=True)
-def send_subscription_email(self, user_id, subject, template_name, context=None):
-    custom_user = get_user_model()
+@shared_task
+def send_subscription_email(user_id, subject, template_name, context=None):
     try:
-        user = custom_user.objects.get(id=user_id)
-    except custom_user.DoesNotExist:
+        user = User.objects.get(id=user_id)
+    except User.DoesNotExist:
         return "Invalid User ID"
 
     context = context or {}

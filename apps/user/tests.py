@@ -2,13 +2,11 @@ import json
 from datetime import timedelta
 from unittest.mock import patch
 
-from django.contrib.auth import get_user_model
-from django.test import Client, TestCase
+from django.test import Client
 from django.utils import timezone
 from graphene_django.utils.testing import GraphQLTestCase
-from jwt import InvalidTokenError, MissingRequiredClaimError
 
-from .utils import _validate_jti, generate_jti, jwt_decode, jwt_payload
+from apps.user.models import User
 
 
 class APITestCaseWithJWT(GraphQLTestCase):
@@ -19,8 +17,7 @@ class APITestCaseWithJWT(GraphQLTestCase):
     @classmethod
     def setUpTestData(cls):
         # Create a test user
-        user_model = get_user_model()
-        cls.user = user_model.objects.create_user(email='test@example.com', password='testpassword')
+        cls.user = User.objects.create_user(username='test', email='test@example.com', password='testpassword')
 
     def setUp(self):
         # Log in the user
@@ -93,7 +90,7 @@ class APITestCaseWithoutJWT(GraphQLTestCase):
 
     def setUp(self):
         # Clear any existing users
-        get_user_model().objects.all().delete()
+        User.objects.all().delete()
 
     @patch('django.core.cache.cache.set')
     @patch('django.core.cache.cache.get')
@@ -182,7 +179,7 @@ class APITestCaseWithoutJWT(GraphQLTestCase):
         self.assertIsNone(content['data']['sendVerifyEmail']['errors'])
 
         # Create a user
-        get_user_model().objects.create_user(email='newuser@example.com', password='newpassword')
+        User.objects.create_user(username='newuser', email='newuser@example.com', password='newpassword')
 
         # Test sending of verification email to existing email
         response = self.query(
@@ -205,7 +202,7 @@ class APITestCaseWithoutJWT(GraphQLTestCase):
 
     def test_reset_password_mutation(self):
         # Create a user
-        get_user_model().objects.create_user(email='newuser@example.com', password='oldpassword')
+        User.objects.create_user(username='newuser', email='newuser@example.com', password='oldpassword')
 
         # Test request to reset password
         response = self.client.post(
@@ -229,7 +226,7 @@ class APITestCaseWithoutJWT(GraphQLTestCase):
     @patch('user.tasks.send_email.delay', side_effect=lambda email, subject, template, context: None)
     def test_reset_password_confirm_mutation(self, mock_send_email):
         # Create a user
-        user = get_user_model().objects.create_user(email='newuser@example.com', password='oldpassword')
+        user = User.objects.create_user(username='newuser', email='newuser@example.com', password='oldpassword')
 
         # Request password reset
         user.password_reset_token = '123456'
@@ -291,8 +288,7 @@ class TestEmailChange(GraphQLTestCase):
     @classmethod
     def setUpTestData(cls):
         # Create a test user
-        user_model = get_user_model()
-        cls.user = user_model.objects.create_user(email='test@example.com', password='testpassword')
+        cls.user = User.objects.create_user(username='test', email='test@example.com', password='testpassword')
 
     def setUp(self):
         # Log in the user
@@ -392,63 +388,3 @@ class TestEmailChange(GraphQLTestCase):
 
         self.assertResponseNoErrors(response)
         self.assertTrue(content['data']['newEmailConfirm']['success'])
-
-
-class UtilsTest(TestCase):
-    @classmethod
-    def setUpTestData(cls):
-        # Create a test user
-        cls.user = get_user_model().objects.create_user(email='test@example.com', password='testpassword')
-
-    def test_generate_jti(self):
-        jti = generate_jti()
-
-        # Check that the JTI is a 64-character hexadecimal string
-        self.assertEqual(len(jti), 64)
-        int(jti, 16)  # This will raise a ValueError if the JTI is not a valid hex string
-
-    def test_jwt_payload(self):
-        # Call the function with the test user
-        payload = jwt_payload(self.user)
-
-        # Check that the payload contains the correct information
-        self.assertEqual(payload['email'], self.user.email)
-        self.assertEqual(payload['jti'], self.user.jti)
-
-    @patch('user.utils.graphql_jwt_decode')
-    @patch('user.utils.get_user_by_payload')
-    def test_jwt_decode(self, mock_get_user_by_payload, mock_graphql_jwt_decode):
-        # Set up the mock functions
-        mock_get_user_by_payload.return_value = self.user
-        mock_graphql_jwt_decode.return_value = {'jti': self.user.jti}
-
-        # Call the function with a test token
-        payload = jwt_decode('testtoken')
-
-        # Check that the payload was correctly decoded
-        mock_graphql_jwt_decode.assert_called_once_with('testtoken', None)
-        self.assertEqual(payload, {'jti': self.user.jti})
-
-    def test__validate_jti_with_authenticated_user_and_valid_jti(self):
-        # Call the function with valid arguments
-        _validate_jti({'jti': self.user.jti}, self.user)
-
-        # If the function didn't raise an exception, then it passed
-
-    def test__validate_jti_with_unauthenticated_user(self):
-        from django.contrib.auth.models import AnonymousUser
-
-        # Call the function with an unauthenticated user
-        _validate_jti({'jti': self.user.jti}, AnonymousUser())
-
-        # If the function didn't raise an exception, then it passed
-
-    def test__validate_jti_with_missing_jti(self):
-        # Call the function without a JTI
-        with self.assertRaises(MissingRequiredClaimError):
-            _validate_jti({}, self.user)
-
-    def test__validate_jti_with_invalid_jti(self):
-        # Call the function with an invalid JTI
-        with self.assertRaises(InvalidTokenError):
-            _validate_jti({'jti': 'invalid'}, self.user)

@@ -1,5 +1,12 @@
+from typing import TYPE_CHECKING
+
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
+
+if TYPE_CHECKING:
+    from django.db.models.fields.related_descriptors import ManyRelatedManager
+
+    from apps.subscription_manager.models import Alert
 
 
 class Subscription(models.Model):
@@ -13,6 +20,9 @@ class Subscription(models.Model):
     certainty_array = ArrayField(models.CharField(verbose_name='certainty_array'), default=list)
     subscribe_by = ArrayField(models.CharField(verbose_name="subscribe_by"), default=list)
     sent_flag = models.IntegerField(default=0, verbose_name="sent_flag")
+
+    if TYPE_CHECKING:
+        alert_set: ManyRelatedManager[Alert]
 
     def get_alert_id_list(self):
         alerts_list = []
@@ -31,7 +41,7 @@ class Subscription(models.Model):
         # Add the subscription id as a view lock, so user will not view the subscription during
         # mappings.
         cache.add("v" + str(self.id), True, timeout=None)
-        subscription_mapper.apply_async(args=[self.id], queue='subscription_manager')
+        subscription_mapper.apply_async(args=(self.pk,), queue='subscription_manager')
 
-    def delete(self, *args, force_insert=False, force_update=False):
-        super().delete(force_insert, force_update)
+    def delete(self, *args, force_insert=False, force_update=False) -> tuple[int, dict[str, int]]:
+        return super().delete(force_insert, force_update)

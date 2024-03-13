@@ -3,20 +3,25 @@ import os
 import django
 from django.core.management import call_command
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE',
-                      'project.production' if 'WEBSITE_HOSTNAME' in os.environ else 'project.settings')
-django.setup()
-
 from faker import Faker
 import random
 
 from django.db import IntegrityError, transaction
-from django.contrib.auth import get_user_model
+from apps.user.models import User
 from apps.subscription.models import Subscription
-from apps.subscription_manager.external_alert_models import CapFeedCountry, CapFeedAdmin1
+from apps.cap_feed.models import Country as CapFeedCountry, Admin1 as CapFeedAdmin1
 
 fake = Faker()
-User = get_user_model()
+
+# TODO: Use django management commands instead of script like this
+os.environ.setdefault(
+    'DJANGO_SETTINGS_MODULE',
+    (
+        'project.production' if 'WEBSITE_HOSTNAME' in os.environ
+        else 'project.settings'
+    ),
+)
+django.setup()
 
 
 def create_user(email, password):
@@ -100,9 +105,9 @@ def generate_fake_users_and_subscriptions(count, csv_filename, subscription_coun
                                 # admin1_per_subscription = random.randint(1, len(admin1s))
                                 # selected_admin1s = random.sample(list(admin1s),
                                 #                                  admin1_per_subscription)
-                                country_id = selected_country.id
+                                country_id = selected_country.pk
                                 # admin1_ids = [admin1.id for admin1 in selected_admin1s]
-                                admin1_ids = [admin1.id for admin1 in admin1s]
+                                admin1_ids = [admin1.pk for admin1 in admin1s]
                                 subscription = create_subscription(user, [country_id], admin1_ids)
                                 subscriptions_to_create.append(subscription)
 

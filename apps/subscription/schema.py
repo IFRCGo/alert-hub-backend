@@ -5,9 +5,11 @@ from unittest.mock import patch
 
 import graphene
 from graphene_django import DjangoObjectType
-from graphql_jwt.decorators import login_required
 
 from .models import Subscription
+
+# from graphql_jwt.decorators import login_required
+
 
 URGENCY_ARRAY = ["immediate", "expected", "future", "past", "unknown"]
 
@@ -16,18 +18,14 @@ SEVERITY_ARRAY = ["extreme", "severe", "moderate", "minor", "unknown"]
 CERTAINTY_ARRAY = ["observed", "likely", "possible", "unlikely", "unknown"]
 
 
-def mock_save(self, *args, **kwargs):
+def mock_save(self: Subscription, *args, **kwargs):
     super(Subscription, self).save(*args, **kwargs)
-
-
-def mock_delete(self, *args, **kwargs):
-    super(Subscription, self).delete(*args, **kwargs)
 
 
 def get_random_string(length):
     # choose from all lowercase letter
     letters = string.ascii_lowercase
-    result_str = ''.join(random.choice(letters) for i in range(length))
+    result_str = ''.join(random.choice(letters) for _ in range(length))
     return result_str
 
 
@@ -104,9 +102,10 @@ class CreateSubscription(graphene.Mutation):
 
     subscription = graphene.Field(SubscriptionType)
 
-    @login_required
+    # @login_required
+    @classmethod
     def mutate(
-        self,
+        cls,
         info,
         subscription_name,
         country_ids,
@@ -128,7 +127,7 @@ class CreateSubscription(graphene.Mutation):
             subscribe_by,
             sent_flag,
         )
-        return CreateSubscription(subscription=subscription)
+        return cls(subscription=subscription)
 
 
 class CreateSubscriptionTest(graphene.Mutation):
@@ -145,8 +144,9 @@ class CreateSubscriptionTest(graphene.Mutation):
 
     subscription = graphene.Field(SubscriptionType)
 
+    @classmethod
     def mutate(
-        self,
+        cls,
         info,
         user_id,
         subscription_name,
@@ -169,7 +169,7 @@ class CreateSubscriptionTest(graphene.Mutation):
             subscribe_by,
             sent_flag,
         )
-        return CreateSubscriptionTest(subscription=subscription)
+        return cls(subscription=subscription)
 
 
 class DeleteSubscription(graphene.Mutation):
@@ -179,14 +179,15 @@ class DeleteSubscription(graphene.Mutation):
     success = graphene.Boolean()
     error_message = graphene.String()
 
-    @login_required
-    def mutate(self, info, subscription_id):
+    # @login_required
+    @classmethod
+    def mutate(cls, info, subscription_id):
         subscription = Subscription.objects.get(id=subscription_id)
         login_user_id = info.context.user.id
         if subscription.user_id != login_user_id:
-            return DeleteSubscription(success=False, error_message='Delete operation is not authorized ' 'to this user.')
+            return cls(success=False, error_message='Delete operation is not authorized ' 'to this user.')
         subscription.delete()
-        return DeleteSubscription(success=True)
+        return cls(success=True)
 
 
 class UpdateSubscription(graphene.Mutation):
@@ -204,8 +205,9 @@ class UpdateSubscription(graphene.Mutation):
     success = graphene.Boolean()
     error_message = graphene.String()
 
+    @classmethod
     def mutate(
-        self,
+        cls,
         info,
         subscription_id,
         subscription_name,
@@ -220,7 +222,7 @@ class UpdateSubscription(graphene.Mutation):
         subscription = Subscription.objects.get(id=subscription_id)
         login_user_id = info.context.user.id
         if subscription.user_id != login_user_id:
-            return UpdateSubscription(success=False, error_message='Update operation is not authorized ' 'to this user.')
+            return cls(success=False, error_message='Update operation is not authorized ' 'to this user.')
         subscription.subscription_name = subscription_name
         subscription.country_ids = country_ids
         subscription.admin1_ids = admin1_ids
@@ -230,7 +232,7 @@ class UpdateSubscription(graphene.Mutation):
         subscription.subscribe_by = subscribe_by
         subscription.sent_flag = sent_flag
         subscription.save()
-        return UpdateSubscription(success=True)
+        return cls(success=True)
 
 
 @patch.object(Subscription, 'save', mock_save)
@@ -242,11 +244,13 @@ class GenerateTestSubscriptions(graphene.Mutation):
     success = graphene.Boolean()
     error_message = graphene.String()
 
-    @login_required
-    def mutate(self, info, user_id, case_numbers):
+    # @login_required
+    @classmethod
+    def mutate(cls, info, user_id, case_numbers):
         if case_numbers > 10000:
-            return GenerateTestSubscriptions(
-                success=False, error_message='You should not be add cases ' 'more than 10000 at one time.'
+            return cls(
+                success=False,
+                error_message='You should not be add cases ' 'more than 10000 at one time.',
             )
         with patch.object(Subscription, 'save', mock_save):
             for _ in range(0, case_numbers):
@@ -262,7 +266,7 @@ class GenerateTestSubscriptions(graphene.Mutation):
                     0,
                 )
                 subscription.save()
-        return GenerateTestSubscriptions(success=True)
+        return cls(success=True)
 
 
 class Mutation(graphene.ObjectType):
@@ -286,7 +290,7 @@ class Query(graphene.ObjectType):
     )
     get_subscription = graphene.Field(SubscriptionType, subscription_id=graphene.Int())
 
-    @login_required
+    # @login_required
     def resolve_list_all_subscription(self, info):
         return Subscription.objects.filter(user_id=info.context.user.id).order_by('-id')
 

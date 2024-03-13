@@ -30,7 +30,7 @@ repos:
     hooks:
       - id: flake8
 
-  # - repo: https://github.com/RobertCraigie/pyright-python
-  #   rev: v1.1.353
-  #   hooks:
-  #     - id: pyright
+  - repo: https://github.com/RobertCraigie/pyright-python
+    rev: v1.1.353
+    hooks:
+      - id: pyright

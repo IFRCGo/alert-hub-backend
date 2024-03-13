@@ -1,9 +1,11 @@
 import json
 
-from django.core.cache import cache
 from django.db import transaction
 
-from .external_alert_models import CapFeedAdmin1, CapFeedAlert
+from apps.cap_feed.models import Admin1 as CapFeedAdmin1
+from apps.cap_feed.models import Alert as CapFeedAlert
+from main.cache import cache
+
 from .models import Alert, Subscription
 from .tasks import process_immediate_alerts
 
@@ -14,8 +16,6 @@ def map_subscriptions_to_alert():
         map_subscription_to_alert(subscription.id)
 
 
-# pylint: disable=too-many-nested-blocks
-# pylint: disable=too-many-branches
 def map_subscription_to_alert(subscription_id):
     updated_alerts = []
     # Only if the subscription finished its last mapping, we start to map the new one.
@@ -37,10 +37,10 @@ def map_subscription_to_alert(subscription_id):
             admin1 = CapFeedAdmin1.objects.filter(id=admin1_id).first()
             if admin1 is None:
                 continue
-            potential_alert_set = admin1.capfeedalert_set.all()
+            potential_alert_set = admin1.alert_set.all()
 
             for alert in potential_alert_set:
-                alert_id = alert.id
+                alert_id = alert.pk
                 if alert_id in potential_alert_ids:
                     continue
                 potential_alert_ids.append(alert_id)
@@ -54,16 +54,16 @@ def map_subscription_to_alert(subscription_id):
                     # If the alert is not to be deleted, lock it so the potential deletion of this
                     # alert can be delayed.
                     deleted_alert_lock.acquire(blocking=True)
-                    for info in alert.capfeedalertinfo_set.all():
+                    for info in alert.alertinfo_set.all():
                         if (
                             info.severity in subscription.severity_array
                             and info.certainty in subscription.certainty_array
                             and info.urgency in subscription.urgency_array
                         ):
 
-                            internal_alert = Alert.objects.filter(id=alert.id).first()
+                            internal_alert = Alert.objects.filter(id=alert.pk).first()
                             if internal_alert is None:
-                                internal_alert = Alert.objects.create(id=alert.id)
+                                internal_alert = Alert.objects.create(id=alert.pk)
                                 internal_alert.save()
 
                             updated_alerts.append(internal_alert)
@@ -105,13 +105,13 @@ def map_alert_to_subscription(alert_id):
     internal_alert = None
     updated_subscriptions = []
 
-    alert_admin1_ids = [admin1.id for admin1 in alert.admin1s.all()]
+    alert_admin1_ids = [admin1.pk for admin1 in alert.admin1s.all()]
     subscriptions = Subscription.objects.filter(admin1_ids__overlap=alert_admin1_ids)
 
     with transaction.atomic():
         for subscription in subscriptions:
             matching_info = None
-            for info in alert.capfeedalertinfo_set.all():
+            for info in alert.alertinfo_set.all():
                 if (
                     info.severity in subscription.severity_array
                     and info.certainty in subscription.certainty_array
@@ -122,7 +122,7 @@ def map_alert_to_subscription(alert_id):
 
             if matching_info:
                 if internal_alert is None:
-                    internal_alert = Alert.objects.create(id=alert.id)
+                    internal_alert = Alert.objects.create(id=alert.pk)
 
                 updated_subscriptions.append(subscription)
 

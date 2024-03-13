@@ -2,12 +2,11 @@ from django.core.cache import cache
 from django.test import TestCase
 from django.utils import timezone
 
-from .external_alert_models import (
-    CapFeedAdmin1,
-    CapFeedAlert,
-    CapFeedAlertinfo,
-    CapFeedCountry,
-)
+from apps.cap_feed.models import Admin1 as CapFeedAdmin1
+from apps.cap_feed.models import Alert as CapFeedAlert
+from apps.cap_feed.models import AlertInfo as CapFeedAlertinfo
+from apps.cap_feed.models import Country as CapFeedCountry
+
 from .models import Alert, Subscription
 from .subscription_alert_mapping import (
     delete_alert_to_subscription,
@@ -22,8 +21,6 @@ from .subscription_alert_mapping import (
 # that manipulate them.
 
 
-# pylint: disable=too-many-locals
-# pylint: disable=too-many-public-methods
 class SubscriptionManagerTestCase(TestCase):
     # Setup data for the tests
     @classmethod
@@ -140,7 +137,7 @@ class SubscriptionManagerTestCase(TestCase):
             subscribe_by=[1],
             sent_flag=0,
         )
-        map_subscription_to_alert(subscription.id)
+        map_subscription_to_alert(subscription.pk)
         expected = [1, 3]
         actual = subscription.get_alert_id_list()
         self.assertListEqual(expected, actual)
@@ -160,7 +157,7 @@ class SubscriptionManagerTestCase(TestCase):
             subscribe_by=[1],
             sent_flag=0,
         )
-        map_subscription_to_alert(subscription.id)
+        map_subscription_to_alert(subscription.pk)
 
         expected = [4]
         actual = subscription.get_alert_id_list()
@@ -183,7 +180,7 @@ class SubscriptionManagerTestCase(TestCase):
             subscribe_by=[1],
             sent_flag=0,
         )
-        map_subscription_to_alert(subscription.id)
+        map_subscription_to_alert(subscription.pk)
         expected = [1, 3]
         actual = subscription.get_alert_id_list()
         self.assertListEqual(expected, actual)
@@ -205,7 +202,7 @@ class SubscriptionManagerTestCase(TestCase):
             subscribe_by=[1],
             sent_flag=0,
         )
-        map_subscription_to_alert(subscription.id)
+        map_subscription_to_alert(subscription.pk)
         expected = [2, 4]
         actual = subscription.get_alert_id_list()
         self.assertListEqual(expected, actual)
@@ -228,7 +225,7 @@ class SubscriptionManagerTestCase(TestCase):
             subscribe_by=[1],
             sent_flag=0,
         )
-        map_subscription_to_alert(subscription.id)
+        map_subscription_to_alert(subscription.pk)
         expected = [2, 4]
         actual = subscription.get_alert_id_list()
         self.assertListEqual(expected, actual)
@@ -243,7 +240,7 @@ class SubscriptionManagerTestCase(TestCase):
 
         subscription.save()
 
-        map_subscription_to_alert(subscription.id)
+        map_subscription_to_alert(subscription.pk)
         expected = [4]
         actual = subscription.get_alert_id_list()
         self.assertListEqual(expected, actual)
@@ -267,7 +264,7 @@ class SubscriptionManagerTestCase(TestCase):
             subscribe_by=[1],
             sent_flag=0,
         )
-        map_subscription_to_alert(subscription.id)
+        map_subscription_to_alert(subscription.pk)
         expected = [1, 3]
         actual = subscription.get_alert_id_list()
         self.assertListEqual(expected, actual)
@@ -276,7 +273,7 @@ class SubscriptionManagerTestCase(TestCase):
         admin1_ids = [3, 4]
         subscription.admin1_ids = admin1_ids
         subscription.save()
-        map_subscription_to_alert(subscription.id)
+        map_subscription_to_alert(subscription.pk)
 
         expected = [2, 4]
         actual = subscription.get_alert_id_list()
@@ -300,7 +297,7 @@ class SubscriptionManagerTestCase(TestCase):
             subscribe_by=[1],
             sent_flag=0,
         )
-        map_subscription_to_alert(subscription.id)
+        map_subscription_to_alert(subscription.pk)
         expected = [1, 3]
         actual = subscription.get_alert_id_list()
         self.assertListEqual(expected, actual)
@@ -311,8 +308,7 @@ class SubscriptionManagerTestCase(TestCase):
         # Check if there is still many-to-many relationship between deleted subscriptions and
         # corresponding alerts
 
-        for alert_id in actual:
-            alert = Alert.objects.filter(id=alert_id).first()
+        for alert in Alert.objects.filter(id__in=actual).all():
             alert_subscriptions = alert.subscriptions.all()
             self.assertQuerysetEqual(alert_subscriptions, [])
 
@@ -331,7 +327,7 @@ class SubscriptionManagerTestCase(TestCase):
             subscribe_by=[1],
             sent_flag=0,
         )
-        map_subscription_to_alert(subscription.id)
+        map_subscription_to_alert(subscription.pk)
 
         expected = [4]
         actual = subscription.get_alert_id_list()
@@ -341,8 +337,7 @@ class SubscriptionManagerTestCase(TestCase):
 
         # Check if there is still many-to-many relationship between deleted subscriptions and
         # corresponding alerts
-        for alert_id in actual:
-            alert = Alert.objects.filter(id=alert_id).first()
+        for alert in Alert.objects.filter(id__in=actual).all():
             alert_subscriptions = alert.subscriptions.all()
             self.assertQuerysetEqual(alert_subscriptions, [])
 
@@ -369,7 +364,7 @@ class SubscriptionManagerTestCase(TestCase):
             subscribe_by=[1],
             sent_flag=0,
         )
-        map_subscription_to_alert(subscription.id)
+        map_subscription_to_alert(subscription.pk)
         # Try to map alert with id 2 to the new subscription, though it is already mapped to the
         # above susbcription
         result = map_alert_to_subscription(1)
@@ -411,10 +406,10 @@ class SubscriptionManagerTestCase(TestCase):
         )
 
         # Check if the alert maps the susbcriptions
-        result = map_alert_to_subscription(mocked_incoming_alert.id)
-        updated_subscription_ids = [common_subscription.id]
+        result = map_alert_to_subscription(mocked_incoming_alert.pk)
+        updated_subscription_ids = [common_subscription.pk]
         expected = (
-            f"Incoming Alert {mocked_incoming_alert.id} is successfully converted. "
+            f"Incoming Alert {mocked_incoming_alert.pk} is successfully converted. "
             f"Mapped Subscription id "
             f"are {updated_subscription_ids}."
         )
@@ -436,8 +431,8 @@ class SubscriptionManagerTestCase(TestCase):
             certainty="Likely",
             alert=mocked_incoming_alert,
         )
-        result = map_alert_to_subscription(mocked_incoming_alert.id)
-        expected = f"Incoming Alert {mocked_incoming_alert.id} is not mapped with any subscription."
+        result = map_alert_to_subscription(mocked_incoming_alert.pk)
+        expected = f"Incoming Alert {mocked_incoming_alert.pk} is not mapped with any subscription."
         self.assertEqual(expected, result)
 
     # Test deleted alert with id that is not existed
@@ -463,13 +458,13 @@ class SubscriptionManagerTestCase(TestCase):
             subscribe_by=[1],
             sent_flag=0,
         )
-        map_subscription_to_alert(common_subscription.id)
+        map_subscription_to_alert(common_subscription.pk)
 
         # simulate the incoming alert
         teyvat_1 = CapFeedCountry.objects.get(id=1)
         admin1_1 = CapFeedAdmin1.objects.get(id=1)
         mocked_incoming_alert = CapFeedAlert.objects.create(sent=timezone.now(), country=teyvat_1)
-        mocked_incoming_alert_id = mocked_incoming_alert.id
+        mocked_incoming_alert_id = mocked_incoming_alert.pk
         mocked_incoming_alert.admin1s.add(admin1_1)
         mocked_incoming_alert.save()
         CapFeedAlertinfo.objects.create(
@@ -482,10 +477,10 @@ class SubscriptionManagerTestCase(TestCase):
         )
 
         # Map the alert to the susbcriptions
-        map_alert_to_subscription(mocked_incoming_alert.id)
+        map_alert_to_subscription(mocked_incoming_alert.pk)
         # Check if subscription deletes the alert in its corresponding alert list
         result = delete_alert_to_subscription(mocked_incoming_alert_id)
-        updated_subscription_ids = [common_subscription.id]
+        updated_subscription_ids = [common_subscription.pk]
         expected = (
             f"Alert {mocked_incoming_alert_id} is successfully "
             f"deleted from subscription database. "
@@ -511,12 +506,12 @@ class SubscriptionManagerTestCase(TestCase):
             subscribe_by=[1],
             sent_flag=0,
         )
-        map_subscription_to_alert(common_subscription.id)
+        map_subscription_to_alert(common_subscription.pk)
         # simulate the incoming alert
         teyvat_1 = CapFeedCountry.objects.get(id=1)
         admin1_1 = CapFeedAdmin1.objects.get(id=1)
         mocked_incoming_alert = CapFeedAlert.objects.create(sent=timezone.now(), country=teyvat_1)
-        mocked_incoming_alert_id = mocked_incoming_alert.id
+        mocked_incoming_alert_id = mocked_incoming_alert.pk
         mocked_incoming_alert.admin1s.add(admin1_1)
         mocked_incoming_alert.save()
         CapFeedAlertinfo.objects.create(
@@ -575,11 +570,11 @@ class SubscriptionManagerTestCase(TestCase):
         expected = [1, 3]
         actual = []
         for alert in subscription_1.alert_set.all():
-            actual.append(alert.id)
+            actual.append(alert.pk)
         self.assertListEqual(expected, actual)
 
         expected = [4]
         actual = []
         for alert in subscription_2.alert_set.all():
-            actual.append(alert.id)
+            actual.append(alert.pk)
         self.assertListEqual(expected, actual)
