@@ -1,9 +1,9 @@
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse
 from django.template import loader
 
 from apps.cap_feed.tasks import inject_data
 
-from .models import Alert, Feed, LanguageInfo
+from .models import Alert
 
 
 def index(request):
@@ -21,29 +21,3 @@ def inject(request):
     except Exception:
         print('Celery not running')
     return HttpResponse("Done")
-
-
-def get_feeds(request):
-    feeds = Feed.objects.filter(enable_rebroadcast=True)
-    response = {'sources': []}
-    for feed in feeds:
-
-        language_set = []
-        for info in LanguageInfo.objects.filter(feed=feed):
-            language_set.append({'name': info.name, 'code': info.language, 'logo': info.logo})
-
-        response['sources'].append(
-            {
-                'source': {
-                    'sourceId': feed.pk,
-                    'byLanguage': language_set,
-                    'authorName': feed.author_name,
-                    'authorEmail': feed.author_email,
-                    'sourceIsOfficial': feed.official,
-                    'capAlertFeed': feed.url,
-                    'capAlertFeedStatus': 'testing',
-                    'authorityCountry': feed.country.iso3,
-                }
-            }
-        )
-    return JsonResponse(response, json_dumps_params={'indent': 2, 'ensure_ascii': False})

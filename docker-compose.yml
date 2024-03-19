@@ -12,10 +12,17 @@ x-server: &base_server_setup
   env_file:
     - .env
   environment: &base_server_setup_environment
+    DJANGO_APP_ENVIRONMENT: ${DJANGO_APP_ENVIRONMENT:-development}
     DJANGO_APP_TYPE: web
-    DJANGO_DEBUG: ${true:-DJANGO_DEBUG}
+    DJANGO_DEBUG: ${DJANGO_DEBUG:-true}
     DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY?error},
+    # -- Domain configurations
     DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-*}
+    APP_DOMAIN: localhost:800
+    APP_HTTP_PROTOCOL: http
+    APP_FRONTEND_HOST: localhost:3000
+    SESSION_COOKIE_DOMAIN: ${SESSION_COOKIE_DOMAIN:-localhost}
+    CSRF_COOKIE_DOMAIN: ${CSRF_COOKIE_DOMAIN:-localhost}
     # Database config
     DB_HOST: ${DB_HOST:-db}
     DB_PORT: ${DB_PORT:-5432}
@@ -97,11 +104,11 @@ services:
 
   worker:
     <<: *base_worker_setup
-    command: bash -c 'celery -A alertmanager worker -l info --pool=solo'
+    command: bash -c 'celery -A main worker -l info --pool=solo'
 
   worker-beat:
     <<: *base_worker_setup
-    command: bash -c 'celery -A alertmanager beat -l info'
+    command: bash -c 'celery -A main beat -l info'
 
 
 volumes:

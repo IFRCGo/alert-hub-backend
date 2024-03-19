@@ -1,0 +1,468 @@
+type Admin1Type {
+  id: ID!
+  countryId: ID!
+  country: CountryType!
+  maxLatitude: String
+  maxLongitude: String
+  minLatitude: String
+  minLongitude: String
+  multipolygon: String
+  name: String!
+  polygon: String
+}
+
+input AlertFilter {
+  id: IDFilterLookup!
+}
+
+type AlertInfoAreaCircleType {
+  id: ID!
+  alertInfoAreaId: ID!
+  value: String!
+}
+
+type AlertInfoAreaGeocodeType {
+  id: ID!
+  alertInfoAreaId: ID!
+  value: String!
+  valueName: String!
+}
+
+type AlertInfoAreaPolygonType {
+  id: ID!
+  alertInfoAreaId: ID!
+  value: String!
+}
+
+type AlertInfoAreaType {
+  id: ID!
+  alertInfoId: ID!
+  altitude: String
+  areaDesc: String!
+  ceiling: String
+  circles: [AlertInfoAreaCircleType!]!
+  geocodes: [AlertInfoAreaGeocodeType!]!
+  polygons: [AlertInfoAreaPolygonType!]!
+}
+
+enum AlertInfoCategoryEnum {
+  GEO
+  MET
+  SAFETY
+  SECURITY
+  RESCUE
+  FIRE
+  HEALTH
+  ENV
+  TRANSPORT
+  INFRA
+  CBRNE
+  OTHER
+}
+
+enum AlertInfoCertaintyEnum {
+  OBSERVED
+  LIKELY
+  POSSIBLE
+  UNLIKELY
+  UNKNOWN
+}
+
+type AlertInfoParameterType {
+  id: ID!
+  alertInfoId: ID!
+  value: String!
+  valueName: String!
+}
+
+enum AlertInfoResponseTypeEnum {
+  SHELTER
+  EVACUATE
+  PREPARE
+  EXECUTE
+  AVOID
+  MONITOR
+  ASSESS
+  ALLCLEAR
+  NONE
+}
+
+enum AlertInfoSeverityEnum {
+  EXTREME
+  SEVERE
+  MODERATE
+  MINOR
+  UNKNOWN
+}
+
+type AlertInfoType {
+  id: ID!
+  alertId: ID!
+  effective: DateTime!
+  onset: DateTime!
+  expires: DateTime!
+  areas: [AlertInfoAreaType!]!
+  audience: String
+  category: AlertInfoCategoryEnum!
+  categoryDisplay: String!
+  certainty: AlertInfoCertaintyEnum!
+  certaintyDisplay: String!
+  contact: String
+  description: String
+  event: String!
+  eventCode: String
+  headline: String
+  infos: [AlertInfoParameterType!]!
+  instruction: String
+  language: String
+  parameter: String
+  responseType: AlertInfoResponseTypeEnum
+  responseTypeDisplay: String
+  senderName: String
+  severity: AlertInfoSeverityEnum!
+  severityDisplay: String!
+  urgency: AlertInfoUrgencyEnum!
+  urgencyDisplay: String!
+  web: String
+}
+
+enum AlertInfoUrgencyEnum {
+  IMMEDIATE
+  EXPECTED
+  FUTURE
+  PAST
+  UNKNOWN
+}
+
+enum AlertMsgTypeEnum {
+  ALERT
+  UPDATE
+  CANCEL
+  ACK
+  ERROR
+}
+
+input AlertOrder {
+  id: Ordering
+}
+
+enum AlertStatusEnum {
+  ACTUAL
+  EXERCISE
+  SYSTEM
+  TEST
+  DRAFT
+}
+
+type AlertType {
+  id: ID!
+  sent: DateTime!
+  countryId: ID!
+  feedId: ID!
+  addresses: String
+  admin1s: [Admin1Type!]!
+  code: String
+  country: CountryType!
+  feed: FeedType!
+  identifier: String!
+  incidents: String
+  infos: [AlertInfoType!]!
+  msgType: AlertMsgTypeEnum!
+  msgTypeDisplay: String!
+  note: String
+  references: String
+  restriction: String
+  scope: String
+  sender: String!
+  source: String
+  status: AlertStatusEnum!
+  statusDisplay: String!
+  url: String!
+}
+
+type AlertTypeCountList {
+  limit: Int!
+  offset: Int!
+  count: Int!
+  items: [AlertType!]!
+}
+
+type AppEnumCollection {
+  UserEmailOptOuts: [AppEnumCollectionUserEmailOptOuts!]!
+  AlertStatus: [AppEnumCollectionAlertStatus!]!
+  AlertMsgType: [AppEnumCollectionAlertMsgType!]!
+  FeedFormat: [AppEnumCollectionFeedFormat!]!
+  FeedPollingInterval: [AppEnumCollectionFeedPollingInterval!]!
+  FeedStatus: [AppEnumCollectionFeedStatus!]!
+  AlertInfoCategory: [AppEnumCollectionAlertInfoCategory!]!
+  AlertInfoResponseType: [AppEnumCollectionAlertInfoResponseType!]!
+  AlertInfoUrgency: [AppEnumCollectionAlertInfoUrgency!]!
+  AlertInfoSeverity: [AppEnumCollectionAlertInfoSeverity!]!
+  AlertInfoCertainty: [AppEnumCollectionAlertInfoCertainty!]!
+}
+
+type AppEnumCollectionAlertInfoCategory {
+  key: AlertInfoCategoryEnum!
+  label: String!
+}
+
+type AppEnumCollectionAlertInfoCertainty {
+  key: AlertInfoCertaintyEnum!
+  label: String!
+}
+
+type AppEnumCollectionAlertInfoResponseType {
+  key: AlertInfoResponseTypeEnum!
+  label: String!
+}
+
+type AppEnumCollectionAlertInfoSeverity {
+  key: AlertInfoSeverityEnum!
+  label: String!
+}
+
+type AppEnumCollectionAlertInfoUrgency {
+  key: AlertInfoUrgencyEnum!
+  label: String!
+}
+
+type AppEnumCollectionAlertMsgType {
+  key: AlertMsgTypeEnum!
+  label: String!
+}
+
+type AppEnumCollectionAlertStatus {
+  key: AlertStatusEnum!
+  label: String!
+}
+
+type AppEnumCollectionFeedFormat {
+  key: FeedFormatEnum!
+  label: String!
+}
+
+type AppEnumCollectionFeedPollingInterval {
+  key: FeedPoolingIntervalEnum!
+  label: String!
+}
+
+type AppEnumCollectionFeedStatus {
+  key: FeedStatusEnum!
+  label: String!
+}
+
+type AppEnumCollectionUserEmailOptOuts {
+  key: OptEmailNotificationTypeEnum!
+  label: String!
+}
+
+type ContinentType {
+  id: ID!
+  name: String!
+}
+
+input CountryFilter {
+  id: IDFilterLookup!
+}
+
+input CountryOrder {
+  id: Ordering
+}
+
+type CountryType {
+  id: ID!
+  regionId: ID!
+  continentId: ID!
+  centroid: String
+  continent: ContinentType!
+  iso3: String!
+  multipolygon: String
+  name: String!
+  polygon: String
+  region: RegionType!
+}
+
+type CountryTypeCountList {
+  limit: Int!
+  offset: Int!
+  count: Int!
+  items: [CountryType!]!
+}
+
+"""Date with time (isoformat)"""
+scalar DateTime
+
+input FeedFilter {
+  id: IDFilterLookup!
+}
+
+enum FeedFormatEnum {
+  ATOM
+  RSS
+  NWS_US
+}
+
+input FeedOrder {
+  id: Ordering
+}
+
+enum FeedPoolingIntervalEnum {
+  I_05
+  I_10
+  I_15
+  I_20
+  I_25
+  I_30
+  I_35
+  I_40
+  I_45
+  I_50
+  I_55
+  I_60
+}
+
+enum FeedStatusEnum {
+  ACTIVE
+  TESTING
+  INACTIVE
+  UNUSABLE
+}
+
+type FeedType {
+  id: ID!
+  enablePolling: Boolean!
+  enableRebroadcast: Boolean!
+  official: Boolean!
+  countryId: ID!
+  authorEmail: String!
+  authorName: String!
+  country: CountryType!
+  format: FeedFormatEnum!
+  formatDisplay: String!
+  languages: [LanguageInfoType!]!
+  notes: String
+  pollingInterval: FeedPoolingIntervalEnum!
+  pollingIntervalDisplay: FeedPoolingIntervalEnum!
+  status: String!
+  statusDisplay: String!
+  url: String!
+}
+
+type FeedTypeCountList {
+  limit: Int!
+  offset: Int!
+  count: Int!
+  items: [FeedType!]!
+}
+
+input IDFilterLookup {
+  exact: ID
+  iExact: ID
+  contains: ID
+  iContains: ID
+  inList: [ID!]
+  gt: ID
+  gte: ID
+  lt: ID
+  lte: ID
+  startsWith: ID
+  iStartsWith: ID
+  endsWith: ID
+  iEndsWith: ID
+  range: [ID!]
+  isNull: Boolean
+  regex: String
+  iRegex: String
+}
+
+type LanguageInfoType {
+  id: ID!
+  feedId: ID!
+  language: String
+  logo: String
+  name: String!
+}
+
+type Mutation {
+  public: PublicMutation!
+  private: PrivateMutation!
+}
+
+input OffsetPaginationInput {
+  offset: Int! = 0
+  limit: Int! = -1
+}
+
+enum OptEmailNotificationTypeEnum {
+  NEWS_AND_OFFERS
+}
+
+enum Ordering {
+  ASC
+  DESC
+}
+
+type PrivateMutation {
+  id: ID!
+}
+
+type PrivateQuery {
+  noop: ID!
+  id: ID!
+}
+
+type PublicMutation {
+  id: ID!
+}
+
+type PublicQuery {
+  me: UserMeType
+  regions(filters: RegionFilter, order: RegionOrder, pagination: OffsetPaginationInput): RegionTypeCountList!
+  countries(filters: CountryFilter, order: CountryOrder, pagination: OffsetPaginationInput): CountryTypeCountList!
+  feeds(filters: FeedFilter, order: FeedOrder, pagination: OffsetPaginationInput): FeedTypeCountList!
+  alerts(filters: AlertFilter, order: AlertOrder, pagination: OffsetPaginationInput): AlertTypeCountList!
+  region(pk: ID!): RegionType
+  country(pk: ID!): CountryType
+  feed(pk: ID!): FeedType
+  alert(pk: ID!): AlertType
+  id: ID!
+}
+
+type Query {
+  public: PublicQuery!
+  private: PrivateQuery!
+  enums: AppEnumCollection!
+}
+
+input RegionFilter {
+  id: IDFilterLookup!
+}
+
+input RegionOrder {
+  id: Ordering
+}
+
+type RegionType {
+  id: ID!
+  centroid: String
+  name: String!
+  polygon: String
+}
+
+type RegionTypeCountList {
+  limit: Int!
+  offset: Int!
+  count: Int!
+  items: [RegionType!]!
+}
+
+type UserMeType {
+  id: ID!
+  firstName: String!
+  lastName: String!
+  displayName: String!
+  email: String!
+  phoneNumber: String!
+  country: String!
+  city: String!
+}

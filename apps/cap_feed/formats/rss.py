@@ -5,6 +5,7 @@ import requests
 
 from apps.cap_feed.formats.cap_xml import get_alert
 from apps.cap_feed.models import Alert, ProcessedAlert
+from utils.common import logger_log_extra
 
 logger = logging.getLogger(__name__)
 
@@ -22,9 +23,11 @@ def get_alerts_rss(feed, ns):
         logger.error(
             '[RSS] Failed to fetch feed alerts',
             exc_info=True,
-            extra={
-                'feed': feed.pk,
-            },
+            extra=logger_log_extra(
+                {
+                    'feed': feed.pk,
+                }
+            ),
         )
         return alert_urls, polled_alerts_count, valid_poll
 
@@ -49,17 +52,26 @@ def get_alerts_rss(feed, ns):
                 continue
             alert_response = requests.get(url)
             # navigate alert
-            alert_root = ET.fromstring(alert_response.content)
+
+            # TODO: Add this to other formatting as well?
+            alert_response_content = alert_response.content
+            if alert_response_content is None or alert_response_content.strip() == '':
+                logger.warning('Skipping for url: {url}: Due to empty content')
+                continue
+
+            alert_root = ET.fromstring(alert_response_content)
             polled_alert_count = get_alert(url, alert_root, feed, ns)
             polled_alerts_count += polled_alert_count
         except Exception:
             logger.error(
                 '[RSS] Failed to fetch url',
                 exc_info=True,
-                extra={
-                    'url': url,
-                    'alert_entry': str(alert_entry),
-                },
+                extra=logger_log_extra(
+                    {
+                        'url': url,
+                        'alert_entry': str(alert_entry),
+                    }
+                ),
             )
         else:
             valid_poll = True

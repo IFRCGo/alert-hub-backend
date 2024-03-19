@@ -14,16 +14,30 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 
+from django.conf import settings
+from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 
-# from django.views.decorators.csrf import csrf_exempt
-# from graphene_django.views import GraphQLView
-# from main.schema import schema
-
+from main.graphql.schema import CustomAsyncGraphQLView
+from main.graphql.schema import schema as graphql_schema
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    # path('graphql', csrf_exempt(GraphQLView.as_view(graphiql=True, schema=schema))),
+    path(
+        'graphql/',
+        CustomAsyncGraphQLView.as_view(
+            schema=graphql_schema,
+            graphiql=False,
+        ),
+    ),
     path('', include('apps.cap_feed.urls')),
 ]
+
+
+if settings.DEBUG:
+    urlpatterns.append(path('graphiql/', CustomAsyncGraphQLView.as_view(schema=graphql_schema)))
+
+    # Static and media file URLs
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

@@ -40,6 +40,9 @@ class Country(models.Model):
     continent = models.ForeignKey(Continent, on_delete=models.CASCADE)
     centroid = models.CharField(blank=True, null=True)
 
+    region_id: int
+    continent_id: int
+
     def __str__(self):
         return self.iso3 + ' ' + self.name
 
@@ -59,6 +62,8 @@ class Admin1(models.Model):
     max_latitude = models.FloatField(editable=False, null=True)
     min_longitude = models.FloatField(editable=False, null=True)
     max_longitude = models.FloatField(editable=False, null=True)
+
+    country_id: int
 
     if TYPE_CHECKING:
         alert_set: ManyRelatedManager['Alert']
@@ -81,17 +86,43 @@ class Admin1(models.Model):
 
 class LanguageInfo(models.Model):
     LANGUAGE_CHOICES = [(lg.pt1, lg.pt1 + ' - ' + lg.name) for lg in iter_langs() if lg.pt1]
+    """
+    TODO: Move this to textchoices
+    Language = models.TextChoices('Language', {
+        lg.pt1.upper(): (
+            lg.pt1,
+            lg.pt1 + ' - ' + lg.name,
+        )
+        for lg in iter_langs() if lg.pt1
+    })
+    """
 
     feed = models.ForeignKey('Feed', on_delete=models.CASCADE)
     name = models.CharField()
     language = models.CharField(blank=True, null=True, choices=LANGUAGE_CHOICES, default='en-US')
     logo = models.CharField(blank=True, null=True)
 
+    feed_id: int
+
 
 class Feed(models.Model):
-    INTERVAL_CHOICES = []
-    for interval in range(5, 65, 5):
-        INTERVAL_CHOICES.append((interval, f"{interval} seconds"))
+    class PoolingInterval(models.IntegerChoices):
+        """
+        Generated using: range(5, 65, 5):
+        """
+
+        I_05 = 5, '5 seconds'
+        I_10 = 10, '10 seconds'
+        I_15 = 15, '15 seconds'
+        I_20 = 20, '20 seconds'
+        I_25 = 25, '25 seconds'
+        I_30 = 30, '30 seconds'
+        I_35 = 35, '35 seconds'
+        I_40 = 40, '40 seconds'
+        I_45 = 45, '45 seconds'
+        I_50 = 50, '50 seconds'
+        I_55 = 55, '55 seconds'
+        I_60 = 60, '60 seconds'
 
     class Format(models.TextChoices):
         ATOM = ['atom', 'ATOM']
@@ -107,7 +138,7 @@ class Feed(models.Model):
     url = models.CharField(unique=True)
     country = models.ForeignKey(Country, on_delete=models.CASCADE)
     format = models.CharField(choices=Format.choices)
-    polling_interval = models.IntegerField(choices=INTERVAL_CHOICES)
+    polling_interval = models.IntegerField(choices=PoolingInterval.choices)
     enable_polling = models.BooleanField(default=False)
     enable_rebroadcast = models.BooleanField(default=False)
     official = models.BooleanField(default=False)
@@ -116,6 +147,8 @@ class Feed(models.Model):
     author_email = models.CharField(default='')
 
     notes = models.TextField(blank=True, default='')
+
+    country_id: int
 
     __old_polling_interval = None
     __old_url = None
@@ -189,6 +222,9 @@ class Alert(models.Model):
     references = models.TextField(blank=True, null=True, default=None)
     incidents = models.TextField(blank=True, null=True, default=None)
 
+    country_id: int
+    feed_id: int
+
     if TYPE_CHECKING:
         alertinfo_set: ManyRelatedManager['AlertInfo']
     __all_info_added = None
@@ -210,6 +246,11 @@ class Alert(models.Model):
 class AlertAdmin1(models.Model):
     alert = models.ForeignKey(Alert, on_delete=models.CASCADE)
     admin1 = models.ForeignKey(Admin1, on_delete=models.CASCADE)
+
+    alert_id: int
+    admin1_id: int
+
+    # TODO: Add unique constraint
 
 
 class AlertInfo(models.Model):
@@ -287,6 +328,8 @@ class AlertInfo(models.Model):
     contact = models.CharField(blank=True, null=True, default=None)
     parameter = models.CharField(blank=True, null=True, default=None)
 
+    alert_id: int
+
     def __str__(self):
         return str(self.alert) + ' ' + self.language
 
@@ -296,6 +339,8 @@ class AlertInfoParameter(models.Model):
 
     value_name = models.CharField()
     value = models.TextField()
+
+    alert_info_id: int
 
     def to_dict(self):
         alert_info_parameter_dict = dict()
@@ -311,6 +356,8 @@ class AlertInfoArea(models.Model):
     altitude = models.CharField(blank=True, null=True, default=None)
     ceiling = models.CharField(blank=True, null=True, default=None)
 
+    alert_info_id: int
+
     def __str__(self):
         return str(self.alert_info) + ' ' + self.area_desc
 
@@ -319,6 +366,8 @@ class AlertInfoAreaPolygon(models.Model):
     alert_info_area = models.ForeignKey(AlertInfoArea, on_delete=models.CASCADE)
 
     value = models.TextField()
+
+    alert_info_area_id: int
 
     def to_dict(self):
         alert_info_area_ploygon_dict = dict()
@@ -331,6 +380,8 @@ class AlertInfoAreaCircle(models.Model):
 
     value = models.TextField()
 
+    alert_info_area_id: int
+
     def to_dict(self):
         alert_info_area_circle_dict = dict()
         alert_info_area_circle_dict['value'] = self.value
@@ -342,6 +393,8 @@ class AlertInfoAreaGeocode(models.Model):
 
     value_name = models.CharField()
     value = models.CharField()
+
+    alert_info_area_id: int
 
     def to_dict(self):
         alert_info_area_geocode_dict = dict()
@@ -385,7 +438,7 @@ def add_task(feed):
         new_task = PeriodicTask.objects.create(
             interval=interval_schedule,
             name='poll_feed_' + feed.url,
-            task='cap_feed.tasks.poll_feed',
+            task='apps.cap_feed.tasks.poll_feed',
             start_time=timezone.now(),
             kwargs=json.dumps({"url": feed.url}),
         )

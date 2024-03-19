@@ -20,9 +20,16 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 env = environ.Env(
     DJANGO_DEBUG=(bool, False),
     DJANGO_SECRET_KEY=str,
-    DJANGO_ALLOWED_HOSTS=(list, ['*']),
     DJANGO_TIME_ZONE=(str, 'UTC'),
     DJANGO_APP_TYPE=str,  # web/worker  TODO: Use this in sentry
+    DJANGO_APP_ENVIRONMENT=str,  # dev/prod
+    # App Domain
+    APP_DOMAIN=str,  # api.example.com
+    APP_HTTP_PROTOCOL=str,  # http|https
+    APP_FRONTEND_HOST=str,  # http://frontend.example.com
+    DJANGO_ALLOWED_HOSTS=(list, ['*']),
+    SESSION_COOKIE_DOMAIN=str,
+    CSRF_COOKIE_DOMAIN=str,
     # Database
     DB_NAME=str,
     DB_USER=str,
@@ -39,6 +46,7 @@ env = environ.Env(
     EMAIL_HOST_USER=str,
     EMAIL_HOST_PASSWORD=str,
     DEFAULT_FROM_EMAIL=str,
+    # Misc
 )
 
 # SECURITY WARNING: keep the secret key used in production secret!
@@ -48,6 +56,14 @@ SECRET_KEY = env('DJANGO_SECRET_KEY')
 DEBUG = env('DJANGO_DEBUG')
 
 ALLOWED_HOSTS = env('DJANGO_ALLOWED_HOSTS')
+
+APP_SITE_NAME = 'Alert-Hub'
+APP_HTTP_PROTOCOL = env('APP_HTTP_PROTOCOL')
+APP_DOMAIN = env('APP_DOMAIN')
+APP_FRONTEND_HOST = env('APP_FRONTEND_HOST')
+
+DJANGO_APP_ENVIRONMENT = env('DJANGO_APP_ENVIRONMENT')
+
 
 # Application definition
 INSTALLED_APPS = [
@@ -59,12 +75,13 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     # External
+    'strawberry_django',
     'django_celery_beat',
     'django_extensions',
-    # 'graphene_django',
     'corsheaders',
     'storages',
     # Internal
+    'apps.common',
     'apps.user',
     'apps.cap_feed',
     'apps.subscription',
@@ -74,12 +91,12 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
 ]
 
 AUTHENTICATION_BACKENDS = [
@@ -107,6 +124,33 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'main.wsgi.application'
 
+# Security
+
+# Security Header configuration
+SESSION_COOKIE_NAME = f'alert-hub-{DJANGO_APP_ENVIRONMENT}-sessionid'
+CSRF_COOKIE_NAME = f'alert-hub-{DJANGO_APP_ENVIRONMENT}-csrftoken'
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = 'DENY'
+CSP_DEFAULT_SRC = ["'self'"]
+SECURE_REFERRER_POLICY = 'same-origin'
+if APP_HTTP_PROTOCOL == 'https':
+    SESSION_COOKIE_NAME = f'__Secure-{SESSION_COOKIE_NAME}'
+    SESSION_COOKIE_SECURE = True
+    SESSION_COOKIE_HTTPONLY = True
+    SECURE_HSTS_SECONDS = 30  # TODO: Increase this slowly
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    CSRF_TRUSTED_ORIGINS = [
+        APP_FRONTEND_HOST,
+        f'{APP_HTTP_PROTOCOL}://{APP_DOMAIN}',
+    ]
+
+# -- https://docs.djangoproject.com/en/3.2/ref/settings/#std:setting-SESSION_COOKIE_DOMAIN
+SESSION_COOKIE_DOMAIN = env('SESSION_COOKIE_DOMAIN')
+# https://docs.djangoproject.com/en/3.2/ref/settings/#csrf-cookie-domain
+CSRF_COOKIE_DOMAIN = env('CSRF_COOKIE_DOMAIN')
 
 # Database
 DATABASES = {
@@ -138,7 +182,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-AUTH_USER_MODEL = 'user.CustomUser'
+AUTH_USER_MODEL = 'user.User'
 
 # Internationalization
 # https://docs.djangoproject.com/en/4.0/topics/i18n/
@@ -159,11 +203,7 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # CELERY
-CELERY_BROKER_URL = env('CELERY_BROKER_URL')
-CELERY_ACCEPT_CONTENT = ['application/json']
-CELERY_TASK_SERIALIZER = 'json'
-CELERY_RESULT_BACKEND = 'django-db'
-CELERY_CACHE_BACKEND = 'django-cache'
+CELERY_RESULT_BACKEND = CELERY_BROKER_URL = env('CELERY_BROKER_URL')
 CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 
 # CORS
@@ -192,6 +232,10 @@ CORS_ALLOW_HEADERS = (
     'sentry-trace',
 )
 
+# Graphql
+STRAWBERRY_ENUM_TO_STRAWBERRY_ENUM_MAP = 'main.graphql.enums.ENUM_TO_STRAWBERRY_ENUM_MAP'
+STRAWBERRY_DEFAULT_PAGINATION_LIMIT = 50
+STRAWBERRY_MAX_PAGINATION_LIMIT = 100
 
 # Cache
 CACHES = {
@@ -212,12 +256,6 @@ EMAIL_PORT = env('EMAIL_PORT')
 EMAIL_HOST_USER = env('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL')
-
-# Graphql
-GRAPHENE = {
-    'SCHEMA': 'main.schema.schema',
-    'MIDDLEWARE': [],
-}
 
 # TODO: Add logging for PROD
 if DEBUG:

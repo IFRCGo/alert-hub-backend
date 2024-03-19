@@ -23,6 +23,10 @@ shapely = "^2.0.1"
 pytz = "*"
 colorlog = "*"
 requests = "*"
+strawberry-graphql = "^0.220.0"
+strawberry-django-plus = "*"
+sentry-sdk = "*"
+djangorestframework = "*"
 
 [tool.poetry.dev-dependencies]
 pytest = "*"
@@ -30,7 +34,7 @@ ipython = "*"
 pytest-profiling = "*"
 pytest-ordering = "*"
 pytest-django = "*"
-django-stubs = "^4.2.6"  # NOTE: 4.2.7 is messing with TextChoices/IntergerChoices
+django-stubs = "==4.2.6"  # NOTE: 4.2.7 is messing with TextChoices/IntergerChoices
 celery-types = "*"
 
 [tool.black]
@@ -47,6 +51,8 @@ exclude = [
     "**/__pycache__",
     "**/snap_test_*.py",
     ".venv/",
+    "legacy/",
+    "**/migrations/*.py",
 ]
 reportMissingImports = true
 reportMissingTypeStubs = false

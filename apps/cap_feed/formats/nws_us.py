@@ -5,6 +5,7 @@ import requests
 
 from apps.cap_feed.formats.cap_xml import get_alert
 from apps.cap_feed.models import Alert, ProcessedAlert
+from utils.common import logger_log_extra
 
 logger = logging.getLogger(__name__)
 
@@ -22,9 +23,11 @@ def get_alerts_nws_us(feed, ns):
         logger.error(
             '[NWS_US] Failed to fetch feed alerts',
             exc_info=True,
-            extra={
-                'feed': feed.pk,
-            },
+            extra=logger_log_extra(
+                {
+                    'feed': feed.pk,
+                }
+            ),
         )
         return alert_urls, polled_alerts_count, valid_poll
 
@@ -60,10 +63,12 @@ def get_alerts_nws_us(feed, ns):
             logger.error(
                 '[NWS_US] Failed to fetch url',
                 exc_info=True,
-                extra={
-                    'url': url,
-                    'alert_entry': str(alert_entry),
-                },
+                extra=logger_log_extra(
+                    {
+                        'url': url,
+                        'alert_entry': str(alert_entry),
+                    }
+                ),
             )
         else:
             valid_poll = True

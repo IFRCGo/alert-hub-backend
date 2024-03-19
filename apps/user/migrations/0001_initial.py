@@ -14,7 +14,7 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='CustomUser',
+            name='User',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('password', models.CharField(max_length=128, verbose_name='password')),
@@ -23,16 +23,14 @@ class Migration(migrations.Migration):
                 ('is_staff', models.BooleanField(default=False, help_text='Designates whether the user can log into this admin site.', verbose_name='staff status')),
                 ('is_active', models.BooleanField(default=True, help_text='Designates whether this user should be treated as active. Unselect this instead of deleting accounts.', verbose_name='active')),
                 ('date_joined', models.DateTimeField(default=django.utils.timezone.now, verbose_name='date joined')),
+                ('display_name', models.CharField(blank=True, max_length=255, null=True, verbose_name='system generated user display name')),
+                ('email_opt_outs', django.contrib.postgres.fields.ArrayField(base_field=models.IntegerField(choices=[(4, 'News And Offers')]), blank=True, default=list, size=None)),
                 ('email', models.EmailField(max_length=255, unique=True, verbose_name='email')),
-                ('phoneNumber', models.CharField(max_length=255, null=True, unique=True, verbose_name='phone')),
-                ('avatar', models.CharField(blank=True, max_length=255, null=True)),
+                ('phone_number', models.CharField(max_length=20, null=True, unique=True, verbose_name='phone')),
                 ('country', models.CharField(blank=True, max_length=255, null=True)),
                 ('city', models.CharField(blank=True, max_length=255, null=True)),
                 ('first_name', models.CharField(blank=True, max_length=255, null=True)),
                 ('last_name', models.CharField(blank=True, max_length=255, null=True)),
-                ('password_reset_token', models.CharField(blank=True, null=True)),
-                ('password_reset_token_expires_at', models.DateTimeField(blank=True, null=True)),
-                ('username', models.CharField(blank=True, max_length=150, null=True, unique=True, verbose_name='username')),
                 ('groups', models.ManyToManyField(blank=True, help_text='The groups this user belongs to. A user will get all permissions granted to each of their groups.', related_name='user_set', related_query_name='user', to='auth.group', verbose_name='groups')),
                 ('user_permissions', models.ManyToManyField(blank=True, help_text='Specific permissions for this user.', related_name='user_set', related_query_name='user', to='auth.permission', verbose_name='user permissions')),
             ],
