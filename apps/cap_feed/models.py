@@ -15,6 +15,15 @@ if TYPE_CHECKING:
     from django.db.models.fields.related_descriptors import ManyRelatedManager
 
 
+# To dynamically set default expire time
+def alert_info_default_expire():
+    return timezone.now() + timedelta(days=1)
+
+
+def processed_alert_default_expire():
+    return timezone.now() + timedelta(weeks=1)
+
+
 class Continent(models.Model):
     name = models.CharField()
 
@@ -125,7 +134,7 @@ class Feed(models.Model):
         I_60 = 60, '60 seconds'
 
     class Format(models.TextChoices):
-        ATOM = ['atom', 'ATOM']
+        ATOM = 'atom', 'ATOM'
         RSS = 'rss', 'RSS'
         NWS_US = 'nws_us', 'NWS_US'
 
@@ -170,14 +179,9 @@ class Feed(models.Model):
 
 
 class ProcessedAlert(models.Model):
-    # Set expire time to 1 week
-    @staticmethod
-    def default_expire():
-        return timezone.now() + timedelta(weeks=1)
-
     url = models.CharField(unique=True)
     feed = models.ForeignKey(Feed, on_delete=models.CASCADE)
-    expires = models.DateTimeField(default=default_expire)
+    expires = models.DateTimeField(default=processed_alert_default_expire)
 
     def __str__(self):
         return self.url
@@ -254,11 +258,6 @@ class AlertAdmin1(models.Model):
 
 
 class AlertInfo(models.Model):
-    # To dynamically set default expire time
-    @staticmethod
-    def default_expire():
-        return timezone.now() + timedelta(days=1)
-
     class Category(models.TextChoices):
         GEO = 'Geo', 'Geo'
         MET = 'Met', 'Met'
@@ -319,7 +318,7 @@ class AlertInfo(models.Model):
     # effective = models.DateTimeField(default=Alert.objects.get(pk=alert).sent)
     effective = models.DateTimeField(blank=True, default=timezone.now)
     onset = models.DateTimeField(blank=True, null=True)
-    expires = models.DateTimeField(blank=True, null=True, default=default_expire)
+    expires = models.DateTimeField(blank=True, null=True, default=alert_info_default_expire)
     sender_name = models.CharField(blank=True, null=True, default=None)
     headline = models.CharField(blank=True, null=True, default=None)
     description = models.TextField(blank=True, null=True, default=None)

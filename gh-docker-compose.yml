@@ -23,13 +23,11 @@ services:
     tty: true
     extra_hosts:
       - 'host.docker.internal:host-gateway'
-    env_file:
-      - .env
     environment:
-      CI: true
+      CI: "true"
       DJANGO_APP_ENVIRONMENT: development
       DJANGO_APP_TYPE: web
-      DJANGO_DEBUG: true
+      DJANGO_DEBUG: "true"
       DJANGO_SECRET_KEY: INSECURE_DJANGO_SECRET_KEY
       # -- Domain configurations
       DJANGO_ALLOWED_HOSTS: "*"

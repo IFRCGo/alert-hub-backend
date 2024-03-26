@@ -13,9 +13,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@master
-      - uses: actions/setup-python@master
-      - uses: pre-commit/action@master
+      - uses: actions/checkout@main
+      - name: Install poetry
+        run: pipx install poetry
+      - uses: actions/setup-python@main
+        with:
+          cache: 'poetry'
+      - run: poetry install
+      - uses: pre-commit/action@main
 
   test:
     name: 🚴 Test 🚴
@@ -23,7 +28,7 @@ jobs:
     needs: pre_commit_checks
 
     steps:
-      - uses: actions/checkout@mastj
+      - uses: actions/checkout@main
 
       - name: 🐳 Prepare Docker
         id: prep
