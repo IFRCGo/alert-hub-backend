@@ -1,6 +1,6 @@
 #!/bin/bash
 
-BASE_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+BASE_DIR="$(dirname "$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )")"
 echo $BASE_DIR
 
 # Download static files

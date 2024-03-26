@@ -1,4 +1,5 @@
 version: '3.2'
+name: alert-hub  # NOTE: Define COMPOSE_PROJECT_NAME in .env to use custom name
 
 x-server: &base_server_setup
   build:

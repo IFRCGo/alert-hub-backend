@@ -1,0 +1,66 @@
+version: '3.2'
+
+services:
+  db:
+    image: postgis/postgis:13-3.1-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    volumes:
+      - postgres-data13:/var/lib/postgresql/data
+
+  redis:
+    image: redis:6-alpine
+    volumes:
+      - redis-data:/data
+
+  web:
+    image: $DOCKER_IMAGE_BACKEND
+    # To attach to container with stdin `docker attach <container_name>`
+    # Used for python debugging.
+    stdin_open: true
+    tty: true
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+    env_file:
+      - .env
+    environment:
+      CI: true
+      DJANGO_APP_ENVIRONMENT: development
+      DJANGO_APP_TYPE: web
+      DJANGO_DEBUG: true
+      DJANGO_SECRET_KEY: INSECURE_DJANGO_SECRET_KEY
+      # -- Domain configurations
+      DJANGO_ALLOWED_HOSTS: "*"
+      APP_DOMAIN: localhost:800
+      APP_HTTP_PROTOCOL: http
+      APP_FRONTEND_HOST: localhost:3000
+      SESSION_COOKIE_DOMAIN: localhost
+      CSRF_COOKIE_DOMAIN: localhost
+      # Database config
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: postgres
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      # Redis config
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CACHE_REDIS_URL: redis://redis:6379/1
+      # Email config
+      EMAIL_HOST: fake
+      EMAIL_PORT: 1025
+      EMAIL_HOST_USER: fake
+      EMAIL_HOST_PASSWORD: fake
+      DEFAULT_FROM_EMAIL: alert-hub-dev <info@alert-hub.ifrc.org>
+    volumes:
+      - ./:/code
+      - ./ci-share/:/ci-share/
+      # - ./coverage/:/code/coverage/
+    depends_on:
+      - db
+      - redis
+
+volumes:
+  postgres-data13:
+  redis-data:
