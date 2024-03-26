@@ -1,3 +1,15 @@
+input Admin1Filter {
+  id: IDBaseFilterLookup
+  AND: Admin1Filter
+  OR: Admin1Filter
+  NOT: Admin1Filter
+  DISTINCT: Boolean
+}
+
+input Admin1Order {
+  id: Ordering
+}
+
 type Admin1Type {
   id: ID!
   countryId: ID!
@@ -11,8 +23,18 @@ type Admin1Type {
   country: CountryType!
 }
 
+type Admin1TypeCountList {
+  limit: Int!
+  offset: Int!
+  count: Int!
+  items: [Admin1Type!]!
+}
+
 input AlertFilter {
   id: IDBaseFilterLookup
+  url: StrFilterLookup
+  sender: StrFilterLookup
+  admin1s: DjangoModelFilterInput
   AND: AlertFilter
   OR: AlertFilter
   NOT: AlertFilter
@@ -72,6 +94,18 @@ enum AlertInfoCertaintyEnum {
   UNKNOWN
 }
 
+input AlertInfoFilter {
+  id: IDBaseFilterLookup
+  AND: AlertInfoFilter
+  OR: AlertInfoFilter
+  NOT: AlertInfoFilter
+  DISTINCT: Boolean
+}
+
+input AlertInfoOrder {
+  id: Ordering
+}
+
 type AlertInfoParameterType {
   id: ID!
   alertInfoId: ID!
@@ -126,8 +160,15 @@ type AlertInfoType {
   urgencyDisplay: String!
   severityDisplay: String!
   certaintyDisplay: String!
-  infos: [AlertInfoParameterType!]!
+  parameters: [AlertInfoParameterType!]!
   areas: [AlertInfoAreaType!]!
+}
+
+type AlertInfoTypeCountList {
+  limit: Int!
+  offset: Int!
+  count: Int!
+  items: [AlertInfoType!]!
 }
 
 enum AlertInfoUrgencyEnum {
@@ -288,6 +329,7 @@ type CountryType {
   centroid: String
   region: RegionType!
   continent: ContinentType!
+  admin1s: [Admin1Type!]!
 }
 
 type CountryTypeCountList {
@@ -299,6 +341,10 @@ type CountryTypeCountList {
 
 """Date with time (isoformat)"""
 scalar DateTime
+
+input DjangoModelFilterInput {
+  pk: ID!
+}
 
 input FeedFilter {
   id: IDBaseFilterLookup
@@ -428,12 +474,16 @@ type PublicQuery {
   me: UserMeType
   regions(filters: RegionFilter, order: RegionOrder, pagination: OffsetPaginationInput): RegionTypeCountList!
   countries(filters: CountryFilter, order: CountryOrder, pagination: OffsetPaginationInput): CountryTypeCountList!
+  admin1s(filters: Admin1Filter, order: Admin1Order, pagination: OffsetPaginationInput): Admin1TypeCountList!
   feeds(filters: FeedFilter, order: FeedOrder, pagination: OffsetPaginationInput): FeedTypeCountList!
   alerts(filters: AlertFilter, order: AlertOrder, pagination: OffsetPaginationInput): AlertTypeCountList!
+  alertInfos(filters: AlertInfoFilter, order: AlertInfoOrder, pagination: OffsetPaginationInput): AlertInfoTypeCountList!
   region(pk: ID!): RegionType
   country(pk: ID!): CountryType
+  admin1(pk: ID!): Admin1Type
   feed(pk: ID!): FeedType
   alert(pk: ID!): AlertType
+  alertInfo(pk: ID!): AlertInfoType
   id: ID!
 }
 
@@ -467,6 +517,54 @@ type RegionTypeCountList {
   offset: Int!
   count: Int!
   items: [RegionType!]!
+}
+
+input StrFilterLookup {
+  """Exact match. Filter will be skipped on `null` value"""
+  exact: String
+
+  """Assignment test. Filter will be skipped on `null` value"""
+  isNull: Boolean
+
+  """
+  Exact match of items in a given list. Filter will be skipped on `null` value
+  """
+  inList: [String!]
+
+  """Case-insensitive exact match. Filter will be skipped on `null` value"""
+  iExact: String
+
+  """
+  Case-sensitive containment test. Filter will be skipped on `null` value
+  """
+  contains: String
+
+  """
+  Case-insensitive containment test. Filter will be skipped on `null` value
+  """
+  iContains: String
+
+  """Case-sensitive starts-with. Filter will be skipped on `null` value"""
+  startsWith: String
+
+  """Case-insensitive starts-with. Filter will be skipped on `null` value"""
+  iStartsWith: String
+
+  """Case-sensitive ends-with. Filter will be skipped on `null` value"""
+  endsWith: String
+
+  """Case-insensitive ends-with. Filter will be skipped on `null` value"""
+  iEndsWith: String
+
+  """
+  Case-sensitive regular expression match. Filter will be skipped on `null` value
+  """
+  regex: String
+
+  """
+  Case-insensitive regular expression match. Filter will be skipped on `null` value
+  """
+  iRegex: String
 }
 
 type UserMeType {

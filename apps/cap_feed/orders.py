@@ -1,11 +1,16 @@
 import strawberry
 import strawberry_django
 
-from .models import Alert, Country, Feed, Region
+from .models import Admin1, Alert, AlertInfo, Country, Feed, Region
 
 
 @strawberry_django.ordering.order(Alert)
 class AlertOrder:
+    id: strawberry.auto
+
+
+@strawberry_django.ordering.order(AlertInfo)
+class AlertInfoOrder:
     id: strawberry.auto
 
 
@@ -16,6 +21,11 @@ class FeedOrder:
 
 @strawberry_django.ordering.order(Country)
 class CountryOrder:
+    id: strawberry.auto
+
+
+@strawberry_django.ordering.order(Admin1)
+class Admin1Order:
     id: strawberry.auto
 
 

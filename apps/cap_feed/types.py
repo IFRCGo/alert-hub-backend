@@ -58,6 +58,7 @@ class CountryType:
     centroid = string_field(Country.centroid)
 
     if typing.TYPE_CHECKING:
+        pk = Country.pk
         region_id = Country.region_id
         continent_id = Country.continent_id
     else:
@@ -75,6 +76,11 @@ class CountryType:
     @strawberry.field
     async def continent(self, info: Info) -> ContinentType:
         return await info.context.dl.cap_feed.load_continent.load(self.continent_id)
+
+    # TODO: Create a separate admin1s_names
+    @strawberry.field
+    async def admin1s(self, info: Info) -> list['Admin1Type']:
+        return await info.context.dl.cap_feed.load_admin1s_by_country.load(self.pk)
 
 
 @strawberry_django.type(Admin1)
@@ -94,6 +100,10 @@ class Admin1Type:
         country_id = Admin1.country_id
     else:
         country_id: strawberry.ID
+
+    @staticmethod
+    def get_queryset(_, queryset: models.QuerySet | None, info: Info):
+        return get_queryset_for_model(Admin1, queryset)
 
     @strawberry.field
     async def country(self, info: Info) -> CountryType:
@@ -246,9 +256,13 @@ class AlertInfoType:
     if typing.TYPE_CHECKING:
         pk: int
 
+    @staticmethod
+    def get_queryset(_, queryset: models.QuerySet | None, info: Info):
+        return get_queryset_for_model(AlertInfo, queryset)
+
     # TODO: Need to check if we need pagination instead
     @strawberry.field
-    async def infos(self, info: Info) -> list[AlertInfoParameterType]:
+    async def parameters(self, info: Info) -> list[AlertInfoParameterType]:
         return await info.context.dl.cap_feed.load_info_parameters_by_info.load(self.pk)
 
     @strawberry.field
@@ -294,6 +308,7 @@ class AlertType:
     def get_queryset(_, queryset: models.QuerySet | None, info: Info):
         return get_queryset_for_model(Alert, queryset)
 
+    # TODO: Create a separate country_name
     @strawberry.field
     async def country(self: Alert, info: Info) -> CountryType:  # type: ignore[reportGeneralTypeIssues]
         return await info.context.dl.cap_feed.load_country.load(self.country_id)
@@ -302,7 +317,7 @@ class AlertType:
     async def feed(self, info: Info) -> FeedType:
         return await info.context.dl.cap_feed.load_feed.load(self.feed_id)
 
-    # TODO: Need to check if we need pagination instead
+    # TODO: Create a separate admin1s_names
     @strawberry.field
     async def admin1s(self, info: Info) -> list[Admin1Type]:
         return await info.context.dl.cap_feed.load_admin1s_by_alert.load(self.pk)

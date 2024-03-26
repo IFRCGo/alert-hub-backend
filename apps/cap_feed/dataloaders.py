@@ -81,6 +81,14 @@ def load_admin1_by_alert(keys: list[int]) -> list[list['Admin1Type']]:
     return [_map[key] for key in keys]
 
 
+def load_admin1s_by_country(keys: list[int]) -> list[list['Admin1Type']]:
+    qs = Admin1.objects.filter(country__in=keys)
+    _map = defaultdict(list)
+    for admin1 in qs.all():
+        _map[admin1.country_id].append(admin1)
+    return [_map[key] for key in keys]
+
+
 def load_infos_by_alert(keys: list[int]) -> list[list['AlertInfoType']]:
     qs = AlertInfo.objects.filter(alert__in=keys).all()
 
@@ -172,6 +180,10 @@ class CapFeedDataloader:
     @cached_property
     def load_admin1s_by_alert(self):
         return DataLoader(load_fn=sync_to_async(load_admin1_by_alert))
+
+    @cached_property
+    def load_admin1s_by_country(self):
+        return DataLoader(load_fn=sync_to_async(load_admin1s_by_country))
 
     @cached_property
     def load_infos_by_alert(self):
