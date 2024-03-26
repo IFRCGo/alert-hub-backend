@@ -26,4 +26,5 @@ class Mutation:
         - city: str
         - avatar: str
     """
+
     noop: strawberry.ID = strawberry.ID('noop')

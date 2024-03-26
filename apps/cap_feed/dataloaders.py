@@ -1,73 +1,78 @@
 import typing
 from collections import defaultdict
-from asgiref.sync import sync_to_async
-from strawberry.dataloader import DataLoader
-from django.utils.functional import cached_property
-from django.contrib.postgres.aggregates.general import ArrayAgg
 
+from asgiref.sync import sync_to_async
+from django.contrib.postgres.aggregates.general import ArrayAgg
+from django.db import models
+from django.utils.functional import cached_property
+from strawberry.dataloader import DataLoader
 
 from .models import (
-    Country, Feed, Admin1, AlertAdmin1, Region, Continent, AlertInfo, AlertInfoParameter, AlertInfoArea,
-    AlertInfoAreaPolygon,
+    Admin1,
+    AlertAdmin1,
+    AlertInfo,
+    AlertInfoArea,
     AlertInfoAreaCircle,
     AlertInfoAreaGeocode,
+    AlertInfoAreaPolygon,
+    AlertInfoParameter,
+    Continent,
+    Country,
+    Feed,
     LanguageInfo,
+    Region,
 )
 
 if typing.TYPE_CHECKING:
     from .types import (
-        CountryType, FeedType, Admin1Type,
-        RegionType, ContinentType, AlertInfoType, AlertInfoParameterType, AlertInfoAreaType,
-        AlertInfoAreaPolygonType,
+        Admin1Type,
         AlertInfoAreaCircleType,
         AlertInfoAreaGeocodeType,
+        AlertInfoAreaPolygonType,
+        AlertInfoAreaType,
+        AlertInfoParameterType,
+        AlertInfoType,
+        ContinentType,
+        CountryType,
+        FeedType,
         LanguageInfoType,
+        RegionType,
     )
 
 
-def _load_model(Model, keys):
+def _load_model(Model: models.Model, keys: list[int]):
     qs = Model.objects.filter(id__in=keys)
-    _map = {
-        obj.pk: obj for obj in qs
-    }
-    return [
-        _map[key] for key in keys
-    ]
+    _map = {obj.pk: obj for obj in qs}
+    return [_map[key] for key in keys]
 
 
 def load_country(keys: list[int]) -> list['CountryType']:
-    return _load_model(Country, keys)   # pyright: ignore[reportGeneralTypeIssues]
+    return _load_model(Country, keys)  # type: ignore[reportGeneralTypeIssues]
 
 
 def load_region(keys: list[int]) -> list['RegionType']:
-    return _load_model(Region, keys)   # pyright: ignore[reportGeneralTypeIssues]
+    return _load_model(Region, keys)  # type: ignore[reportGeneralTypeIssues]
 
 
 def load_continent(keys: list[int]) -> list['ContinentType']:
-    return _load_model(Continent, keys)   # pyright: ignore[reportGeneralTypeIssues]
+    return _load_model(Continent, keys)  # type: ignore[reportGeneralTypeIssues]
 
 
 def load_feed(keys: list[int]) -> list['FeedType']:
-    return _load_model(Feed, keys)   # pyright: ignore[reportGeneralTypeIssues]
+    return _load_model(Feed, keys)  # type: ignore[reportGeneralTypeIssues]
 
 
 def load_admin1_by_alert(keys: list[int]) -> list[list['Admin1Type']]:
     qs = (
-        AlertAdmin1.objects
-        .filter(alert__in=keys)
-        .order_by().values('admin1')
+        AlertAdmin1.objects.filter(alert__in=keys)
+        .order_by()
+        .values('admin1')
         .annotate(alert_ids=ArrayAgg('alert_id', distinct=True))
     )
 
     _map = defaultdict(list)
-    relation_map = {
-        admin1_id: alert_ids
-        for admin1_id, alert_ids in qs.values_list('admin1', 'alert_ids')
-    }
-    admin1_map = {
-        admin1.pk: admin1
-        for admin1 in Admin1.objects.filter(pk__in=qs.values('admin1'))
-    }
+    relation_map = {admin1_id: alert_ids for admin1_id, alert_ids in qs.values_list('admin1', 'alert_ids')}
+    admin1_map = {admin1.pk: admin1 for admin1 in Admin1.objects.filter(pk__in=qs.values('admin1'))}
 
     for admin1_id, alert_ids in relation_map.items():
         for alert_id in alert_ids:

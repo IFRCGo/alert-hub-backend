@@ -1,11 +1,12 @@
 import strawberry
 import strawberry_django
+
 from main.graphql.context import Info
 from utils.strawberry.paginations import CountList, pagination_field
 
-from .filters import AlertFilter, FeedFilter, RegionFilter, CountryFilter
-from .orders import AlertOrder, FeedOrder, RegionOrder, CountryOrder
-from .types import AlertType, FeedType, RegionType, CountryType
+from .filters import AlertFilter, CountryFilter, FeedFilter, RegionFilter
+from .orders import AlertOrder, CountryOrder, FeedOrder, RegionOrder
+from .types import AlertType, CountryType, FeedType, RegionType
 
 
 @strawberry.type
@@ -37,27 +38,19 @@ class PublicQuery:
 
     @strawberry_django.field
     async def region(self, info: Info, pk: strawberry.ID) -> RegionType | None:
-        return await RegionType.get_queryset(None, None, info)\
-            .filter(pk=pk)\
-            .afirst()
+        return await RegionType.get_queryset(None, None, info).filter(pk=pk).afirst()
 
     @strawberry_django.field
     async def country(self, info: Info, pk: strawberry.ID) -> CountryType | None:
-        return await CountryType.get_queryset(None, None, info)\
-            .filter(pk=pk)\
-            .afirst()
+        return await CountryType.get_queryset(None, None, info).filter(pk=pk).afirst()
 
     @strawberry_django.field
     async def feed(self, info: Info, pk: strawberry.ID) -> FeedType | None:
-        return await FeedType.get_queryset(None, None, info)\
-            .filter(pk=pk)\
-            .afirst()
+        return await FeedType.get_queryset(None, None, info).filter(pk=pk).afirst()
 
     @strawberry_django.field
     async def alert(self, info: Info, pk: strawberry.ID) -> AlertType | None:
-        return await AlertType.get_queryset(None, None, info)\
-            .filter(pk=pk)\
-            .afirst()
+        return await AlertType.get_queryset(None, None, info).filter(pk=pk).afirst()
 
 
 @strawberry.type

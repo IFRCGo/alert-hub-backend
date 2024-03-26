@@ -1,22 +1,21 @@
 import typing
-import strawberry
 
+import strawberry
 from django.conf import settings
-from django.db import models
-from django.utils.module_loading import import_string
-from django.db.models.fields import Field as DjangoBaseField
-from django.utils.hashable import make_hashable
-from django.utils.encoding import force_str
 from django.contrib.postgres.fields import ArrayField
+from django.db import models
+from django.db.models.fields import Field as DjangoBaseField
+from django.utils.encoding import force_str
+from django.utils.hashable import make_hashable
+from django.utils.module_loading import import_string
 from rest_framework import serializers
 
 from utils.common import to_camel_case
 
 if typing.TYPE_CHECKING:
     from django.db.models.fields import _FieldDescriptor
-    GET_ENUM_NAME_FROM_DJANGO_FIELD_FIELD_TYPE: typing.TypeAlias = (
-        DjangoBaseField | _FieldDescriptor | list | None
-    )
+
+    GET_ENUM_NAME_FROM_DJANGO_FIELD_FIELD_TYPE: typing.TypeAlias = DjangoBaseField | _FieldDescriptor | list | None
 
 
 def get_enum_name_from_django_field(
@@ -44,12 +43,16 @@ def get_enum_name_from_django_field(
         if isinstance(field, serializers.ChoiceField):
             if isinstance(field.parent, serializers.ListField):
                 if _have_model(field.parent.parent):
-                    model_name = model_name or field.parent.parent.Meta.model.__name__
+                    if model_name is None:
+                        assert field.parent.parent is not None
+                        model_name = field.parent.parent.Meta.model.__name__
                 serializer_name = _get_serializer_name(field.parent)
                 field_name = field_name or field.parent.field_name
             else:
                 if _have_model(field.parent):
-                    model_name = model_name or field.parent.Meta.model.__name__
+                    if model_name is None:
+                        assert field.parent is not None
+                        model_name = field.parent.Meta.model.__name__
                 serializer_name = _get_serializer_name(field)
                 field_name = field_name or field.field_name
         elif isinstance(field, ArrayField):
@@ -57,12 +60,15 @@ def get_enum_name_from_django_field(
                 model_name = model_name or field.model.__name__
             serializer_name = _get_serializer_name(field)
             field_name = field_name or field.base_field.name
-        elif isinstance(field, (
-            models.CharField,
-            models.SmallIntegerField,
-            models.IntegerField,
-            models.PositiveSmallIntegerField,
-        )):
+        elif isinstance(
+            field,
+            (
+                models.CharField,
+                models.SmallIntegerField,
+                models.IntegerField,
+                models.PositiveSmallIntegerField,
+            ),
+        ):
             if _have_model(field):
                 model_name = model_name or field.model.__name__
             serializer_name = _get_serializer_name(field)
@@ -76,8 +82,9 @@ def get_enum_name_from_django_field(
     raise Exception(f'{serializer_name=} should have a value')
 
 
-def enum_display_field(field) -> typing.Callable[..., str]:
+def enum_display_field(field) -> typing.Callable[..., str]:  # type: ignore[reportGeneralTypeIssues] FIXME
     field: DjangoBaseField
+
     _field = field
     if isinstance(field, models.query_utils.DeferredAttribute):
         _field = field.field
@@ -93,37 +100,30 @@ def enum_display_field(field) -> typing.Callable[..., str]:
         choices_dict = dict(make_hashable(_field.flatchoices))
         # force_str() to coerce lazy strings.
         if is_array:
-            return [
-                force_str(
-                    choices_dict.get(make_hashable(v), v), strings_only=True
-                )
-                for v in value or []
-            ]
-        return force_str(
-            choices_dict.get(make_hashable(value), value), strings_only=True
-        )
+            return [force_str(choices_dict.get(make_hashable(v), v), strings_only=True) for v in value or []]
+        return force_str(choices_dict.get(make_hashable(value), value), strings_only=True)
 
     @strawberry.field
     def array_field_(root) -> list[str]:
-        return _get_value(root)
+        return _get_value(root)  # type: ignore[reportGeneralTypeIssues]
 
     if is_array:
-        return array_field_
+        return array_field_  # type: ignore[reportGeneralTypeIssues]
 
     @strawberry.field
     def field_(root) -> str:
-        return _get_value(root)
+        return _get_value(root)  # type: ignore[reportGeneralTypeIssues]
 
     @strawberry.field
     def nullable_field_(root) -> typing.Optional[str]:
-        return _get_value(root)
+        return _get_value(root)  # type: ignore[reportGeneralTypeIssues]
 
     if _field.null:
-        return nullable_field_
-    return field_
+        return nullable_field_  # type: ignore[reportGeneralTypeIssues]
+    return field_  # type: ignore[reportGeneralTypeIssues]
 
 
-def enum_field(field):
+def enum_field(field):  # type: ignore[reportGeneralTypeIssues] FIXME
     field: DjangoBaseField
 
     # NOTE: To avoid circular import
@@ -137,29 +137,27 @@ def enum_field(field):
     if is_array := isinstance(_field, ArrayField):
         _field = _field.base_field
 
-    def _get_value(root) -> None | FieldEnum | list[FieldEnum]:
+    def _get_value(root) -> None | FieldEnum | list[FieldEnum]:  # type: ignore[reportGeneralTypeIssues]
         value = getattr(root, _field.attname)
         if value is None:
             return
         if is_array:
-            return [
-                FieldEnum(v) for v in value or []
-            ]
+            return [FieldEnum(v) for v in value or []]
         return FieldEnum(value)
 
     @strawberry.field
-    def array_field_(root) -> list[FieldEnum]:
-        return _get_value(root)
+    def array_field_(root) -> list[FieldEnum]:  # type: ignore[reportGeneralTypeIssues]
+        return _get_value(root)  # type: ignore[reportGeneralTypeIssues]
 
     if is_array:
         return array_field_
 
     @strawberry.field
-    def field_(root) -> FieldEnum:
+    def field_(root) -> FieldEnum:  # type: ignore[reportGeneralTypeIssues]
         return _get_value(root)
 
     @strawberry.field
-    def nullable_field_(root) -> typing.Optional[FieldEnum]:
+    def nullable_field_(root) -> typing.Optional[FieldEnum]:  # type: ignore[reportGeneralTypeIssues]
         return _get_value(root)
 
     if _field.null:

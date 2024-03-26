@@ -104,6 +104,7 @@ services:
 
   worker:
     <<: *base_worker_setup
+    # TODO: Use run_celery_dev
     command: bash -c 'celery -A main worker -l info --pool=solo'
 
   worker-beat:

@@ -1,7 +1,7 @@
 import strawberry
 import strawberry_django
 
-from .models import Alert, Feed, Country, Region
+from .models import Alert, Country, Feed, Region
 
 
 @strawberry_django.filters.filter(Alert, lookups=True)

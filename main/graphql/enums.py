@@ -1,9 +1,9 @@
-import strawberry
 import dataclasses
 
-from apps.user.enums import enum_map as user_enum_map
-from apps.cap_feed.enums import enum_map as cap_feed_enum_map
+import strawberry
 
+from apps.cap_feed.enums import enum_map as cap_feed_enum_map
+from apps.user.enums import enum_map as user_enum_map
 
 ENUM_TO_STRAWBERRY_ENUM_MAP: dict[str, type] = {
     **user_enum_map,
@@ -11,7 +11,7 @@ ENUM_TO_STRAWBERRY_ENUM_MAP: dict[str, type] = {
 }
 
 
-class AppEnumData():
+class AppEnumData:
     def __init__(self, enum):
         self.enum = enum
 
@@ -28,13 +28,7 @@ def generate_app_enum_collection_data(name):
     return type(
         name,
         (),
-        {
-            field_name: [
-                AppEnumData(e)
-                for e in enum
-            ]
-            for field_name, enum in ENUM_TO_STRAWBERRY_ENUM_MAP.items()
-        },
+        {field_name: [AppEnumData(e) for e in enum] for field_name, enum in ENUM_TO_STRAWBERRY_ENUM_MAP.items()},
     )
 
 
@@ -48,7 +42,7 @@ def generate_type_for_enum(name, Enum):
             [
                 ('key', Enum),
                 ('label', str),
-            ]
+            ],
         )
     )
 
@@ -57,7 +51,7 @@ def _enum_type(name, Enum):
     EnumType = generate_type_for_enum(name, Enum)
 
     @strawberry.field
-    def _field() -> list[EnumType]:  # pyright: ignore[reportGeneralTypeIssues]
+    def _field() -> list[EnumType]:  # type: ignore[reportGeneralTypeIssues]
         return [
             EnumType(
                 key=e,

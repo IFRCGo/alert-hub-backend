@@ -1347,26 +1347,6 @@ pure-eval = "*"
 tests = ["cython", "littleutils", "pygments", "pytest", "typeguard"]
 
 [[package]]
-name = "strawberry-django-plus"
-version = "3.1.1"
-description = "Enhanced Strawberry GraphQL integration with Django"
-optional = false
-python-versions = ">=3.8,<4.0"
-files = [
-    {file = "strawberry_django_plus-3.1.1-py3-none-any.whl", hash = "sha256:7d442e4889a1eed9278408835aac4c0eb573dc57c3721ab9430fc04cad5488b8"},
-    {file = "strawberry_django_plus-3.1.1.tar.gz", hash = "sha256:f17bf38f76e71509b9064b2d06faa9a24a0ff158b2e2a46ae159bc2240616fd1"},
-]
-
-[package.dependencies]
-django = ">=3.2"
-strawberry-graphql = ">=0.187.5"
-strawberry-graphql-django = ">=0.9.4,<0.10.0"
-typing-extensions = ">=4.2.0"
-
-[package.extras]
-enum = ["django-choices-field (>=2.0)"]
-
-[[package]]
 name = "strawberry-graphql"
 version = "0.220.0"
 description = "A library for creating GraphQL APIs"
@@ -1403,21 +1383,22 @@ starlite = ["starlite (>=1.48.0)"]
 
 [[package]]
 name = "strawberry-graphql-django"
-version = "0.9.5"
+version = "0.35.1"
 description = "Strawberry GraphQL Django extension"
 optional = false
-python-versions = ">=3.7,<4.0"
+python-versions = ">=3.8,<4.0"
 files = [
-    {file = "strawberry_graphql_django-0.9.5-py3-none-any.whl", hash = "sha256:848418179337c2901d793f938de38726efe320f8e0ba637f9b0c9c686913e80c"},
-    {file = "strawberry_graphql_django-0.9.5.tar.gz", hash = "sha256:c849c5212a9f9daa3281d3fc90a701c26c0a3405be56a3d4a2a6eab6ba1e8a1e"},
+    {file = "strawberry_graphql_django-0.35.1-py3-none-any.whl", hash = "sha256:09da5d62c33eacb0e25cd7f5ab179904fd44fb792cb80815a6c99344ffc39bb9"},
+    {file = "strawberry_graphql_django-0.35.1.tar.gz", hash = "sha256:f4c28b8a9b89a74b1a78f88898f3140d758ac2b6ef93d7e2e97e5f4480eea7ef"},
 ]
 
 [package.dependencies]
-Django = ">=3.2"
-strawberry-graphql = ">=0.184.0"
+django = ">=3.2"
+strawberry-graphql = ">=0.212.0"
 
 [package.extras]
 debug-toolbar = ["django-debug-toolbar (>=3.4)"]
+enum = ["django-choices-field (>=2.2.2)"]
 
 [[package]]
 name = "text-unidecode"
@@ -1531,4 +1512,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "2294a6d6b77bf4681529ff7eee759989eafcc89ef5e5b00752948a8bd63d0ec0"
+content-hash = "bb52ab5b05ed9e97bdc8240e11f64f9f6de43cf9b5bc9be6a4b6a84d7f0fcaa4"

@@ -1,6 +1,7 @@
 from dataclasses import dataclass
-from strawberry.types import Info as _Info
+
 from strawberry.django.context import StrawberryDjangoContext
+from strawberry.types import Info as _Info
 
 from .dataloaders import GlobalDataLoader
 
@@ -12,4 +13,4 @@ class GraphQLContext(StrawberryDjangoContext):
 
 # NOTE: This is for type support only, There is a better way?
 class Info(_Info):
-    context: GraphQLContext  # pyright: ignore[reportIncompatibleMethodOverride]
+    context: GraphQLContext  # type: ignore[reportIncompatibleMethodOverride]

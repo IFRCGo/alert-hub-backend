@@ -1,18 +1,22 @@
 type Admin1Type {
   id: ID!
   countryId: ID!
-  country: CountryType!
-  maxLatitude: String
-  maxLongitude: String
-  minLatitude: String
-  minLongitude: String
-  multipolygon: String
   name: String!
   polygon: String
+  multipolygon: String
+  minLatitude: String
+  maxLatitude: String
+  minLongitude: String
+  maxLongitude: String
+  country: CountryType!
 }
 
 input AlertFilter {
-  id: IDFilterLookup!
+  id: IDBaseFilterLookup
+  AND: AlertFilter
+  OR: AlertFilter
+  NOT: AlertFilter
+  DISTINCT: Boolean
 }
 
 type AlertInfoAreaCircleType {
@@ -24,8 +28,8 @@ type AlertInfoAreaCircleType {
 type AlertInfoAreaGeocodeType {
   id: ID!
   alertInfoAreaId: ID!
-  value: String!
   valueName: String!
+  value: String!
 }
 
 type AlertInfoAreaPolygonType {
@@ -37,12 +41,12 @@ type AlertInfoAreaPolygonType {
 type AlertInfoAreaType {
   id: ID!
   alertInfoId: ID!
-  altitude: String
   areaDesc: String!
+  altitude: String
   ceiling: String
+  polygons: [AlertInfoAreaPolygonType!]!
   circles: [AlertInfoAreaCircleType!]!
   geocodes: [AlertInfoAreaGeocodeType!]!
-  polygons: [AlertInfoAreaPolygonType!]!
 }
 
 enum AlertInfoCategoryEnum {
@@ -71,8 +75,8 @@ enum AlertInfoCertaintyEnum {
 type AlertInfoParameterType {
   id: ID!
   alertInfoId: ID!
-  value: String!
   valueName: String!
+  value: String!
 }
 
 enum AlertInfoResponseTypeEnum {
@@ -99,31 +103,31 @@ type AlertInfoType {
   id: ID!
   alertId: ID!
   effective: DateTime!
-  onset: DateTime!
-  expires: DateTime!
-  areas: [AlertInfoAreaType!]!
-  audience: String
-  category: AlertInfoCategoryEnum!
-  categoryDisplay: String!
-  certainty: AlertInfoCertaintyEnum!
-  certaintyDisplay: String!
-  contact: String
-  description: String
-  event: String!
-  eventCode: String
-  headline: String
-  infos: [AlertInfoParameterType!]!
-  instruction: String
+  onset: DateTime
+  expires: DateTime
   language: String
-  parameter: String
-  responseType: AlertInfoResponseTypeEnum
-  responseTypeDisplay: String
+  event: String!
+  audience: String
+  eventCode: String
   senderName: String
-  severity: AlertInfoSeverityEnum!
-  severityDisplay: String!
-  urgency: AlertInfoUrgencyEnum!
-  urgencyDisplay: String!
+  headline: String
+  description: String
+  instruction: String
   web: String
+  contact: String
+  parameter: String
+  category: AlertInfoCategoryEnum!
+  responseType: AlertInfoResponseTypeEnum
+  urgency: AlertInfoUrgencyEnum!
+  severity: AlertInfoSeverityEnum!
+  certainty: AlertInfoCertaintyEnum!
+  categoryDisplay: String!
+  responseTypeDisplay: String
+  urgencyDisplay: String!
+  severityDisplay: String!
+  certaintyDisplay: String!
+  infos: [AlertInfoParameterType!]!
+  areas: [AlertInfoAreaType!]!
 }
 
 enum AlertInfoUrgencyEnum {
@@ -159,25 +163,25 @@ type AlertType {
   sent: DateTime!
   countryId: ID!
   feedId: ID!
-  addresses: String
-  admin1s: [Admin1Type!]!
-  code: String
-  country: CountryType!
-  feed: FeedType!
+  url: String!
   identifier: String!
-  incidents: String
-  infos: [AlertInfoType!]!
-  msgType: AlertMsgTypeEnum!
-  msgTypeDisplay: String!
-  note: String
-  references: String
-  restriction: String
-  scope: String
   sender: String!
   source: String
+  scope: String
+  restriction: String
+  addresses: String
+  code: String
+  note: String
+  references: String
+  incidents: String
   status: AlertStatusEnum!
+  msgType: AlertMsgTypeEnum!
   statusDisplay: String!
-  url: String!
+  msgTypeDisplay: String!
+  country: CountryType!
+  feed: FeedType!
+  admin1s: [Admin1Type!]!
+  infos: [AlertInfoType!]!
 }
 
 type AlertTypeCountList {
@@ -262,7 +266,11 @@ type ContinentType {
 }
 
 input CountryFilter {
-  id: IDFilterLookup!
+  id: IDBaseFilterLookup
+  AND: CountryFilter
+  OR: CountryFilter
+  NOT: CountryFilter
+  DISTINCT: Boolean
 }
 
 input CountryOrder {
@@ -273,13 +281,13 @@ type CountryType {
   id: ID!
   regionId: ID!
   continentId: ID!
-  centroid: String
-  continent: ContinentType!
-  iso3: String!
-  multipolygon: String
   name: String!
+  iso3: String!
   polygon: String
+  multipolygon: String
+  centroid: String
   region: RegionType!
+  continent: ContinentType!
 }
 
 type CountryTypeCountList {
@@ -293,7 +301,11 @@ type CountryTypeCountList {
 scalar DateTime
 
 input FeedFilter {
-  id: IDFilterLookup!
+  id: IDBaseFilterLookup
+  AND: FeedFilter
+  OR: FeedFilter
+  NOT: FeedFilter
+  DISTINCT: Boolean
 }
 
 enum FeedFormatEnum {
@@ -334,18 +346,18 @@ type FeedType {
   enableRebroadcast: Boolean!
   official: Boolean!
   countryId: ID!
-  authorEmail: String!
-  authorName: String!
-  country: CountryType!
-  format: FeedFormatEnum!
-  formatDisplay: String!
-  languages: [LanguageInfoType!]!
-  notes: String
-  pollingInterval: FeedPoolingIntervalEnum!
-  pollingIntervalDisplay: FeedPoolingIntervalEnum!
-  status: String!
-  statusDisplay: String!
   url: String!
+  authorName: String!
+  authorEmail: String!
+  notes: String
+  format: FeedFormatEnum!
+  pollingInterval: FeedPoolingIntervalEnum!
+  status: String!
+  formatDisplay: String!
+  pollingIntervalDisplay: FeedPoolingIntervalEnum!
+  statusDisplay: String!
+  country: CountryType!
+  languages: [LanguageInfoType!]!
 }
 
 type FeedTypeCountList {
@@ -355,32 +367,25 @@ type FeedTypeCountList {
   items: [FeedType!]!
 }
 
-input IDFilterLookup {
+input IDBaseFilterLookup {
+  """Exact match. Filter will be skipped on `null` value"""
   exact: ID
-  iExact: ID
-  contains: ID
-  iContains: ID
-  inList: [ID!]
-  gt: ID
-  gte: ID
-  lt: ID
-  lte: ID
-  startsWith: ID
-  iStartsWith: ID
-  endsWith: ID
-  iEndsWith: ID
-  range: [ID!]
+
+  """Assignment test. Filter will be skipped on `null` value"""
   isNull: Boolean
-  regex: String
-  iRegex: String
+
+  """
+  Exact match of items in a given list. Filter will be skipped on `null` value
+  """
+  inList: [ID!]
 }
 
 type LanguageInfoType {
   id: ID!
   feedId: ID!
-  language: String
-  logo: String
   name: String!
+  logo: String
+  language: String
 }
 
 type Mutation {
@@ -399,7 +404,11 @@ enum OptEmailNotificationTypeEnum {
 
 enum Ordering {
   ASC
+  ASC_NULLS_FIRST
+  ASC_NULLS_LAST
   DESC
+  DESC_NULLS_FIRST
+  DESC_NULLS_LAST
 }
 
 type PrivateMutation {
@@ -435,7 +444,11 @@ type Query {
 }
 
 input RegionFilter {
-  id: IDFilterLookup!
+  id: IDBaseFilterLookup
+  AND: RegionFilter
+  OR: RegionFilter
+  NOT: RegionFilter
+  DISTINCT: Boolean
 }
 
 input RegionOrder {
@@ -444,9 +457,9 @@ input RegionOrder {
 
 type RegionType {
   id: ID!
-  centroid: String
   name: String!
   polygon: String
+  centroid: String
 }
 
 type RegionTypeCountList {
@@ -458,11 +471,11 @@ type RegionTypeCountList {
 
 type UserMeType {
   id: ID!
-  firstName: String!
-  lastName: String!
-  displayName: String!
+  firstName: String
+  lastName: String
+  displayName: String
   email: String!
-  phoneNumber: String!
-  country: String!
-  city: String!
+  phoneNumber: String
+  country: String
+  city: String
 }

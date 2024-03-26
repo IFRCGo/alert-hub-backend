@@ -1,23 +1,25 @@
 from __future__ import annotations
 
-import copy
-from typing import Any, Generic, TypeVar, Callable, Type
+from functools import cached_property
+from typing import Any, Callable, Generic, Type, TypeVar
 
 import strawberry
 from asgiref.sync import sync_to_async
 from django.conf import settings
 from django.db import models
-from strawberry_django import utils
+from strawberry.types import Info
 from strawberry_django.fields.field import StrawberryDjangoField
+from strawberry_django.filters import apply as apply_filters
+from strawberry_django.ordering import apply as apply_orders
 from strawberry_django.pagination import (
     OffsetPaginationInput,
     StrawberryDjangoPagination,
 )
-
 from strawberry_django.resolvers import django_resolver
+from strawberry_django.utils.typing import unwrap_type
 
 
-def process_pagination(pagination):
+def process_pagination(pagination: OffsetPaginationInput):
     """
     Mutate pagination object to make sure limit are under given threshold
     """
@@ -55,7 +57,9 @@ class CountBeforePaginationMonkeyPatch(StrawberryDjangoPagination):
         )
 
 
-StrawberryDjangoPagination.get_queryset = CountBeforePaginationMonkeyPatch.get_queryset
+StrawberryDjangoPagination.get_queryset = (  # type: ignore[reportGeneralTypeIssues]
+    CountBeforePaginationMonkeyPatch.get_queryset
+)
 OffsetPaginationInput.limit = 1  # TODO: This is not working
 
 DjangoModelTypeVar = TypeVar("DjangoModelTypeVar")
@@ -65,7 +69,9 @@ DjangoModelTypeVar = TypeVar("DjangoModelTypeVar")
 class CountList(Generic[DjangoModelTypeVar]):
     limit: int
     offset: int
-    queryset: strawberry.Private[models.QuerySet | list[DjangoModelTypeVar]]
+    queryset: strawberry.Private[
+        models.QuerySet[DjangoModelTypeVar] | list[DjangoModelTypeVar]  # type: ignore[reportGeneralTypeIssues]
+    ]
     get_count: strawberry.Private[Callable]
 
     @strawberry.field
@@ -74,59 +80,70 @@ class CountList(Generic[DjangoModelTypeVar]):
 
     @strawberry.field
     async def items(self) -> list[DjangoModelTypeVar]:
-        # queryset = self.queryset
         queryset = self.queryset
-        if type(self.queryset) in [list, tuple]:
-            return queryset
-        return [
-            d
-            async for d in queryset
-        ]
+        if type(queryset) in [list, tuple]:
+            return list(queryset)
+        return [d async for d in queryset]  # type: ignore[reportGeneralTypeIssues]
 
 
 class StrawberryDjangoCountList(StrawberryDjangoField):
-    @property
-    def is_list(self):
+    @cached_property
+    def is_list(self) -> bool:
         return True
 
-    @property
-    def django_model(self) -> models.Model | None:
+    @cached_property
+    def django_model(self) -> type[models.Model] | None:
+        super().django_model
         # Hack to get the nested type of `CountList` to register
         # as the type of this field
         items_type = [
-            f.type for f in self.type.__strawberry_definition__.fields if f.name == "items"
+            f.type
+            for f in self.type.__strawberry_definition__.fields  # type: ignore[reportGeneralTypeIssues]
+            if f.name == "items"
         ]
         if len(items_type) > 0:
-            type_ = utils.unwrap_type(items_type[0])
+            type_ = unwrap_type(items_type[0])
             self._base_type = type_
-            return utils.get_django_model(type_)
+            return type_.__strawberry_django_definition__.model  # type: ignore[reportGeneralTypeIssues]
         return None
+
+    def get_result(
+        self,
+        source: models.Model | None,
+        info: Any,
+        args: list[Any],
+        kwargs: dict[str, Any],
+    ):
+        return self.resolver(source, info, args, kwargs)
 
     def resolver(
         self,
-        info,
-        source,
-        pk=strawberry.UNSET,
-        filters: Type = strawberry.UNSET,
-        order: Type = strawberry.UNSET,
-        pagination: Type = strawberry.UNSET,
-    ):
+        source: Any,
+        info: Info | None,
+        args: list[Any],
+        kwargs: dict[str, Any],
+    ) -> Any:
+        pk: int = kwargs.get('pk', strawberry.UNSET)
+        filters: Type = kwargs.get('filters', strawberry.UNSET)
+        order: Type = kwargs.get('order', strawberry.UNSET)
+        pagination: OffsetPaginationInput = kwargs.get('pagination', strawberry.UNSET)
+
         if self.django_model is None or self._base_type is None:
             # This needs to be fixed by developers
             raise Exception('django_model should be defined!!')
 
         queryset = self.django_model.objects.all()
 
-        type_ = self._base_type or self.child.type
-        type_ = utils.unwrap_type(type_)
+        type_ = self._base_type
+        type_ = unwrap_type(type_)
         get_queryset = getattr(type_, "get_queryset", None)
         if get_queryset:
             queryset = get_queryset(type_, queryset, info)
 
-        queryset = self.apply_filters(queryset, filters, pk, info)
-        queryset = self.apply_order(queryset, order)
+        queryset = apply_filters(filters, queryset, info, pk)
+        queryset = apply_orders(order, queryset, info=info)
 
-        _current_queryset = copy.copy(queryset)
+        _current_queryset = queryset._chain()  # type: ignore[reportGeneralTypeIssues]
 
         @sync_to_async
         def get_count():
@@ -135,7 +152,7 @@ class StrawberryDjangoCountList(StrawberryDjangoField):
         pagination = process_pagination(pagination)
 
         queryset = self.apply_pagination(queryset, pagination)
-        return CountList[self._base_type](
+        return CountList[self._base_type](  # type: ignore[reportGeneralTypeIssues]
             get_count=get_count,
             queryset=queryset,
             limit=pagination.limit,
@@ -144,7 +161,13 @@ class StrawberryDjangoCountList(StrawberryDjangoField):
 
 
 def pagination_field(
-    resolver=None, *, name=None, field_name=None, filters=strawberry.UNSET, default=strawberry.UNSET, **kwargs
+    resolver=None,
+    *,
+    name=None,
+    field_name=None,
+    filters=strawberry.UNSET,
+    default=strawberry.UNSET,
+    **kwargs,
 ) -> Any:
     field_ = StrawberryDjangoCountList(
         python_name=None,

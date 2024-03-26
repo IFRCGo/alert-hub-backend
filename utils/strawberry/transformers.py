@@ -1,25 +1,26 @@
-import typing
-import strawberry
 import dataclasses
 import datetime
 import decimal
-
-from importlib import import_module
+import typing
 from collections import OrderedDict
 from functools import singledispatch
-from rest_framework import serializers, fields as drf_fields
-from strawberry.field import StrawberryField
-from strawberry.file_uploads import Upload as StrawberryUploadField
-from strawberry.annotation import StrawberryAnnotation
+from importlib import import_module
+
+import strawberry
+from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.module_loading import import_string
-from django.conf import settings
+from rest_framework import fields as drf_fields
+from rest_framework import serializers
+from strawberry.annotation import StrawberryAnnotation
+from strawberry.field import StrawberryField
+from strawberry.file_uploads import Upload as StrawberryUploadField
+from strawberry.type import get_object_definition
+from strawberry_django.type import _process_type
 
+from . import types
 from .enums import get_enum_name_from_django_field
 from .serializers import IntegerIDField, StringIDField
-from . import types
-
-from strawberry_django.type import get_field
 
 """
 XXX:
@@ -31,8 +32,7 @@ XXX:
 @singledispatch
 def get_strawberry_type_from_serializer_field(field):
     raise ImproperlyConfigured(
-        "Don't know how to convert the serializer field %s (%s) "
-        "to strawberry type" % (field, field.__class__)
+        "Don't know how to convert the serializer field %s (%s) " "to strawberry type" % (field, field.__class__)
     )
 
 
@@ -127,6 +127,9 @@ def convert_serializer_field_to_enum(field):
     return ENUM_TO_STRAWBERRY_ENUM_MAP[custom_name]
 
 
+convert_serializer_to_type_cache = {}
+
+
 def convert_serializer_to_type(serializer_class, name=None, partial=False):
     """
     graphene_django.rest_framework.serializer_converter.convert_serializer_to_type
@@ -140,16 +143,13 @@ def convert_serializer_to_type(serializer_class, name=None, partial=False):
         if partial:
             ref_name = f'{serializer_name}NestUpdateInputType'
 
-    cached_type = convert_serializer_to_type.cache.get(ref_name, None)
+    cached_type = convert_serializer_to_type_cache.get(ref_name, None)
     if cached_type:
         return cached_type
 
     ret_type = generate_type_for_serializer(ref_name, serializer_class, partial=partial)
-    convert_serializer_to_type.cache[ref_name] = ret_type
+    convert_serializer_to_type_cache[ref_name] = ret_type
     return ret_type
-
-
-convert_serializer_to_type.cache = {}
 
 
 def convert_serializer_field(field, convert_choices_to_enum=True, force_optional=False):
@@ -167,7 +167,7 @@ def convert_serializer_field(field, convert_choices_to_enum=True, force_optional
     is_required = field.required and not force_optional
     if field.default != drf_fields.empty:
         if field.default.__class__.__hash__ is None:  # Mutable
-            kwargs['default_factory'] = lambda: field.default
+            kwargs['default_factory'] = lambda: field.default  # type: ignore[reportGeneralTypeIssues] FIXME
         else:
             kwargs['default'] = field.default
     else:
@@ -263,22 +263,20 @@ def generate_type_for_serializer(
             [
                 *non_defaults_model_fields,
                 *defaults_model_fields,
-            ]
+            ],
         )
     )
 
 
 # Custom GraphQL type generation logics
 
-class MonkeyPatch:
-    og_get_field = get_field
 
+class MonkeyPatch:
     @classmethod
-    def get_field_monkey_patch(
+    def _process_type(
         cls,
-        django_type,
-        field_name: str,
-        field_annotation: StrawberryAnnotation | None = None,
+        *args,
+        **kwargs,
     ):
         """
         For field with <field>_id, let's use ID instead of object while rendering.
@@ -290,16 +288,14 @@ class MonkeyPatch:
                     member_id gives value "1" == str(obj.member_id)
         NOTE: This doesn't work with Mixin
         """
-        field = cls.og_get_field(
-            django_type,
-            field_name,
-            field_annotation,
-        )
-        # CUSTOM CHANGE -- START
-        if field_name.endswith('_id'):
-            field.django_name = field_name
-        return field
-        # CUSTOM CHANGE -- END
+        response = _process_type(*args, **kwargs)
+        # Custom Logic
+        obj_definition = get_object_definition(response)
+        assert obj_definition is not None
+        for field in obj_definition.fields:
+            if field.name.endswith('_id'):
+                field.django_name = field.name  # type: ignore[reportGeneralTypeIssues] FIXME
+        return response
 
 
-import_module('strawberry_django.type').get_field = MonkeyPatch.get_field_monkey_patch
+import_module('strawberry_django.type')._process_type = MonkeyPatch._process_type  # type: ignore[reportGeneralTypeIssues]

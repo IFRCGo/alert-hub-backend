@@ -24,7 +24,7 @@ pytz = "*"
 colorlog = "*"
 requests = "*"
 strawberry-graphql = "^0.220.0"
-strawberry-django-plus = "*"
+strawberry-graphql-django = "0.35.1"
 sentry-sdk = "*"
 djangorestframework = "*"
 

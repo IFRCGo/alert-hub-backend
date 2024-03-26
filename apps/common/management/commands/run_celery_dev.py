@@ -1,17 +1,13 @@
-import shlex
 import os
+import shlex
 import subprocess
 
 from django.core.management.base import BaseCommand
 from django.utils import autoreload
-from main.celery import CeleryQueue
-
 
 WORKER_STATE_DIR = '/var/run/celery'
 
-CMD = (
-    f"celery -A main worker -Q {','.join(CeleryQueue.ALL_QUEUES)} -E --concurrency=2 -l info"
-)
+CMD = "celery -A main worker -E --concurrency=2 -l info"
 
 
 def restart_celery(*args, **kwargs):

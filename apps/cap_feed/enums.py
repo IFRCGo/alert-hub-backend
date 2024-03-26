@@ -2,7 +2,7 @@ import strawberry
 
 from utils.strawberry.enums import get_enum_name_from_django_field
 
-from .models import Alert, Feed, AlertInfo
+from .models import Alert, AlertInfo, Feed
 
 AlertStatusEnum = strawberry.enum(Alert.Status, name='AlertStatusEnum')
 AlertMsgTypeEnum = strawberry.enum(Alert.MsgType, name='AlertMsgTypeEnum')

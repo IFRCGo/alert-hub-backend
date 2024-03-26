@@ -8,8 +8,5 @@ OptEmailNotificationTypeEnum = strawberry.enum(User.OptEmailNotificationType, na
 
 
 enum_map = {
-    get_enum_name_from_django_field(field): enum
-    for field, enum in (
-        (User.email_opt_outs, OptEmailNotificationTypeEnum),
-    )
+    get_enum_name_from_django_field(field): enum for field, enum in ((User.email_opt_outs, OptEmailNotificationTypeEnum),)
 }

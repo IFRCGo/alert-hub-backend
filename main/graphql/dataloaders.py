@@ -1,7 +1,7 @@
 from django.utils.functional import cached_property
 
-from apps.user.dataloaders import UserDataLoader
 from apps.cap_feed.dataloaders import CapFeedDataloader
+from apps.user.dataloaders import UserDataLoader
 
 
 class GlobalDataLoader:

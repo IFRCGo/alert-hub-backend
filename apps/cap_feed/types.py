@@ -1,26 +1,28 @@
 import typing
+
 import strawberry
 import strawberry_django
 from django.db import models
 
 from main.graphql.context import Info
+from utils.common import get_queryset_for_model
 from utils.strawberry.enums import enum_display_field, enum_field
 from utils.strawberry.types import string_field
-from utils.common import get_queryset_for_model
+
 from .models import (
-    Country,
-    Alert,
     Admin1,
-    Feed,
-    Region,
+    Alert,
     AlertInfo,
-    Continent,
-    AlertInfoParameter,
     AlertInfoArea,
-    AlertInfoAreaPolygon,
     AlertInfoAreaCircle,
     AlertInfoAreaGeocode,
+    AlertInfoAreaPolygon,
+    AlertInfoParameter,
+    Continent,
+    Country,
+    Feed,
     LanguageInfo,
+    Region,
 )
 
 
@@ -293,7 +295,7 @@ class AlertType:
         return get_queryset_for_model(Alert, queryset)
 
     @strawberry.field
-    async def country(self: Alert, info: Info) -> CountryType:  # pyright: ignore[reportGeneralTypeIssues]
+    async def country(self: Alert, info: Info) -> CountryType:  # type: ignore[reportGeneralTypeIssues]
         return await info.context.dl.cap_feed.load_country.load(self.country_id)
 
     @strawberry.field

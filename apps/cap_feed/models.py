@@ -413,7 +413,7 @@ class FeedLog(models.Model):
     timestamp = models.DateTimeField(default=timezone.now)
     notes = models.TextField(blank=True, default='')
 
-    class Meta:  # pyright: ignore [reportIncompatibleVariableOverride]
+    class Meta:  # type: ignore [reportIncompatibleVariableOverride]
         constraints = [
             models.UniqueConstraint(fields=['alert_url', 'description'], name="unique_alert_error"),
         ]

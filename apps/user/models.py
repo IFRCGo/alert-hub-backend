@@ -91,7 +91,7 @@ class User(AbstractUser):
     EMAIL_FIELD = USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
 
-    objects = CustomUserManager()  # pyright: ignore [reportAssignmentType,reportGeneralTypeIssues]
+    objects = CustomUserManager()  # type: ignore [reportAssignmentType,reportGeneralTypeIssues]
 
     def save(self, *args, **kwargs):
         self.display_name = self.get_full_name() or f'User#{self.pk}'

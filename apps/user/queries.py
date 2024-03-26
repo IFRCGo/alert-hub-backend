@@ -3,6 +3,7 @@ import strawberry_django
 from asgiref.sync import sync_to_async
 
 from main.graphql.context import Info
+
 from .models import User
 
 
@@ -30,7 +31,7 @@ class PublicQuery:
         user = info.context.request.user
         print(info.context.request.user)
         if user.is_authenticated:
-            return user  # pyright: ignore[reportGeneralTypeIssues]
+            return user  # type: ignore[reportGeneralTypeIssues]
 
 
 @strawberry.type

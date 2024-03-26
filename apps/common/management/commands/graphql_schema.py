@@ -1,6 +1,8 @@
 import argparse
+
 from django.core.management.base import BaseCommand
 from strawberry.printer import print_schema
+
 from main.graphql.schema import schema
 
 
@@ -16,8 +18,6 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         file = options['out']
-        file.write(
-            print_schema(schema)
-        )
+        file.write(print_schema(schema))
         file.close()
         self.stdout.write(self.style.SUCCESS(f'{file.name} file generated'))
