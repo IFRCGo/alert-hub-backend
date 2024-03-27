@@ -41,6 +41,7 @@ x-server: &base_server_setup
     DEFAULT_FROM_EMAIL: ${DEFAULT_FROM_EMAIL:-alert-hub-dev <info@alert-hub.ifrc.org>}
   volumes:
     - ./:/code
+    - backend_data:/data/
     - ipython_data_local:/root/.ipython/profile_default   # persist ipython data, including ipython history
   depends_on:
     - db
@@ -118,3 +119,4 @@ volumes:
   redis-data:
   ipython_data_local:
   mailpit-data:
+  backend_data:

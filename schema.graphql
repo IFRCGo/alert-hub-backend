@@ -20,6 +20,7 @@ type Admin1Type {
   maxLatitude: String
   minLongitude: String
   maxLongitude: String
+  isUnknown: Boolean!
   country: CountryType!
 }
 
@@ -32,13 +33,18 @@ type Admin1TypeCountList {
 
 input AlertFilter {
   id: IDBaseFilterLookup
-  url: StrFilterLookup
-  sender: StrFilterLookup
-  admin1s: DjangoModelFilterInput
+  country: DjangoModelFilterInput
+  sent: DatetimeDatetimeFilterLookup
   AND: AlertFilter
   OR: AlertFilter
   NOT: AlertFilter
   DISTINCT: Boolean
+  region: ID
+  admin1: ID
+  urgency: [AlertInfoUrgencyEnum!]
+  severity: [AlertInfoSeverityEnum!]
+  certainty: [AlertInfoCertaintyEnum!]
+  category: [AlertInfoCategoryEnum!]
 }
 
 type AlertInfoAreaCircleType {
@@ -342,6 +348,52 @@ type CountryTypeCountList {
 """Date with time (isoformat)"""
 scalar DateTime
 
+input DatetimeDatetimeFilterLookup {
+  """Exact match. Filter will be skipped on `null` value"""
+  exact: DateTime
+
+  """Assignment test. Filter will be skipped on `null` value"""
+  isNull: Boolean
+
+  """
+  Exact match of items in a given list. Filter will be skipped on `null` value
+  """
+  inList: [DateTime!]
+
+  """Greater than. Filter will be skipped on `null` value"""
+  gt: DateTime
+
+  """Greater than or equal to. Filter will be skipped on `null` value"""
+  gte: DateTime
+
+  """Less than. Filter will be skipped on `null` value"""
+  lt: DateTime
+
+  """Less than or equal to. Filter will be skipped on `null` value"""
+  lte: DateTime
+
+  """Inclusive range test (between)"""
+  range: DatetimeRangeLookup
+  year: IntComparisonFilterLookup
+  month: IntComparisonFilterLookup
+  day: IntComparisonFilterLookup
+  weekDay: IntComparisonFilterLookup
+  isoWeekDay: IntComparisonFilterLookup
+  week: IntComparisonFilterLookup
+  isoYear: IntComparisonFilterLookup
+  quarter: IntComparisonFilterLookup
+  hour: IntComparisonFilterLookup
+  minute: IntComparisonFilterLookup
+  second: IntComparisonFilterLookup
+  date: IntComparisonFilterLookup
+  time: IntComparisonFilterLookup
+}
+
+input DatetimeRangeLookup {
+  start: DateTime = null
+  end: DateTime = null
+}
+
 input DjangoModelFilterInput {
   pk: ID!
 }
@@ -424,6 +476,39 @@ input IDBaseFilterLookup {
   Exact match of items in a given list. Filter will be skipped on `null` value
   """
   inList: [ID!]
+}
+
+input IntComparisonFilterLookup {
+  """Exact match. Filter will be skipped on `null` value"""
+  exact: Int
+
+  """Assignment test. Filter will be skipped on `null` value"""
+  isNull: Boolean
+
+  """
+  Exact match of items in a given list. Filter will be skipped on `null` value
+  """
+  inList: [Int!]
+
+  """Greater than. Filter will be skipped on `null` value"""
+  gt: Int
+
+  """Greater than or equal to. Filter will be skipped on `null` value"""
+  gte: Int
+
+  """Less than. Filter will be skipped on `null` value"""
+  lt: Int
+
+  """Less than or equal to. Filter will be skipped on `null` value"""
+  lte: Int
+
+  """Inclusive range test (between)"""
+  range: IntRangeLookup
+}
+
+input IntRangeLookup {
+  start: Int = null
+  end: Int = null
 }
 
 type LanguageInfoType {
@@ -517,54 +602,6 @@ type RegionTypeCountList {
   offset: Int!
   count: Int!
   items: [RegionType!]!
-}
-
-input StrFilterLookup {
-  """Exact match. Filter will be skipped on `null` value"""
-  exact: String
-
-  """Assignment test. Filter will be skipped on `null` value"""
-  isNull: Boolean
-
-  """
-  Exact match of items in a given list. Filter will be skipped on `null` value
-  """
-  inList: [String!]
-
-  """Case-insensitive exact match. Filter will be skipped on `null` value"""
-  iExact: String
-
-  """
-  Case-sensitive containment test. Filter will be skipped on `null` value
-  """
-  contains: String
-
-  """
-  Case-insensitive containment test. Filter will be skipped on `null` value
-  """
-  iContains: String
-
-  """Case-sensitive starts-with. Filter will be skipped on `null` value"""
-  startsWith: String
-
-  """Case-insensitive starts-with. Filter will be skipped on `null` value"""
-  iStartsWith: String
-
-  """Case-sensitive ends-with. Filter will be skipped on `null` value"""
-  endsWith: String
-
-  """Case-insensitive ends-with. Filter will be skipped on `null` value"""
-  iEndsWith: String
-
-  """
-  Case-sensitive regular expression match. Filter will be skipped on `null` value
-  """
-  regex: String
-
-  """
-  Case-insensitive regular expression match. Filter will be skipped on `null` value
-  """
-  iRegex: String
 }
 
 type UserMeType {

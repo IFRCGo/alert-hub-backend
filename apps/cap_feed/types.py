@@ -88,7 +88,7 @@ class Admin1Type:
     id: strawberry.ID
     name = string_field(Admin1.name)
 
-    # TODO: use custom type
+    # TODO: use custom type (or use file?)
     polygon = string_field(Admin1.polygon)
     multipolygon = string_field(Admin1.multipolygon)
     min_latitude = string_field(Admin1.min_latitude)
@@ -98,12 +98,18 @@ class Admin1Type:
 
     if typing.TYPE_CHECKING:
         country_id = Admin1.country_id
+        pk = Admin1.pk
     else:
         country_id: strawberry.ID
 
     @staticmethod
     def get_queryset(_, queryset: models.QuerySet | None, info: Info):
         return get_queryset_for_model(Admin1, queryset)
+
+    # TODO: Refactor to remove negative pk for Admin1
+    @strawberry.field
+    async def is_unknown(self) -> bool:
+        return self.pk < 0
 
     @strawberry.field
     async def country(self, info: Info) -> CountryType:
