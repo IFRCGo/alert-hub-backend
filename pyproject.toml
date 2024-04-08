@@ -8,7 +8,7 @@ package-mode = false
 
 [tool.poetry.dependencies]
 python = "^3.11"
-django = "^4.2"
+django = "^5.0"
 celery = "^5.3"
 django-celery-beat = "*"
 django-cors-headers = "^4.2.0"
