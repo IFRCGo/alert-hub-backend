@@ -1,11 +1,22 @@
 import os
 from datetime import timedelta
 
-from celery import Celery
+import celery
+from django.conf import settings
 from kombu import Queue
+
+from main import sentry
+
+
+class Celery(celery.Celery):
+    def on_configure(self):  # type: ignore[reportIncompatibleVariableOverride]
+        if settings.SENTRY_ENABLED:
+            sentry.init_sentry(**settings.SENTRY_CONFIG)
+
 
 # TODO: Merge main.settings and main.production
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'main.settings')
+
 
 app = Celery('main')
 
