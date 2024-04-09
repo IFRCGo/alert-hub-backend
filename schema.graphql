@@ -4,6 +4,7 @@ input Admin1Filter {
   OR: Admin1Filter
   NOT: Admin1Filter
   DISTINCT: Boolean
+  unknown: Boolean
 }
 
 input Admin1Order {
@@ -22,6 +23,7 @@ type Admin1Type {
   maxLongitude: String
   isUnknown: Boolean!
   country: CountryType!
+  alertCount: Int!
 }
 
 type Admin1TypeCountList {
@@ -228,6 +230,7 @@ type AlertType {
   country: CountryType!
   feed: FeedType!
   admin1s: [Admin1Type!]!
+  info: AlertInfoType
   infos: [AlertInfoType!]!
 }
 
@@ -336,6 +339,7 @@ type CountryType {
   region: RegionType!
   continent: ContinentType!
   admin1s: [Admin1Type!]!
+  alertCount: Int!
 }
 
 type CountryTypeCountList {
@@ -564,6 +568,7 @@ type PublicQuery {
   alerts(filters: AlertFilter, order: AlertOrder, pagination: OffsetPaginationInput): AlertTypeCountList!
   alertInfos(filters: AlertInfoFilter, order: AlertInfoOrder, pagination: OffsetPaginationInput): AlertInfoTypeCountList!
   region(pk: ID!): RegionType
+  allCountries: [CountryType!]!
   country(pk: ID!): CountryType
   admin1(pk: ID!): Admin1Type
   feed(pk: ID!): FeedType

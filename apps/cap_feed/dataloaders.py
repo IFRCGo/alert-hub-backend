@@ -90,6 +90,22 @@ def load_admin1s_by_country(keys: list[int]) -> list[list['Admin1Type']]:
     return [_map[key] for key in keys]
 
 
+def load_info_by_alert(keys: list[int]) -> list[typing.Union['AlertInfoType', None]]:
+    qs = (
+        AlertInfo.objects.filter(alert__in=keys)
+        # TODO: Is this order good enough?
+        .order_by('alert_id', 'id')
+        .distinct('alert_id')
+        .all()
+    )
+
+    _map: dict[int, 'AlertInfoType'] = {  # type: ignore[reportGeneralTypeIssues]
+        alert_info.alert_id: alert_info for alert_info in qs
+    }
+
+    return [_map.get(key) for key in keys]
+
+
 def load_infos_by_alert(keys: list[int]) -> list[list['AlertInfoType']]:
     qs = AlertInfo.objects.filter(alert__in=keys).all()
 
@@ -221,6 +237,10 @@ class CapFeedDataloader:
     @cached_property
     def load_admin1s_by_country(self):
         return DataLoader(load_fn=sync_to_async(load_admin1s_by_country))
+
+    @cached_property
+    def load_info_by_alert(self):
+        return DataLoader(load_fn=sync_to_async(load_info_by_alert))
 
     @cached_property
     def load_infos_by_alert(self):

@@ -337,6 +337,10 @@ class AlertType:
     async def admin1s(self, info: Info) -> list[Admin1Type]:
         return await info.context.dl.cap_feed.load_admin1s_by_alert.load(self.pk)
 
+    @strawberry.field
+    async def info(self, info: Info) -> AlertInfoType | None:
+        return await info.context.dl.cap_feed.load_info_by_alert.load(self.pk)
+
     # TODO: Need to check if we need pagination instead
     @strawberry.field
     async def infos(self, info: Info) -> list[AlertInfoType]:
