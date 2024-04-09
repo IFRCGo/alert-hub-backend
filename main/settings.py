@@ -51,7 +51,8 @@ env = environ.Env(
     DEFAULT_FROM_EMAIL=str,
     # Sentry
     SENTRY_DSN=(str, None),
-    SENTRY_SAMPLE_RATE=(float, 0.2),
+    SENTRY_TRACES_SAMPLE_RATE=(float, 0.2),
+    SENTRY_PROFILE_SAMPLE_RATE=(float, 0.2),
     # Misc
 )
 
@@ -342,7 +343,8 @@ if SENTRY_DSN:
         'send_default_pii': True,
         'release': env('APP_RELEASE'),
         'environment': DJANGO_APP_ENVIRONMENT,
-        'traces_sample_rate': env('SENTRY_SAMPLE_RATE'),
+        'traces_sample_rate': env('SENTRY_TRACES_SAMPLE_RATE'),
+        'profiles_sample_rate': env('SENTRY_PROFILE_SAMPLE_RATE'),
         'debug': DEBUG,
         'tags': {
             'site': ','.join(set(ALLOWED_HOSTS)),
