@@ -102,6 +102,17 @@ class CountryFilter:
 class Admin1Filter:
     id: strawberry.auto
 
+    @strawberry_django.filter_field
+    def unknown(
+        self,
+        queryset: models.QuerySet,
+        value: bool,
+        prefix: str,
+    ) -> tuple[models.QuerySet, models.Q]:
+        if value:
+            return queryset, models.Q(**{f"{prefix}id__lt": 0})
+        return queryset, models.Q(**{f"{prefix}id__gte": 0})
+
 
 @strawberry_django.filters.filter(Region, lookups=True)
 class RegionFilter:

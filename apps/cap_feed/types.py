@@ -67,6 +67,7 @@ class CountryType:
 
     @staticmethod
     def get_queryset(_, queryset: models.QuerySet | None, info: Info):
+        # TODO: defer polygon, multipolygon
         return get_queryset_for_model(Country, queryset)
 
     @strawberry.field
@@ -81,6 +82,10 @@ class CountryType:
     @strawberry.field
     async def admin1s(self, info: Info) -> list['Admin1Type']:
         return await info.context.dl.cap_feed.load_admin1s_by_country.load(self.pk)
+
+    @strawberry.field
+    async def alert_count(self, info: Info) -> int:
+        return await info.context.dl.cap_feed.load_alert_count_by_country.load(self.pk)
 
 
 @strawberry_django.type(Admin1)
@@ -114,6 +119,10 @@ class Admin1Type:
     @strawberry.field
     async def country(self, info: Info) -> CountryType:
         return await info.context.dl.cap_feed.load_country.load(self.country_id)
+
+    @strawberry.field
+    async def alert_count(self, info: Info) -> int:
+        return await info.context.dl.cap_feed.load_alert_count_by_admin1.load(self.pk)
 
 
 @strawberry_django.type(LanguageInfo)

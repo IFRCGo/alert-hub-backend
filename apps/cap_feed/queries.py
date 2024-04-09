@@ -74,6 +74,10 @@ class PublicQuery:
         return await RegionType.get_queryset(None, None, info).filter(pk=pk).afirst()
 
     @strawberry_django.field
+    async def all_countries(self, info: Info) -> list[CountryType]:
+        return [country async for country in CountryType.get_queryset(None, None, info).all()]
+
+    @strawberry_django.field
     async def country(self, info: Info, pk: strawberry.ID) -> CountryType | None:
         return await CountryType.get_queryset(None, None, info).filter(pk=pk).afirst()
 

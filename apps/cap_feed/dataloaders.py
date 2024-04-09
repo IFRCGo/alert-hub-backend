@@ -9,6 +9,7 @@ from strawberry.dataloader import DataLoader
 
 from .models import (
     Admin1,
+    Alert,
     AlertAdmin1,
     AlertInfo,
     AlertInfoArea,
@@ -159,6 +160,42 @@ def load_language_info_by_feed(keys: list[int]) -> list[list['LanguageInfoType']
     return [_map[key] for key in keys]
 
 
+def load_alert_count_by_country(keys: list[int]) -> list[int]:
+    qs = (
+        Alert.objects
+        # TODO: Add is_expired=False filter
+        .filter(country__in=keys)
+        .order_by()
+        .values('country_id')
+        .annotate(
+            count=models.Count('id'),
+        )
+        .values_list('country_id', 'count')
+    )
+
+    _map = {country_id: count for country_id, count in qs}
+
+    return [_map.get(key, 0) for key in keys]
+
+
+def load_alert_count_by_admin1(keys: list[int]) -> list[int]:
+    qs = (
+        Alert.objects
+        # TODO: Add is_expired=False filter
+        .filter(admin1s__in=keys)
+        .order_by()
+        .values('admin1s')
+        .annotate(
+            count=models.Count('id'),
+        )
+        .values_list('admin1s', 'count')
+    )
+
+    _map = {admin1_id: count for admin1_id, count in qs}
+
+    return [_map.get(key, 0) for key in keys]
+
+
 class CapFeedDataloader:
 
     @cached_property
@@ -212,3 +249,11 @@ class CapFeedDataloader:
     @cached_property
     def load_language_info_by_feed(self):
         return DataLoader(load_fn=sync_to_async(load_language_info_by_feed))
+
+    @cached_property
+    def load_alert_count_by_country(self):
+        return DataLoader(load_fn=sync_to_async(load_alert_count_by_country))
+
+    @cached_property
+    def load_alert_count_by_admin1(self):
+        return DataLoader(load_fn=sync_to_async(load_alert_count_by_admin1))
