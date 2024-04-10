@@ -240,6 +240,11 @@ class Alert(models.Model):
     def __str__(self):
         return self.url
 
+    @classmethod
+    def get_queryset(cls) -> models.QuerySet:
+        # TODO: Add is_expired=False filter
+        return cls.objects.all()
+
     def info_has_been_added(self):
         self.__all_info_added = True
 

@@ -3,12 +3,15 @@ import typing
 import strawberry
 import strawberry_django
 from django.db import models
+from django.db.models.functions import Coalesce
+from strawberry_django.filters import apply as apply_filters
 
 from main.graphql.context import Info
 from utils.common import get_queryset_for_model
 from utils.strawberry.enums import enum_display_field, enum_field
 from utils.strawberry.types import string_field
 
+from .filters import AlertFilter
 from .models import (
     Admin1,
     Alert,
@@ -80,12 +83,43 @@ class CountryType:
 
     # TODO: Create a separate admin1s_names
     @strawberry.field
-    async def admin1s(self, info: Info) -> list['Admin1Type']:
+    async def admin1s(
+        self,
+        info: Info,
+        alert_filters: AlertFilter | None = None,
+    ) -> list['Admin1Type']:
+        if alert_filters:
+            alert_queryset = AlertType.get_queryset(None, None, info)
+            alert_queryset = apply_filters(alert_filters, alert_queryset, info, None)
+
+            queryset = (
+                Admin1Type.get_queryset(None, None, info)
+                .filter(country=self)
+                .annotate(
+                    filtered_alert_count=Coalesce(
+                        models.Subquery(
+                            alert_queryset.filter(admin1s=models.OuterRef('id'))
+                            .order_by()
+                            .values('admin1s')
+                            .annotate(count=models.Count('id', distinct=True))
+                            .values('count')[:1],
+                            output_field=models.IntegerField(),
+                        ),
+                        0,
+                    ),
+                )
+            )
+            return [admin1 async for admin1 in queryset.all()]
+
         return await info.context.dl.cap_feed.load_admin1s_by_country.load(self.pk)
 
     @strawberry.field
     async def alert_count(self, info: Info) -> int:
         return await info.context.dl.cap_feed.load_alert_count_by_country.load(self.pk)
+
+    @strawberry.field
+    async def filtered_alert_count(self, _: Info) -> int | None:
+        return getattr(self, 'filtered_alert_count', None)
 
 
 @strawberry_django.type(Admin1)
@@ -123,6 +157,10 @@ class Admin1Type:
     @strawberry.field
     async def alert_count(self, info: Info) -> int:
         return await info.context.dl.cap_feed.load_alert_count_by_admin1.load(self.pk)
+
+    @strawberry.field
+    async def filtered_alert_count(self, _: Info) -> int | None:
+        return getattr(self, 'filtered_alert_count', None)
 
 
 @strawberry_django.type(LanguageInfo)
@@ -321,7 +359,7 @@ class AlertType:
 
     @staticmethod
     def get_queryset(_, queryset: models.QuerySet | None, info: Info):
-        return get_queryset_for_model(Alert, queryset)
+        return get_queryset_for_model(Alert, queryset, custom_model_method=Alert.get_queryset)
 
     # TODO: Create a separate country_name
     @strawberry.field

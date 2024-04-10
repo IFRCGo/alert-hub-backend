@@ -24,6 +24,7 @@ type Admin1Type {
   isUnknown: Boolean!
   country: CountryType!
   alertCount: Int!
+  filteredAlertCount: Int
 }
 
 type Admin1TypeCountList {
@@ -338,8 +339,9 @@ type CountryType {
   centroid: String
   region: RegionType!
   continent: ContinentType!
-  admin1s: [Admin1Type!]!
+  admin1s(alertFilters: AlertFilter = null): [Admin1Type!]!
   alertCount: Int!
+  filteredAlertCount: Int
 }
 
 type CountryTypeCountList {
@@ -568,7 +570,7 @@ type PublicQuery {
   alerts(filters: AlertFilter, order: AlertOrder, pagination: OffsetPaginationInput): AlertTypeCountList!
   alertInfos(filters: AlertInfoFilter, order: AlertInfoOrder, pagination: OffsetPaginationInput): AlertInfoTypeCountList!
   region(pk: ID!): RegionType
-  allCountries: [CountryType!]!
+  allCountries(alertFilters: AlertFilter = null): [CountryType!]!
   country(pk: ID!): CountryType
   admin1(pk: ID!): Admin1Type
   feed(pk: ID!): FeedType

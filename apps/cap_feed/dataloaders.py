@@ -178,8 +178,7 @@ def load_language_info_by_feed(keys: list[int]) -> list[list['LanguageInfoType']
 
 def load_alert_count_by_country(keys: list[int]) -> list[int]:
     qs = (
-        Alert.objects
-        # TODO: Add is_expired=False filter
+        Alert.get_queryset()
         .filter(country__in=keys)
         .order_by()
         .values('country_id')
