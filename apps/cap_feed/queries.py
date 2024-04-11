@@ -81,6 +81,7 @@ class PublicQuery:
         self,
         info: Info,
         alert_filters: AlertFilter | None = None,
+        include_empty_filtered_alert_count: bool = False,
     ) -> list[CountryType]:
         queryset = CountryType.get_queryset(None, None, info)
         if alert_filters:
@@ -98,7 +99,9 @@ class PublicQuery:
                     ),
                     0,
                 ),
-            )
+            ).order_by('-filtered_alert_count')
+            if not include_empty_filtered_alert_count:
+                queryset = queryset.exclude(filtered_alert_count=0)
 
         return [country async for country in queryset.all()]
 

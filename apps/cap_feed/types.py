@@ -87,6 +87,7 @@ class CountryType:
         self,
         info: Info,
         alert_filters: AlertFilter | None = None,
+        include_empty_filtered_alert_count: bool = False,
     ) -> list['Admin1Type']:
         if alert_filters:
             alert_queryset = AlertType.get_queryset(None, None, info)
@@ -108,7 +109,10 @@ class CountryType:
                         0,
                     ),
                 )
-            )
+            ).order_by('-filtered_alert_count')
+            if not include_empty_filtered_alert_count:
+                queryset = queryset.exclude(filtered_alert_count=0)
+
             return [admin1 async for admin1 in queryset.all()]
 
         return await info.context.dl.cap_feed.load_admin1s_by_country.load(self.pk)

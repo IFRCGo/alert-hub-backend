@@ -3,6 +3,7 @@ from sentry_sdk.integrations.celery import CeleryIntegration
 from sentry_sdk.integrations.django import DjangoIntegration
 from sentry_sdk.integrations.logging import ignore_logger
 from sentry_sdk.integrations.redis import RedisIntegration
+from sentry_sdk.integrations.strawberry import StrawberryIntegration
 from strawberry.permission import BasePermission
 
 IGNORED_ERRORS = [
@@ -10,6 +11,7 @@ IGNORED_ERRORS = [
 ]
 IGNORED_LOGGERS = [
     "graphql.execution.utils",
+    "strawberry.http.exceptions.HTTPException",
 ]
 
 for _logger in IGNORED_LOGGERS:
@@ -21,6 +23,7 @@ def init_sentry(app_type, tags={}, **config):
         DjangoIntegration(),
         CeleryIntegration(),
         RedisIntegration(),
+        StrawberryIntegration(async_execution=True),
     ]
     sentry_sdk.init(
         **config,
