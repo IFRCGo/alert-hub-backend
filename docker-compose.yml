@@ -45,6 +45,11 @@ x-server: &base_server_setup
   depends_on:
     - db
     - redis
+  logging:
+    driver: "json-file"
+    options:
+      max-size: "100m"
+      max-file: "5"
 
 
 x-worker: &base_worker_setup
