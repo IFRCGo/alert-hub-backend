@@ -3,8 +3,8 @@ from __future__ import absolute_import, unicode_literals
 from celery import shared_task
 from django.utils import timezone
 
-from .data_injector.geo import inject_geographical_data
 from .data_injector.feed import inject_feeds
+from .data_injector.geo import inject_geographical_data
 from .formats import format_handler as fh
 from .models import Alert, AlertInfo, Feed, ProcessedAlert
 
