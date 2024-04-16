@@ -11,7 +11,7 @@ COPY pyproject.toml poetry.lock /code/
 RUN apt-get update -y \
     && apt-get install -y --no-install-recommends \
         # Build required packages
-        gcc libc-dev libproj-dev \
+        gcc libc-dev gdal-bin libproj-dev \
         # Helper packages
         wait-for-it \
     # Upgrade pip and install python packages for code

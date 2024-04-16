@@ -128,6 +128,7 @@ def get_alert(url, alert_root, feed, ns):
                     )
                     for admin1 in possible_admin1s:
                         admin1_polygon = None
+                        # TODO: Move this to postgis
                         if admin1.polygon:
                             polygon_string = '{"coordinates": ' + admin1.polygon + '}'
                             polygon_dict = json.loads(polygon_string)['coordinates'][0]
@@ -142,6 +143,7 @@ def get_alert(url, alert_root, feed, ns):
                         if admin1_polygon.intersects(polygon):
                             if AlertAdmin1.objects.filter(alert=alert, admin1=admin1).exists():
                                 continue
+                            # TODO: Use bulk manager
                             alert_admin1 = AlertAdmin1()
                             alert_admin1.alert = alert
                             alert_admin1.admin1 = admin1

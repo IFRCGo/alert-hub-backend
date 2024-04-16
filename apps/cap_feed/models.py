@@ -2,6 +2,7 @@ import json
 from datetime import timedelta
 from typing import TYPE_CHECKING
 
+from django.contrib.gis.db import models as gid_models
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import IntegrityError, models
 from django.db.models.signals import post_save
@@ -32,7 +33,11 @@ class Continent(models.Model):
 
 
 class Region(models.Model):
+    ifrc_go_id = models.IntegerField(unique=True, null=True, editable=False)
     name = models.CharField()
+    bbox = gid_models.PolygonField(srid=4326, blank=True, null=True)
+
+    # Not used anywhere TODO: Delete
     polygon = models.TextField(blank=True, null=True)
     centroid = models.CharField(blank=True, null=True)
 
@@ -41,12 +46,17 @@ class Region(models.Model):
 
 
 class Country(models.Model):
+    ifrc_go_id = models.IntegerField(unique=True, null=True, editable=False)
     name = models.CharField()
     iso3 = models.CharField(unique=True, validators=[MinValueValidator(3), MaxValueValidator(3)])
-    polygon = models.TextField(blank=True, null=True)
-    multipolygon = models.TextField(blank=True, null=True)
     region = models.ForeignKey(Region, on_delete=models.CASCADE)
     continent = models.ForeignKey(Continent, on_delete=models.CASCADE)
+
+    bbox = gid_models.PolygonField(srid=4326, blank=True, null=True)
+
+    # Not used anywhere TODO: Delete
+    polygon = models.TextField(blank=True, null=True)
+    multipolygon = models.TextField(blank=True, null=True)
     centroid = models.CharField(blank=True, null=True)
 
     region_id: int
@@ -63,8 +73,12 @@ def create_unknown_admin1(sender, instance, created, **kwargs):
 
 
 class Admin1(models.Model):
+    ifrc_go_id = models.IntegerField(unique=True, null=True, editable=False)
     name = models.CharField()
     country = models.ForeignKey(Country, on_delete=models.CASCADE)
+    bbox = gid_models.PolygonField(srid=4326, blank=True, null=True)
+
+    # NOTE: Used to tag alerts using their polygons with Admin1
     polygon = models.TextField(blank=True, null=True)
     multipolygon = models.TextField(blank=True, null=True)
     min_latitude = models.FloatField(editable=False, null=True)

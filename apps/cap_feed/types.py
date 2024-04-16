@@ -9,7 +9,7 @@ from strawberry_django.filters import apply as apply_filters
 from main.graphql.context import Info
 from utils.common import get_queryset_for_model
 from utils.strawberry.enums import enum_display_field, enum_field
-from utils.strawberry.types import string_field
+from utils.strawberry.types import PolygonScalar, string_field
 
 from .filters import AlertFilter
 from .models import (
@@ -32,14 +32,18 @@ from .models import (
 @strawberry_django.type(Region)
 class RegionType:
     id: strawberry.ID
+    ifrc_go_id: strawberry.ID | None
+    bbox: PolygonScalar | None
 
     name = string_field(Region.name)
-    polygon = string_field(Region.polygon)
-    centroid = string_field(Region.centroid)
 
     @staticmethod
     def get_queryset(_, queryset: models.QuerySet | None, info: Info):
-        return get_queryset_for_model(Region, queryset)
+        return get_queryset_for_model(Region, queryset).defer(
+            # TODO: Remove this fields from model
+            'polygon',
+            'centroid',
+        )
 
 
 @strawberry_django.type(Continent)
@@ -51,14 +55,11 @@ class ContinentType:
 @strawberry_django.type(Country)
 class CountryType:
     id: strawberry.ID
+    ifrc_go_id: strawberry.ID | None
+    bbox: PolygonScalar | None
 
     name = string_field(Country.name)
     iso3 = string_field(Country.iso3)
-
-    # TODO: Use custom type
-    polygon = string_field(Country.polygon)
-    multipolygon = string_field(Country.multipolygon)
-    centroid = string_field(Country.centroid)
 
     if typing.TYPE_CHECKING:
         pk = Country.pk
@@ -70,8 +71,12 @@ class CountryType:
 
     @staticmethod
     def get_queryset(_, queryset: models.QuerySet | None, info: Info):
-        # TODO: defer polygon, multipolygon
-        return get_queryset_for_model(Country, queryset)
+        return get_queryset_for_model(Country, queryset).defer(
+            # TODO: Remove this fields from model
+            'polygon',
+            'multipolygon',
+            'centroid',
+        )
 
     @strawberry.field
     async def region(self, info: Info) -> RegionType:
@@ -129,15 +134,9 @@ class CountryType:
 @strawberry_django.type(Admin1)
 class Admin1Type:
     id: strawberry.ID
+    ifrc_go_id: strawberry.ID | None
     name = string_field(Admin1.name)
-
-    # TODO: use custom type (or use file?)
-    polygon = string_field(Admin1.polygon)
-    multipolygon = string_field(Admin1.multipolygon)
-    min_latitude = string_field(Admin1.min_latitude)
-    max_latitude = string_field(Admin1.max_latitude)
-    min_longitude = string_field(Admin1.min_longitude)
-    max_longitude = string_field(Admin1.max_longitude)
+    bbox: PolygonScalar | None
 
     if typing.TYPE_CHECKING:
         country_id = Admin1.country_id
@@ -147,7 +146,15 @@ class Admin1Type:
 
     @staticmethod
     def get_queryset(_, queryset: models.QuerySet | None, info: Info):
-        return get_queryset_for_model(Admin1, queryset)
+        return get_queryset_for_model(Admin1, queryset).defer(
+            # TODO: Remove this fields from model
+            'polygon',
+            'multipolygon',
+            'min_latitude',
+            'max_latitude',
+            'min_longitude',
+            'max_longitude',
+        )
 
     # TODO: Refactor to remove negative pk for Admin1
     @strawberry.field

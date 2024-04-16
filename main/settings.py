@@ -82,6 +82,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.gis',
     # External
     'strawberry_django',
     'django_celery_beat',
@@ -163,7 +164,7 @@ CSRF_COOKIE_DOMAIN = env('CSRF_COOKIE_DOMAIN')
 # Database
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'ENGINE': 'django.contrib.gis.db.backends.postgis',
         'HOST': env('DB_HOST'),
         'PORT': env('DB_PORT'),
         'NAME': env('DB_NAME'),
