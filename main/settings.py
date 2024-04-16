@@ -14,6 +14,8 @@ from pathlib import Path
 
 import environ
 
+from main import sentry
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -21,9 +23,10 @@ env = environ.Env(
     DJANGO_DEBUG=(bool, False),
     DJANGO_SECRET_KEY=str,
     DJANGO_TIME_ZONE=(str, 'UTC'),
-    DJANGO_APP_TYPE=str,  # web/worker  TODO: Use this in sentry
+    DJANGO_APP_TYPE=str,  # web/worker
     DJANGO_APP_ENVIRONMENT=str,  # dev/prod
     # App Domain
+    APP_RELEASE=(str, 'develop'),
     APP_DOMAIN=str,  # api.example.com
     APP_HTTP_PROTOCOL=str,  # http|https
     APP_FRONTEND_HOST=str,  # http://frontend.example.com
@@ -46,6 +49,10 @@ env = environ.Env(
     EMAIL_HOST_USER=str,
     EMAIL_HOST_PASSWORD=str,
     DEFAULT_FROM_EMAIL=str,
+    # Sentry
+    SENTRY_DSN=(str, None),
+    SENTRY_TRACES_SAMPLE_RATE=(float, 0.2),
+    SENTRY_PROFILE_SAMPLE_RATE=(float, 0.2),
     # Misc
 )
 
@@ -61,6 +68,7 @@ APP_SITE_NAME = 'Alert-Hub'
 APP_HTTP_PROTOCOL = env('APP_HTTP_PROTOCOL')
 APP_DOMAIN = env('APP_DOMAIN')
 APP_FRONTEND_HOST = env('APP_FRONTEND_HOST')
+DJANGO_APP_TYPE = env('DJANGO_APP_TYPE')
 
 DJANGO_APP_ENVIRONMENT = env('DJANGO_APP_ENVIRONMENT')
 
@@ -197,6 +205,10 @@ USE_TZ = True
 # TODO: Use custom config for static files
 STATICFILES_DIRS = (str(BASE_DIR.joinpath('static')),)
 STATIC_URL = 'static/'
+STATIC_ROOT = '/data/static'
+
+MEDIA_URL = 'media/'
+MEDIA_ROOT = '/data/media'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
@@ -317,3 +329,25 @@ if DEBUG:
             },
         },
     }
+
+
+# Sentry Config
+SENTRY_DSN = env('SENTRY_DSN')
+SENTRY_ENABLED = False
+
+if SENTRY_DSN:
+    SENTRY_ENABLED = True
+    SENTRY_CONFIG = {
+        'app_type': DJANGO_APP_TYPE,
+        'dsn': SENTRY_DSN,
+        'send_default_pii': True,
+        'release': env('APP_RELEASE'),
+        'environment': DJANGO_APP_ENVIRONMENT,
+        'traces_sample_rate': env('SENTRY_TRACES_SAMPLE_RATE'),
+        'profiles_sample_rate': env('SENTRY_PROFILE_SAMPLE_RATE'),
+        'debug': DEBUG,
+        'tags': {
+            'site': ','.join(set(ALLOWED_HOSTS)),
+        },
+    }
+    sentry.init_sentry(**SENTRY_CONFIG)

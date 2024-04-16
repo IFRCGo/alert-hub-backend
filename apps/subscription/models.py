@@ -43,5 +43,10 @@ class Subscription(models.Model):
         cache.add("v" + str(self.id), True, timeout=None)
         subscription_mapper.apply_async(args=(self.pk,), queue='subscription_manager')
 
-    def delete(self, *args, force_insert=False, force_update=False) -> tuple[int, dict[str, int]]:
+    def delete(  # type: ignore[reportIncompatibleMethodOverride]
+        self,
+        *args,
+        force_insert=False,
+        force_update=False,
+    ) -> tuple[int, dict[str, int]]:
         return super().delete(force_insert, force_update)

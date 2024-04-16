@@ -3,12 +3,15 @@ import typing
 import strawberry
 import strawberry_django
 from django.db import models
+from django.db.models.functions import Coalesce
+from strawberry_django.filters import apply as apply_filters
 
 from main.graphql.context import Info
 from utils.common import get_queryset_for_model
 from utils.strawberry.enums import enum_display_field, enum_field
 from utils.strawberry.types import string_field
 
+from .filters import AlertFilter
 from .models import (
     Admin1,
     Alert,
@@ -67,6 +70,7 @@ class CountryType:
 
     @staticmethod
     def get_queryset(_, queryset: models.QuerySet | None, info: Info):
+        # TODO: defer polygon, multipolygon
         return get_queryset_for_model(Country, queryset)
 
     @strawberry.field
@@ -79,8 +83,47 @@ class CountryType:
 
     # TODO: Create a separate admin1s_names
     @strawberry.field
-    async def admin1s(self, info: Info) -> list['Admin1Type']:
+    async def admin1s(
+        self,
+        info: Info,
+        alert_filters: AlertFilter | None = None,
+        include_empty_filtered_alert_count: bool = False,
+    ) -> list['Admin1Type']:
+        if alert_filters:
+            alert_queryset = AlertType.get_queryset(None, None, info)
+            alert_queryset = apply_filters(alert_filters, alert_queryset, info, None)
+
+            queryset = (
+                Admin1Type.get_queryset(None, None, info)
+                .filter(country=self)
+                .annotate(
+                    filtered_alert_count=Coalesce(
+                        models.Subquery(
+                            alert_queryset.filter(admin1s=models.OuterRef('id'))
+                            .order_by()
+                            .values('admin1s')
+                            .annotate(count=models.Count('id', distinct=True))
+                            .values('count')[:1],
+                            output_field=models.IntegerField(),
+                        ),
+                        0,
+                    ),
+                )
+            ).order_by('-filtered_alert_count')
+            if not include_empty_filtered_alert_count:
+                queryset = queryset.exclude(filtered_alert_count=0)
+
+            return [admin1 async for admin1 in queryset.all()]
+
         return await info.context.dl.cap_feed.load_admin1s_by_country.load(self.pk)
+
+    @strawberry.field
+    async def alert_count(self, info: Info) -> int:
+        return await info.context.dl.cap_feed.load_alert_count_by_country.load(self.pk)
+
+    @strawberry.field
+    async def filtered_alert_count(self, _: Info) -> int | None:
+        return getattr(self, 'filtered_alert_count', None)
 
 
 @strawberry_django.type(Admin1)
@@ -88,7 +131,7 @@ class Admin1Type:
     id: strawberry.ID
     name = string_field(Admin1.name)
 
-    # TODO: use custom type
+    # TODO: use custom type (or use file?)
     polygon = string_field(Admin1.polygon)
     multipolygon = string_field(Admin1.multipolygon)
     min_latitude = string_field(Admin1.min_latitude)
@@ -98,6 +141,7 @@ class Admin1Type:
 
     if typing.TYPE_CHECKING:
         country_id = Admin1.country_id
+        pk = Admin1.pk
     else:
         country_id: strawberry.ID
 
@@ -105,9 +149,22 @@ class Admin1Type:
     def get_queryset(_, queryset: models.QuerySet | None, info: Info):
         return get_queryset_for_model(Admin1, queryset)
 
+    # TODO: Refactor to remove negative pk for Admin1
+    @strawberry.field
+    async def is_unknown(self) -> bool:
+        return self.pk < 0
+
     @strawberry.field
     async def country(self, info: Info) -> CountryType:
         return await info.context.dl.cap_feed.load_country.load(self.country_id)
+
+    @strawberry.field
+    async def alert_count(self, info: Info) -> int:
+        return await info.context.dl.cap_feed.load_alert_count_by_admin1.load(self.pk)
+
+    @strawberry.field
+    async def filtered_alert_count(self, _: Info) -> int | None:
+        return getattr(self, 'filtered_alert_count', None)
 
 
 @strawberry_django.type(LanguageInfo)
@@ -306,7 +363,7 @@ class AlertType:
 
     @staticmethod
     def get_queryset(_, queryset: models.QuerySet | None, info: Info):
-        return get_queryset_for_model(Alert, queryset)
+        return get_queryset_for_model(Alert, queryset, custom_model_method=Alert.get_queryset)
 
     # TODO: Create a separate country_name
     @strawberry.field
@@ -321,6 +378,10 @@ class AlertType:
     @strawberry.field
     async def admin1s(self, info: Info) -> list[Admin1Type]:
         return await info.context.dl.cap_feed.load_admin1s_by_alert.load(self.pk)
+
+    @strawberry.field
+    async def info(self, info: Info) -> AlertInfoType | None:
+        return await info.context.dl.cap_feed.load_info_by_alert.load(self.pk)
 
     # TODO: Need to check if we need pagination instead
     @strawberry.field

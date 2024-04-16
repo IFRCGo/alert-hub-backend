@@ -1,5 +1,8 @@
 import strawberry
 import strawberry_django
+from django.db import models
+from django.db.models.functions import Coalesce
+from strawberry_django.filters import apply as apply_filters
 
 from main.graphql.context import Info
 from utils.strawberry.paginations import CountList, pagination_field
@@ -72,6 +75,35 @@ class PublicQuery:
     @strawberry_django.field
     async def region(self, info: Info, pk: strawberry.ID) -> RegionType | None:
         return await RegionType.get_queryset(None, None, info).filter(pk=pk).afirst()
+
+    @strawberry_django.field
+    async def all_countries(
+        self,
+        info: Info,
+        alert_filters: AlertFilter | None = None,
+        include_empty_filtered_alert_count: bool = False,
+    ) -> list[CountryType]:
+        queryset = CountryType.get_queryset(None, None, info)
+        if alert_filters:
+            alert_queryset = AlertType.get_queryset(None, None, info)
+            alert_queryset = apply_filters(alert_filters, alert_queryset, info, None)
+            queryset = queryset.annotate(
+                filtered_alert_count=Coalesce(
+                    models.Subquery(
+                        alert_queryset.filter(country=models.OuterRef('id'))
+                        .order_by()
+                        .values('country_id')
+                        .annotate(count=models.Count('id', distinct=True))
+                        .values('count')[:1],
+                        output_field=models.IntegerField(),
+                    ),
+                    0,
+                ),
+            ).order_by('-filtered_alert_count')
+            if not include_empty_filtered_alert_count:
+                queryset = queryset.exclude(filtered_alert_count=0)
+
+        return [country async for country in queryset.all()]
 
     @strawberry_django.field
     async def country(self, info: Info, pk: strawberry.ID) -> CountryType | None:
