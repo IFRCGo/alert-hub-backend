@@ -3,7 +3,8 @@ from __future__ import absolute_import, unicode_literals
 from celery import shared_task
 from django.utils import timezone
 
-from . import data_injector as di
+from .data_injector.geo import inject_geographical_data
+from .data_injector.feed import inject_feeds
 from .formats import format_handler as fh
 from .models import Alert, AlertInfo, Feed, ProcessedAlert
 
@@ -40,6 +41,6 @@ def remove_expired_alert_records():
 
 @shared_task
 def inject_data():
-    di.inject_geographical_data()
-    di.inject_feeds()
+    inject_geographical_data()
+    inject_feeds()
     return "injected data"

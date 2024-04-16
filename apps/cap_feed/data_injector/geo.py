@@ -3,7 +3,7 @@ import os
 
 import requests
 
-from .models import Admin1, Continent, Country, Feed, LanguageInfo, Region
+from apps.cap_feed.models import Admin1, Continent, Country, Region
 
 module_dir = os.path.dirname(__file__)  # get current directory
 
@@ -43,7 +43,7 @@ def inject_continents(inject_path):
         continent_data = json.loads(response.content)
         process_continents()
     else:
-        file_path = os.path.join(module_dir, 'geographical/continents.json')
+        file_path = os.path.join(os.path.dirname(module_dir), 'geographical/continents.json')
         with open(file_path) as file:
             continent_data = json.load(file)
             process_continents()
@@ -68,7 +68,7 @@ def inject_regions(inject_path):
         region_data = json.loads(response.content)
         process_regions()
     else:
-        file_path = os.path.join(module_dir, 'geographical/ifrc-regions.json')
+        file_path = os.path.join(os.path.dirname(module_dir), 'geographical/ifrc-regions.json')
         with open(file_path) as file:
             region_data = json.load(file)
             process_regions()
@@ -125,7 +125,7 @@ def inject_countries(inject_path):
         region_data = json.loads(response.content)
         process_regions()
     else:
-        file_path = os.path.join(module_dir, 'geographical/ifrc-regions.json')
+        file_path = os.path.join(os.path.dirname(module_dir), 'geographical/ifrc-regions.json')
         with open(file_path) as file:
             region_data = json.load(file)
             process_regions()
@@ -137,7 +137,7 @@ def inject_countries(inject_path):
         country_data = json.loads(response.content)
         process_countries_ifrc()
     else:
-        file_path = os.path.join(module_dir, 'geographical/ifrc-countries-and-territories.json')
+        file_path = os.path.join(os.path.dirname(module_dir), 'geographical/ifrc-countries-and-territories.json')
         with open(file_path) as file:
             country_data = json.load(file)
             process_countries_ifrc()
@@ -149,7 +149,7 @@ def inject_countries(inject_path):
         country_data = json.loads(response.content)
         process_countries_opendatasoft()
     else:
-        file_path = os.path.join(module_dir, 'geographical/opendatasoft-countries-and-territories.geojson')
+        file_path = os.path.join(os.path.dirname(module_dir), 'geographical/opendatasoft-countries-and-territories.geojson')
         with open(file_path) as file:
             country_data = json.load(file)
             process_countries_opendatasoft()
@@ -184,45 +184,7 @@ def inject_admin1s(inject_path):
         admin1_data = json.loads(response.content)
         process_admin1s()
     else:
-        file_path = os.path.join(module_dir, 'geographical/geoBoundariesCGAZ_ADM1.geojson')
+        file_path = os.path.join(os.path.dirname(module_dir), 'geographical/geoBoundariesCGAZ_ADM1.geojson')
         with open(file_path, encoding='utf-8') as f:
             admin1_data = json.load(f)
             process_admin1s()
-
-
-# inject feed configurations if not already present
-def inject_feeds():
-    file_path = os.path.join(module_dir, 'feeds.json')
-    with open(file_path, encoding='utf-8') as file:
-        feeds = json.load(file)
-        print('Injecting feeds...')
-        unique_countries = set()
-        feed_counter = 0
-        for feed_entry in feeds:
-            try:
-                feed = Feed()
-                feed.url = feed_entry['capAlertFeed']
-                feed.country = Country.objects.get(iso3=feed_entry['iso3'])
-                feed_counter += 1
-                unique_countries.add(feed_entry['iso3'])
-                if Feed.objects.filter(url=feed.url).first():
-                    continue
-                feed.format = feed_entry['format']
-                feed.polling_interval = 60
-                feed.enable_polling = True
-                feed.enable_rebroadcast = True
-                feed.official = True
-                feed.save()
-
-                language_info = LanguageInfo()
-                language_info.feed = feed
-                language_info.name = feed_entry['name']
-                language_info.language = feed_entry['language']
-                language_info.logo = feed_entry['picUrl']
-                language_info.save()
-
-            except Exception as e:
-                print(feed_entry['name'])
-                print(f'Error injecting feed: {e}')
-
-        print(f'Injected {feed_counter} feeds for {len(unique_countries)} unique countries')
