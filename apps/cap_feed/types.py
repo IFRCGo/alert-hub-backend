@@ -83,8 +83,9 @@ class CountryType:
         return await info.context.dl.cap_feed.load_region.load(self.region_id)
 
     @strawberry.field
-    async def continent(self, info: Info) -> ContinentType:
-        return await info.context.dl.cap_feed.load_continent.load(self.continent_id)
+    async def continent(self, info: Info) -> ContinentType | None:
+        if self.continent_id:
+            return await info.context.dl.cap_feed.load_continent.load(self.continent_id)
 
     # TODO: Create a separate admin1s_names
     @strawberry.field

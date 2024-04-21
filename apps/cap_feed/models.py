@@ -50,9 +50,10 @@ class Country(models.Model):
     name = models.CharField()
     iso3 = models.CharField(unique=True, validators=[MinValueValidator(3), MaxValueValidator(3)])
     region = models.ForeignKey(Region, on_delete=models.CASCADE)
-    continent = models.ForeignKey(Continent, on_delete=models.CASCADE)
-
     bbox = gid_models.PolygonField(srid=4326, blank=True, null=True)
+
+    # XXX: Not used anywhere right now, maybe we can remove this. Need to confirm first
+    continent = models.ForeignKey(Continent, on_delete=models.CASCADE, null=True, blank=True)
 
     # Not used anywhere TODO: Delete
     polygon = models.TextField(blank=True, null=True)
