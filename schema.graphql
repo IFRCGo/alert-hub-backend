@@ -1,5 +1,6 @@
 input Admin1Filter {
   id: IDBaseFilterLookup
+  country: DjangoModelFilterInput
   AND: Admin1Filter
   OR: Admin1Filter
   NOT: Admin1Filter
@@ -333,7 +334,7 @@ type CountryType {
   name: String!
   iso3: String!
   region: RegionType!
-  continent: ContinentType!
+  continent: ContinentType
   admin1s(alertFilters: AlertFilter = null, includeEmptyFilteredAlertCount: Boolean! = false): [Admin1Type!]!
   alertCount: Int!
   filteredAlertCount: Int
