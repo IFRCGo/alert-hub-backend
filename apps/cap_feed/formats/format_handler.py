@@ -36,6 +36,7 @@ def get_alerts(feed, all_alert_urls=set()):
             # remove these alerts from the database
             all_alert_urls.update(alert_urls)
             deleted_alerts = Alert.objects.filter(feed=feed).exclude(url__in=all_alert_urls)
+            # TODO: Don't delete alerts, tag them
             deleted_alerts.delete()
 
     return polled_alerts_count

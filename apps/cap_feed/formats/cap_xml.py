@@ -1,8 +1,6 @@
-import json
-
+from django.contrib.gis.geos import Point, Polygon
 from django.db import IntegrityError
 from django.utils import timezone
-from shapely.geometry import MultiPolygon, Polygon
 
 from apps.cap_feed.formats.utils import (
     convert_datetime,
@@ -31,7 +29,7 @@ def find_element(element, ns, tag):
     return None
 
 
-def get_alert(url, alert_root, feed, ns):
+def get_alert(url, alert_root, feed, ns) -> bool:
     alert = None
     try:
         # register alert
@@ -44,7 +42,7 @@ def get_alert(url, alert_root, feed, ns):
         alert.sent = convert_datetime(alert_root.find('cap:sent', ns).text)
         alert.status = alert_root.find('cap:status', ns).text
         if alert.status != 'Actual':
-            return alert.url, False
+            return False
         alert.msg_type = alert_root.find('cap:msgType', ns).text
         alert.source = find_element(alert_root, ns, 'cap:source')
         alert.scope = alert_root.find('cap:scope', ns).text
@@ -114,41 +112,24 @@ def get_alert(url, alert_root, feed, ns):
                         alert_info_area_polygon.value = alert_info_area_polygon_entry.text
                         alert_info_area_polygon.save()
                         points = [point.split(',') for point in alert_info_area_polygon_entry.text.strip().split(' ')]
-                        polygons.append(Polygon([[point[1], point[0]] for point in points]))
+                        polygons.append(Polygon([Point(float(point[1]), float(point[0])) for point in points]))
 
                 # check polygon intersection with admin1s
                 for polygon in polygons:
-                    (min_longitude, min_latitude, max_longitude, max_latitude) = polygon.bounds
                     possible_admin1s = Admin1.objects.filter(
                         country=alert.country,
-                        min_longitude__lte=max_longitude,
-                        max_longitude__gte=min_longitude,
-                        min_latitude__lte=max_latitude,
-                        max_latitude__gte=min_latitude,
+                        # TODO: Check for performance issues
+                        geometry__intersects=polygon,
                     )
                     for admin1 in possible_admin1s:
-                        admin1_polygon = None
-                        # TODO: Move this to postgis
-                        if admin1.polygon:
-                            polygon_string = '{"coordinates": ' + admin1.polygon + '}'
-                            polygon_dict = json.loads(polygon_string)['coordinates'][0]
-                            admin1_polygon = Polygon(polygon_dict)
-                        elif admin1.multipolygon:
-                            multipolygon_string = '{"coordinates": ' + admin1.multipolygon + '}'
-                            multipolygon_dict = json.loads(multipolygon_string)['coordinates']
-                            polygons = [Polygon(x[0]) for x in multipolygon_dict]
-                            admin1_polygon = MultiPolygon(polygons)
-                        else:
+                        if AlertAdmin1.objects.filter(alert=alert, admin1=admin1).exists():
                             continue
-                        if admin1_polygon.intersects(polygon):
-                            if AlertAdmin1.objects.filter(alert=alert, admin1=admin1).exists():
-                                continue
-                            # TODO: Use bulk manager
-                            alert_admin1 = AlertAdmin1()
-                            alert_admin1.alert = alert
-                            alert_admin1.admin1 = admin1
-                            alert_admin1.save()
-                            alert_matched_admin1 = True
+                        # TODO: Use bulk manager
+                        alert_admin1 = AlertAdmin1.objects.create(
+                            alert=alert,
+                            admin1=admin1,
+                        )
+                        alert_matched_admin1 = True
 
                 # navigate alert info area circle
                 for alert_info_area_circle_entry in alert_info_area_entry.findall('cap:circle', ns):

@@ -2,6 +2,7 @@ import logging
 import xml.etree.ElementTree as ET
 
 import requests
+import validators
 
 from apps.cap_feed.formats.cap_xml import get_alert
 from apps.cap_feed.models import Alert, ProcessedAlert
@@ -41,7 +42,6 @@ def get_alerts_nws_us(feed, ns):
             url = url_element.text
             if url is None:
                 raise Exception('URL is None')
-            alert_urls.add(url)
 
             cap_link_element = alert_entry.find('atom:link', ns)
             if cap_link_element is None:
@@ -50,6 +50,13 @@ def get_alerts_nws_us(feed, ns):
             if cap_link is None:
                 raise Exception('cap_link is None')
 
+            if not validators.url(cap_link):
+                # TODO: Track this?
+                logger.warning(f'Invalid url {cap_link}')
+                continue
+
+            alert_urls.add(url)
+
             # skip if alert has been processed before
             if ProcessedAlert.objects.filter(url=url).exists() or Alert.objects.filter(url=url).exists():
                 continue
@@ -57,8 +64,8 @@ def get_alerts_nws_us(feed, ns):
             alert_response = requests.get(cap_link)
             # navigate alert
             alert_root = ET.fromstring(alert_response.content)
-            polled_alert_count = get_alert(url, alert_root, feed, ns)
-            polled_alerts_count += polled_alert_count
+            if get_alert(url, alert_root, feed, ns):
+                polled_alerts_count += 1
         except Exception:
             logger.error(
                 '[NWS_US] Failed to fetch url',

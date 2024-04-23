@@ -78,6 +78,7 @@ class Admin1(models.Model):
     name = models.CharField()
     country = models.ForeignKey(Country, on_delete=models.CASCADE)
     bbox = gid_models.PolygonField(srid=4326, blank=True, null=True)
+    geometry = gid_models.GeometryField(null=True, blank=True, default=None)
 
     # NOTE: Used to tag alerts using their polygons with Admin1
     polygon = models.TextField(blank=True, null=True)

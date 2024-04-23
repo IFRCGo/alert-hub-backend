@@ -27,6 +27,7 @@ strawberry-graphql = "^0.225.0"
 strawberry-graphql-django = "0.37.1"
 sentry-sdk = "*"
 djangorestframework = "*"
+validators = "*"
 
 [tool.poetry.dev-dependencies]
 pytest = "*"
