@@ -64,6 +64,7 @@ type AlertInfoAreaPolygonType {
   id: ID!
   alertInfoAreaId: ID!
   value: String!
+  valuePolygon: PolygonScalar
 }
 
 type AlertInfoAreaType {

@@ -3,6 +3,9 @@ from datetime import timedelta
 from typing import TYPE_CHECKING
 
 from django.contrib.gis.db import models as gid_models
+from django.contrib.gis.geos import GEOSGeometry
+from django.contrib.gis.geos import Point as DjPoint
+from django.contrib.gis.geos import Polygon as DjPolygon
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import IntegrityError, models
 from django.db.models.signals import post_save
@@ -389,6 +392,17 @@ class AlertInfoAreaPolygon(models.Model):
 
     alert_info_area_id: int
 
+    @property
+    def value_geojson(self) -> GEOSGeometry | None:
+        """
+        NOTE: Value have data something like "50.532,55.692 50.905,56.234 50.902,56.356 51.075,56.53 ...."
+        """
+        try:
+            points = [point.split(',') for point in self.value.split(' ')]
+            return DjPolygon([DjPoint(float(point[1]), float(point[0])) for point in points])
+        except Exception:
+            return
+
     def to_dict(self):
         alert_info_area_ploygon_dict = dict()
         alert_info_area_ploygon_dict['value'] = self.value
@@ -401,6 +415,8 @@ class AlertInfoAreaCircle(models.Model):
     value = models.TextField()
 
     alert_info_area_id: int
+
+    # NOTE: Circle can't be drawn using Geojson. A polygon needs to be created which holds large data then raw value
 
     def to_dict(self):
         alert_info_area_circle_dict = dict()

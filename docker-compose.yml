@@ -19,8 +19,8 @@ x-server: &base_server_setup
     # -- Domain configurations
     DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-*}
     APP_DOMAIN: localhost:8000
-    APP_HTTP_PROTOCOL: http
-    APP_FRONTEND_HOST: localhost:3000
+    APP_HTTP_PROTOCOL: ${APP_HTTP_PROTOCOL:-http}
+    APP_FRONTEND_HOST: ${APP_FRONTEND_HOST:-http://localhost:3000}
     SESSION_COOKIE_DOMAIN: ${SESSION_COOKIE_DOMAIN:-localhost}
     CSRF_COOKIE_DOMAIN: ${CSRF_COOKIE_DOMAIN:-localhost}
     # Database config

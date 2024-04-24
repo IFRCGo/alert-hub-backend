@@ -1,4 +1,3 @@
-from django.contrib.gis.geos import Point, Polygon
 from django.db import IntegrityError
 from django.utils import timezone
 
@@ -109,10 +108,10 @@ def get_alert(url, alert_root, feed, ns) -> bool:
                     if alert_info_area_polygon_entry is not None and alert_info_area_polygon_entry.text:
                         alert_info_area_polygon = AlertInfoAreaPolygon()
                         alert_info_area_polygon.alert_info_area = alert_info_area
-                        alert_info_area_polygon.value = alert_info_area_polygon_entry.text
+                        alert_info_area_polygon.value = alert_info_area_polygon_entry.text.strip()
                         alert_info_area_polygon.save()
-                        points = [point.split(',') for point in alert_info_area_polygon_entry.text.strip().split(' ')]
-                        polygons.append(Polygon([Point(float(point[1]), float(point[0])) for point in points]))
+                        if parsed_polygon := alert_info_area_polygon.value_geojson:
+                            polygons.append(parsed_polygon)
 
                 # check polygon intersection with admin1s
                 for polygon in polygons:

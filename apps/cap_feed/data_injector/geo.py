@@ -1,4 +1,5 @@
 import glob
+import json
 import os
 import re
 
@@ -12,6 +13,36 @@ from apps.cap_feed.models import Admin1, Country, Region
 from main.managers import BulkUpdateManager
 
 module_dir = os.path.dirname(__file__)  # get current directory
+
+CUSTOM_COUNTRY_BBOX = {
+    'RUS': {
+        "type": "Polygon",
+        "coordinates": [
+            [
+                [
+                    28.463593736068475,
+                    81.94013976473988,
+                ],
+                [
+                    28.463593736068475,
+                    40.78757459314673,
+                ],
+                [
+                    191.12635723119286,
+                    40.78757459314673,
+                ],
+                [
+                    191.12635723119286,
+                    81.94013976473988,
+                ],
+                [
+                    28.463593736068475,
+                    81.94013976473988,
+                ],
+            ],
+        ],
+    },
+}
 
 
 class IfrcGoGeoInjector:
@@ -129,7 +160,7 @@ class IfrcGoGeoInjector:
             if iso3 is None:
                 self.log_warning(f'No iso3 found for {country_name}... skipping')
                 continue
-            if bbox_raw is None:
+            if bbox_raw is None and iso3 not in CUSTOM_COUNTRY_BBOX:
                 self.log_warning(f'Empty bbox for {country_name}... skipping')
                 continue
             if region is None:
@@ -149,7 +180,10 @@ class IfrcGoGeoInjector:
             country.ifrc_go_id = ifrc_go_id
             country.name = country_name
             country.region = region
-            country.bbox = GEOSGeometry(str(bbox_raw))
+            if iso3 in CUSTOM_COUNTRY_BBOX:
+                country.bbox = GEOSGeometry(json.dumps(CUSTOM_COUNTRY_BBOX[iso3]))
+            else:
+                country.bbox = GEOSGeometry(str(bbox_raw))
 
             # country.save()
             mgr.add(country)

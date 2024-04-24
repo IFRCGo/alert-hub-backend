@@ -239,6 +239,13 @@ class AlertInfoAreaPolygonType:
 
     value: strawberry.auto
 
+    if typing.TYPE_CHECKING:
+        value_geojson = AlertInfoAreaPolygon.value_geojson
+
+    @strawberry.field
+    async def value_polygon(self) -> PolygonScalar | None:
+        return self.value_geojson  # type: ignore[reportReturnType]
+
 
 @strawberry_django.type(AlertInfoAreaCircle)
 class AlertInfoAreaCircleType:
