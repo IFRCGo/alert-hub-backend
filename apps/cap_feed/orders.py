@@ -7,6 +7,7 @@ from .models import Admin1, Alert, AlertInfo, Country, Feed, Region
 @strawberry_django.ordering.order(Alert)
 class AlertOrder:
     id: strawberry.auto
+    sent: strawberry.auto
 
 
 @strawberry_django.ordering.order(AlertInfo)

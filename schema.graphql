@@ -196,6 +196,7 @@ enum AlertMsgTypeEnum {
 
 input AlertOrder {
   id: Ordering
+  sent: Ordering
 }
 
 enum AlertStatusEnum {
