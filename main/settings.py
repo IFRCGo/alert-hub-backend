@@ -85,6 +85,7 @@ INSTALLED_APPS = [
     'django.contrib.gis',
     # External
     'strawberry_django',
+    'admin_auto_filters',
     'django_celery_beat',
     'django_extensions',
     'corsheaders',
