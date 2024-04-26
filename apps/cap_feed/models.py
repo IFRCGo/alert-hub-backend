@@ -199,6 +199,9 @@ class Alert(models.Model):
     feed = models.ForeignKey(Feed, on_delete=models.CASCADE)
     url = models.CharField(unique=True)
 
+    # This is updated by the system to filter out is_expired
+    is_expired = models.BooleanField(default=False)
+
     identifier = models.CharField()
     sender = models.CharField()
     sent = models.DateTimeField()
@@ -229,8 +232,7 @@ class Alert(models.Model):
 
     @classmethod
     def get_queryset(cls) -> models.QuerySet:
-        # TODO: Add is_expired=False filter
-        return cls.objects.all()
+        return cls.objects.filter(is_expired=False)
 
     def info_has_been_added(self):
         self.__all_info_added = True

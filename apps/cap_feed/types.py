@@ -357,7 +357,7 @@ class AlertType:
 
     @staticmethod
     def get_queryset(_, queryset: models.QuerySet | None, info: Info):
-        return get_queryset_for_model(Alert, queryset, custom_model_method=Alert.get_queryset)
+        return get_queryset_for_model(Alert, queryset).filter(is_expired=False)
 
     # TODO: Create a separate country_name
     @strawberry.field

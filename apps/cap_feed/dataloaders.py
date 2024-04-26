@@ -195,8 +195,7 @@ def load_alert_count_by_country(keys: list[int]) -> list[int]:
 
 def load_alert_count_by_admin1(keys: list[int]) -> list[int]:
     qs = (
-        Alert.objects
-        # TODO: Add is_expired=False filter
+        Alert.get_queryset()
         .filter(admin1s__in=keys)
         .order_by()
         .values('admin1s')

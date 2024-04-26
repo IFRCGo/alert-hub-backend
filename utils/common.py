@@ -22,12 +22,9 @@ def to_snake_case(name):
 def get_queryset_for_model(
     model: typing.Type[models.Model],
     queryset: models.QuerySet | None = None,
-    custom_model_method: typing.Callable[..., models.QuerySet] | None = None,
 ) -> models.QuerySet:
     if queryset is not None:
         return copy.deepcopy(queryset)
-    if custom_model_method:
-        return custom_model_method()
     return model.objects.all()
 
 

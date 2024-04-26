@@ -1,12 +1,13 @@
 from __future__ import absolute_import, unicode_literals
 
 from celery import shared_task
+from django.db import models
 from django.utils import timezone
 
 from .data_injector.feed import inject_feeds
 from .data_injector.geo import inject_geographical_data
 from .formats import format_handler as fh
-from .models import Alert, AlertInfo, Feed, ProcessedAlert
+from .models import Alert, Feed, ProcessedAlert
 
 
 @shared_task
@@ -24,12 +25,24 @@ def poll_feed(url):
 
 @shared_task
 def remove_expired_alerts():
-    # Remove valid alerts that have expired
-    AlertInfo.objects.filter(expires__lt=timezone.now()).delete()
-    expired_alerts = Alert.objects.filter(infos__isnull=True)
+    # Tag valid alerts that have expired
+    expired_alerts = (
+        Alert.objects.filter(is_expired=False)
+        .annotate(
+            active_alert_info_count=models.Count(
+                'infos',
+                filter=models.Q(
+                    infos__expires__gt=timezone.now(),
+                ),
+            ),
+        )
+        .filter(active_alert_info_count=0)
+    )
+
     expired_alerts_count = expired_alerts.count()
-    expired_alerts.delete()
-    return f"removed {expired_alerts_count} alerts"
+    expired_alerts.update(is_expired=True)
+
+    return f"Tag {expired_alerts_count} alerts as expired"
 
 
 @shared_task
