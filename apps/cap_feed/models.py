@@ -3,9 +3,7 @@ from datetime import timedelta
 from typing import TYPE_CHECKING
 
 from django.contrib.gis.db import models as gid_models
-from django.contrib.gis.geos import GEOSGeometry
-from django.contrib.gis.geos import Point as DjPoint
-from django.contrib.gis.geos import Polygon as DjPolygon
+from django.contrib.gis.geos import GEOSGeometry, Point, Polygon
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import IntegrityError, models
 from django.db.models.signals import post_save
@@ -13,7 +11,6 @@ from django.dispatch import receiver
 from django.utils import timezone
 from django_celery_beat.models import IntervalSchedule, PeriodicTask
 from iso639 import iter_langs
-from shapely.geometry import MultiPolygon, Polygon
 
 if TYPE_CHECKING:
     from django.db.models.fields.related_descriptors import ManyRelatedManager
@@ -40,10 +37,6 @@ class Region(models.Model):
     name = models.CharField()
     bbox = gid_models.PolygonField(srid=4326, blank=True, null=True)
 
-    # Not used anywhere TODO: Delete
-    polygon = models.TextField(blank=True, null=True)
-    centroid = models.CharField(blank=True, null=True)
-
     def __str__(self):
         return self.name
 
@@ -58,13 +51,8 @@ class Country(models.Model):
     # XXX: Not used anywhere right now, maybe we can remove this. Need to confirm first
     continent = models.ForeignKey(Continent, on_delete=models.CASCADE, null=True, blank=True)
 
-    # Not used anywhere TODO: Delete
-    polygon = models.TextField(blank=True, null=True)
-    multipolygon = models.TextField(blank=True, null=True)
-    centroid = models.CharField(blank=True, null=True)
-
     region_id: int
-    continent_id: int
+    continent_id: int | None
 
     def __str__(self):
         return self.iso3 + ' ' + self.name
@@ -83,14 +71,6 @@ class Admin1(models.Model):
     bbox = gid_models.PolygonField(srid=4326, blank=True, null=True)
     geometry = gid_models.GeometryField(null=True, blank=True, default=None)
 
-    # NOTE: Used to tag alerts using their polygons with Admin1
-    polygon = models.TextField(blank=True, null=True)
-    multipolygon = models.TextField(blank=True, null=True)
-    min_latitude = models.FloatField(editable=False, null=True)
-    max_latitude = models.FloatField(editable=False, null=True)
-    min_longitude = models.FloatField(editable=False, null=True)
-    max_longitude = models.FloatField(editable=False, null=True)
-
     country_id: int
 
     if TYPE_CHECKING:
@@ -98,18 +78,6 @@ class Admin1(models.Model):
 
     def __str__(self):
         return self.name
-
-    def save(self, *args, **kwargs):
-        if self.polygon:
-            polygon_string = '{"coordinates": ' + str(self.polygon) + '}'
-            polygon = json.loads(polygon_string)['coordinates'][0]
-            self.min_longitude, self.min_latitude, self.max_longitude, self.max_latitude = Polygon(polygon).bounds
-        elif self.multipolygon:
-            multipolygon_string = '{"coordinates": ' + str(self.multipolygon) + '}'
-            polygon_list = json.loads(multipolygon_string)['coordinates']
-            polygons = [Polygon(x[0]) for x in polygon_list]
-            self.min_longitude, self.min_latitude, self.max_longitude, self.max_latitude = MultiPolygon(polygons).bounds
-        super(Admin1, self).save(*args, **kwargs)
 
 
 class LanguageInfo(models.Model):
@@ -399,7 +367,7 @@ class AlertInfoAreaPolygon(models.Model):
         """
         try:
             points = [point.split(',') for point in self.value.split(' ')]
-            return DjPolygon([DjPoint(float(point[1]), float(point[0])) for point in points])
+            return Polygon([Point(float(point[1]), float(point[0])) for point in points])
         except Exception:
             return
 

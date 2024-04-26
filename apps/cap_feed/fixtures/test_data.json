@@ -10,9 +10,7 @@
       "model": "cap_feed.region",
       "pk": 1,
       "fields": {
-        "name": "test_region",
-        "polygon": "",
-        "centroid": ""
+        "name": "test_region"
       }
     },
     {
@@ -20,12 +18,7 @@
       "pk": 1,
       "fields": {
         "name": "test_country",
-        "iso3": "ISO",
-        "polygon": "",
-        "multipolygon": "",
-        "region": 1,
-        "continent": 1,
-        "centroid": ""
+        "iso3": "ISO"
       }
     },
     {

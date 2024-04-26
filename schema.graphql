@@ -19,7 +19,6 @@ type Admin1Type {
   countryId: ID!
   name: String!
   isUnknown: Boolean!
-  country: CountryType!
   alertCount: Int!
   filteredAlertCount: Int
 }
@@ -332,7 +331,7 @@ type CountryType {
   ifrcGoId: ID
   bbox: PolygonScalar
   regionId: ID!
-  continentId: ID!
+  continentId: ID
   name: String!
   iso3: String!
   region: RegionType!

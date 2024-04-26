@@ -39,11 +39,7 @@ class RegionType:
 
     @staticmethod
     def get_queryset(_, queryset: models.QuerySet | None, info: Info):
-        return get_queryset_for_model(Region, queryset).defer(
-            # TODO: Remove this fields from model
-            'polygon',
-            'centroid',
-        )
+        return get_queryset_for_model(Region, queryset)
 
 
 @strawberry_django.type(Continent)
@@ -67,16 +63,11 @@ class CountryType:
         continent_id = Country.continent_id
     else:
         region_id: strawberry.ID
-        continent_id: strawberry.ID
+        continent_id: strawberry.ID | None
 
     @staticmethod
     def get_queryset(_, queryset: models.QuerySet | None, info: Info):
-        return get_queryset_for_model(Country, queryset).defer(
-            # TODO: Remove this fields from model
-            'polygon',
-            'multipolygon',
-            'centroid',
-        )
+        return get_queryset_for_model(Country, queryset)
 
     @strawberry.field
     async def region(self, info: Info) -> RegionType:
@@ -147,24 +138,12 @@ class Admin1Type:
 
     @staticmethod
     def get_queryset(_, queryset: models.QuerySet | None, info: Info):
-        return get_queryset_for_model(Admin1, queryset).defer(
-            # TODO: Remove this fields from model
-            'polygon',
-            'multipolygon',
-            'min_latitude',
-            'max_latitude',
-            'min_longitude',
-            'max_longitude',
-        )
+        return get_queryset_for_model(Admin1, queryset).defer('geometry')
 
     # TODO: Refactor to remove negative pk for Admin1
     @strawberry.field
     async def is_unknown(self) -> bool:
         return self.pk < 0
-
-    @strawberry.field
-    async def country(self, info: Info) -> CountryType:
-        return await info.context.dl.cap_feed.load_country.load(self.country_id)
 
     @strawberry.field
     async def alert_count(self, info: Info) -> int:
