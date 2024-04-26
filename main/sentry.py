@@ -46,4 +46,4 @@ class SentryTag:
     @staticmethod
     def set_tags(kwargs: dict[Tag, int | str]):
         for key, value in kwargs.items():
-            sentry_sdk.set_tag(key, value)
+            sentry_sdk.set_tag(key.value, value)

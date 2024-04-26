@@ -50,7 +50,7 @@ class BaseBulkManager(object):
                 self._commit(apps.get_model(model_name))
 
     @abc.abstractmethod
-    def summary(self):
+    def summary(self, ignore_empty: bool = False):
         raise NotImplementedError
 
 
@@ -58,7 +58,14 @@ class BulkCreateManager(BaseBulkManager):
     def _commit(self, model_class: typing.Type[models.Model]):
         model_key = model_class._meta.label
         model_class.objects.bulk_create(self._queues[model_key])
+        self._summary[model_key] += len(self._queues[model_key])
         self._queues[model_key] = []
+
+    @abc.abstractmethod
+    def summary(self, ignore_empty: bool = False):
+        if ignore_empty and not self._summary:
+            return
+        return {'created': dict(self._summary)}
 
 
 class BulkUpdateManager(BaseBulkManager):
@@ -78,5 +85,7 @@ class BulkUpdateManager(BaseBulkManager):
         self._queues[model_key] = []
 
     @abc.abstractmethod
-    def summary(self):
+    def summary(self, ignore_empty: bool = False):
+        if ignore_empty and not self._summary:
+            return
         return {'updated': dict(self._summary)}
