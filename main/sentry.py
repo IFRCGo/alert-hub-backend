@@ -1,3 +1,5 @@
+from enum import Enum
+
 import sentry_sdk
 from sentry_sdk.integrations.celery import CeleryIntegration
 from sentry_sdk.integrations.django import DjangoIntegration
@@ -34,3 +36,14 @@ def init_sentry(app_type, tags={}, **config):
         scope.set_tag("app_type", app_type)
         for tag, value in tags.items():
             scope.set_tag(tag, value)
+
+
+class SentryTag:
+    class Tag(str, Enum):
+        _BASE = 'alert-hub.'
+        FEED = _BASE + 'feed'
+
+    @staticmethod
+    def set_tags(kwargs: dict[Tag, int | str]):
+        for key, value in kwargs.items():
+            sentry_sdk.set_tag(key, value)

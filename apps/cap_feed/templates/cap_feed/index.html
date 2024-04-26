@@ -5,8 +5,8 @@
 {% if latest_alert_list %}
     <ul>
     {% for alert in latest_alert_list %}
-        <h3>{{ alert.country }}</h3>
-        <h4>{{ alert.feed.url }}</h4>
+        <h3>{{ alert.country_iso3 }} {{ alert.country_name }}</h3>
+        <h4>{{ alert.feed_url }}</h4>
         <p>identifier: {{ alert.identifier }}</p>
         <p>sender: {{ alert.sender }}</p>
         <p>sent: {{ alert.sent }}</p>

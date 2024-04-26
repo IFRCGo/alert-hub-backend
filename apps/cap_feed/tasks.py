@@ -39,6 +39,7 @@ def remove_expired_alert_records():
     return "removed records of expired alerts"
 
 
+# TODO: Add this to management command
 @shared_task
 def inject_data():
     inject_geographical_data()

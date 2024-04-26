@@ -1,4 +1,5 @@
 from apps.cap_feed.models import Alert
+from main.sentry import SentryTag
 
 from .atom import get_alerts_atom
 from .nws_us import get_alerts_nws_us
@@ -15,6 +16,7 @@ def get_alerts(feed, all_alert_urls=set()):
 
     print(f'Processing feed: {feed}')
 
+    SentryTag.set_tags({SentryTag.Tag.FEED: feed.pk})
     try:
         ns = {'atom': 'http://www.w3.org/2005/Atom', 'cap': 'urn:oasis:names:tc:emergency:cap:1.2'}
         match feed.format:
