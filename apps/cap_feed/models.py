@@ -1,4 +1,3 @@
-import json
 from datetime import timedelta
 from typing import TYPE_CHECKING
 
@@ -9,7 +8,6 @@ from django.db import IntegrityError, models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils import timezone
-from django_celery_beat.models import IntervalSchedule, PeriodicTask
 from iso639 import iter_langs
 
 if TYPE_CHECKING:
@@ -146,23 +144,11 @@ class Feed(models.Model):
 
     country_id: int
 
-    __old_polling_interval = None
-    __old_url = None
-
     def __init__(self, *args, **kwargs):
         super(Feed, self).__init__(*args, **kwargs)
-        self.__old_polling_interval = self.polling_interval
-        self.__old_url = self.url
 
     def __str__(self):
         return self.url
-
-    def save(self, force_insert=False, force_update=False, *args, **kwargs):
-        if self._state.adding:
-            add_task(self)
-        else:
-            update_task(self, self.__old_url, self.__old_polling_interval)
-        super(Feed, self).save(force_insert, force_update, *args, **kwargs)
 
 
 class ProcessedAlert(models.Model):
@@ -430,40 +416,3 @@ class FeedLog(models.Model):
             super(FeedLog, self).save(*args, **kwargs)
         except IntegrityError:
             pass
-
-
-# Add task to poll feed
-def add_task(feed):
-    interval = feed.polling_interval
-    interval_schedule = IntervalSchedule.objects.filter(every=interval, period='seconds').first()
-    if interval_schedule is None:
-        interval_schedule = IntervalSchedule.objects.create(every=interval, period='seconds')
-        interval_schedule.save()
-    # Create a new PeriodicTask
-    try:
-        new_task = PeriodicTask.objects.create(
-            interval=interval_schedule,
-            name='poll_feed_' + feed.url,
-            task='apps.cap_feed.tasks.poll_feed',
-            start_time=timezone.now(),
-            kwargs=json.dumps({"url": feed.url}),
-        )
-        new_task.save()
-    except Exception as e:
-        print('Error while adding new PeriodicTask', e)
-
-
-# Removes task to poll feed
-def remove_task(feed):
-    try:
-        existing_task = PeriodicTask.objects.get(name='poll_feed_' + feed.url)
-        existing_task.delete()
-    except PeriodicTask.DoesNotExist as e:
-        print('Error while removing unknown PeriodicTask', e)
-
-
-# Update task to poll feed
-def update_task(feed, old_url, old_interval):
-    if feed.url != old_url or feed.polling_interval != old_interval:
-        remove_task(feed)
-        add_task(feed)
