@@ -1403,6 +1403,16 @@ socks = ["pysocks (>=1.5.6,!=1.5.7,<2.0)"]
 zstd = ["zstandard (>=0.18.0)"]
 
 [[package]]
+name = "uwsgi"
+version = "2.0.25.1"
+description = "The uWSGI server"
+optional = false
+python-versions = "*"
+files = [
+    {file = "uwsgi-2.0.25.1.tar.gz", hash = "sha256:d653d2d804c194c8cbe2585fa56efa2650313ae75c686a9d7931374d4dfbfc6e"},
+]
+
+[[package]]
 name = "validators"
 version = "0.28.1"
 description = "Python Data Validation for Humans™"
@@ -1438,4 +1448,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "874987c1c665416a3c222fe7c52f29ea70332cce68499a87c626d5095caebf0d"
+content-hash = "8f62ff39df7d5a08d7efb71450c0ed08aee3ac6a6917a2ac6e4521a60a191405"

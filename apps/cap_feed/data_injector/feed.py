@@ -43,6 +43,6 @@ def inject_feeds():
                 language_info.save()
 
             except Exception:
-                logger.error("Error injecting feed: {feed_entry['name']}", exc_info=True)
+                logger.error(f"Error injecting feed: {feed_entry['name']}", exc_info=True)
 
         logger.info(f'Injected {feed_counter} feeds for {len(unique_countries)} unique countries')

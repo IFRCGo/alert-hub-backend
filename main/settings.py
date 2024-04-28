@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.0/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 import environ
@@ -39,10 +40,16 @@ env = environ.Env(
     DB_PASSWORD=str,
     DB_HOST=str,
     DB_PORT=(int, 5432),
+    # Static, Media configs
+    DJANGO_STATIC_URL=(str, '/static/'),
+    DJANGO_MEDIA_URL=(str, '/media/'),
+    # -- File System
+    DJANGO_STATIC_ROOT=(str, os.path.join(BASE_DIR, '/data/static')),  # Where to store
+    DJANGO_MEDIA_ROOT=(str, os.path.join(BASE_DIR, '/data/media')),  # Where to store
     # Celery
-    CELERY_BROKER_URL=str,
+    CELERY_BROKER_URL=str,  # redis://redis:6379/0
     # Cache
-    CACHE_REDIS_URL=str,
+    CACHE_REDIS_URL=str,  # redis://redis:6379/1
     # Email
     EMAIL_HOST=str,
     EMAIL_PORT=(int, 587),
@@ -206,11 +213,12 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.0/howto/static-files/
 # TODO: Use custom config for static files
 STATICFILES_DIRS = (str(BASE_DIR.joinpath('static')),)
-STATIC_URL = 'static/'
-STATIC_ROOT = '/data/static'
 
-MEDIA_URL = 'media/'
-MEDIA_ROOT = '/data/media'
+STATIC_URL = env('DJANGO_STATIC_URL')
+MEDIA_URL = env('DJANGO_MEDIA_URL')
+
+STATIC_ROOT = env('DJANGO_STATIC_ROOT')
+MEDIA_ROOT = env('DJANGO_MEDIA_ROOT')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
