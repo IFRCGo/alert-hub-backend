@@ -270,6 +270,9 @@ CACHES = {
     }
 }
 
+REDIS_LOCK_EXPIRE = 60 * 10  # Lock expires in 10min (in seconds)
+CELERY_TASK_EXPIRE = 60 * 30  # Remove task data after 30min (in seconds)
+
 # Email - SMTP Settings
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_USE_TLS = True

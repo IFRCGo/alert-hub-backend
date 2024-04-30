@@ -48,6 +48,7 @@ app.conf.task_queues = (Queue('default', routing_key='poll.#', exchange='poll'),
 app.conf.task_default_exchange = 'poll'
 app.conf.task_default_exchange_type = 'topic'
 app.conf.task_default_routing_key = 'poll.default'
+app.conf.result_expires = settings.CELERY_TASK_EXPIRE
 
 task_routes = {
     'apps.cap_feed.tasks.poll_feed': {

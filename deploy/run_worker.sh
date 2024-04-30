@@ -6,4 +6,6 @@ ROOT_DIR=$(dirname "$BASE_DIR")
 
 cd $ROOT_DIR
 
-celery -A main worker -l info --pool=solo
+# concurrency: Number of workers
+# max-tasks-per-child: Max number of tasks a worker can run before it is terminated
+celery -A main worker -l info --concurrency 4 --max-tasks-per-child 10

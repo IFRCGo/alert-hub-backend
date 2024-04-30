@@ -1,8 +1,16 @@
 import copy
+import logging
 import re
+import time
 import typing
+from contextlib import contextmanager
 
+from django.conf import settings
 from django.db import models
+
+from main.cache import cache
+
+logger = logging.getLogger(__name__)
 
 
 # Adapted from this response in Stackoverflow
@@ -32,3 +40,21 @@ def logger_log_extra(context_data):
     return {
         'context': context_data,
     }
+
+
+@contextmanager
+def redis_lock(lock_id: str):
+    timeout_at = time.monotonic() + settings.REDIS_LOCK_EXPIRE - 3
+    # cache.add fails if the key already exists
+    status = cache.add(lock_id, 1, settings.REDIS_LOCK_EXPIRE)
+    try:
+        yield status
+    finally:
+        # memcache delete is very slow, but we have to use it to take
+        # advantage of using add() for atomic locking
+        if time.monotonic() < timeout_at and status:
+            # don't release the lock if we exceeded the timeout
+            # to lessen the chance of releasing an expired lock
+            # owned by someone else
+            # also don't release the lock if we didn't acquire it
+            cache.delete(lock_id)
