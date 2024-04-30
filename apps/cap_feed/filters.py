@@ -94,6 +94,27 @@ class AlertInfoFilter:
 class FeedFilter:
     id: strawberry.auto
 
+    def _language_field(self, field, queryset, value, prefix) -> tuple[models.QuerySet, models.Q]:
+        if value:
+            alias_field = f"_languageinfo_{field}_list"
+            queryset = queryset.alias(
+                **{
+                    # NOTE: To avoid duplicate feeds when joining lanauge_info
+                    alias_field: ArrayAgg(f"{prefix}languageinfo__{field}"),
+                }
+            )
+            return queryset, models.Q(**{f"{prefix}{alias_field}__icontains": value})
+        return queryset, models.Q()
+
+    @strawberry_django.filter_field
+    def name(
+        self,
+        queryset: models.QuerySet,
+        value: str,
+        prefix: str,
+    ) -> tuple[models.QuerySet, models.Q]:
+        return self._language_field("name", queryset, value, prefix)
+
 
 @strawberry_django.filters.filter(Country, lookups=True)
 class CountryFilter:

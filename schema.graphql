@@ -407,6 +407,7 @@ input FeedFilter {
   OR: FeedFilter
   NOT: FeedFilter
   DISTINCT: Boolean
+  name: String
 }
 
 enum FeedFormatEnum {
@@ -417,6 +418,7 @@ enum FeedFormatEnum {
 
 input FeedOrder {
   id: Ordering
+  name: Ordering
 }
 
 enum FeedPoolingIntervalEnum {
