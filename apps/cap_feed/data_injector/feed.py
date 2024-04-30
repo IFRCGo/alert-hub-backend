@@ -29,7 +29,7 @@ def inject_feeds():
                 if Feed.objects.filter(url=feed.url).first():
                     continue
                 feed.format = feed_entry['format']
-                feed.polling_interval = 60
+                feed.polling_interval = Feed.PoolingInterval.I_10m
                 feed.enable_polling = True
                 feed.enable_rebroadcast = True
                 feed.official = True

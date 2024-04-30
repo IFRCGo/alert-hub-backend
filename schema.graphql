@@ -434,6 +434,7 @@ enum FeedPoolingIntervalEnum {
   I_50
   I_55
   I_60
+  I_10m
 }
 
 enum FeedStatusEnum {

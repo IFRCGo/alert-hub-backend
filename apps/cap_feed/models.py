@@ -117,6 +117,7 @@ class Feed(models.Model):
         I_50 = 50, '50 seconds'
         I_55 = 55, '55 seconds'
         I_60 = 60, '60 seconds'
+        I_10m = 600, '10 minutes'
 
     class Format(models.TextChoices):
         ATOM = 'atom', 'ATOM'
