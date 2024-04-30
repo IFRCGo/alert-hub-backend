@@ -88,6 +88,7 @@ class AlertInfoInline(admin.StackedInline):
 class AlertAdmin(admin.ModelAdmin):
     list_display = ['url', 'country', 'feed', 'sent', 'status', 'msg_type', 'scope']
     list_filter = (
+        'is_expired',
         AutocompleteFilterFactory('Feed', 'feed'),
         AutocompleteFilterFactory('Country', 'country'),
     )
