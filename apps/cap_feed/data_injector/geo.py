@@ -14,6 +14,11 @@ from main.managers import BulkUpdateManager
 
 module_dir = os.path.dirname(__file__)  # get current directory
 
+CUSTOM_COUNTRY_REGION = {
+    # ISO3: region-go_ifrc_id
+    'OMN': 4,  # Middle East & North Africa
+}
+
 CUSTOM_COUNTRY_BBOX = {
     # ISO3: bbox
     'RUS': {
@@ -173,7 +178,10 @@ class IfrcGoGeoInjector:
             bbox_raw = country_data['bbox']
 
             # NOTE: country_data['region'] is ifrc_go_id for region
-            region = self.region_map.get(country_data['region'])
+            if iso3 in CUSTOM_COUNTRY_REGION:
+                region = self.region_map.get(CUSTOM_COUNTRY_REGION[iso3])
+            else:
+                region = self.region_map.get(country_data['region'])
             if iso3 is None:
                 self.log_warning(f'No iso3 found for {country_name}... skipping')
                 continue
