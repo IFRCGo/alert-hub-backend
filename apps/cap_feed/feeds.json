@@ -27,15 +27,6 @@
         "format": "atom"
     },
     {
-        "sourceId": "ai-dma-en",
-        "name": "Anguilla: Disaster Management Anguilla",
-        "iso3": "AIA",
-        "language": "English",
-        "picUrl": "https://alert-hub.s3.amazonaws.com/images/ai-dma-en.png",
-        "capAlertFeed": "https://axa-primary.capews.com/capews/public/atom?type=cap",
-        "format": "atom"
-    },
-    {
         "sourceId": "ar-smn-es",
         "name": "Argentina: Servicio Meteorologico Nacional",
         "iso3": "ARG",
@@ -843,15 +834,6 @@
         "language": "English",
         "picUrl": "https://alert-hub.s3.amazonaws.com/images/mg-meteo-en.png",
         "capAlertFeed": "https://cap-sources.s3.amazonaws.com/mg-meteo-en/rss.xml",
-        "format": "rss"
-    },
-    {
-        "sourceId": "mo-smg-xx",
-        "name": "Macao, China: 地球物理暨氣象局",
-        "iso3": "MAC",
-        "language": "Chinese",
-        "picUrl": "https://alert-hub.s3.amazonaws.com/images/mo-smg-zh.png",
-        "capAlertFeed": "https://rss.smg.gov.mo/cap_rss.xml",
         "format": "rss"
     },
     {
