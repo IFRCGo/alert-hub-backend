@@ -15,6 +15,7 @@ from main.managers import BulkUpdateManager
 module_dir = os.path.dirname(__file__)  # get current directory
 
 CUSTOM_COUNTRY_BBOX = {
+    # ISO3: bbox
     'RUS': {
         "type": "Polygon",
         "coordinates": [
@@ -42,6 +43,22 @@ CUSTOM_COUNTRY_BBOX = {
             ],
         ],
     },
+}
+
+CUSTOM_ADMIN1_BBOX = {
+    # ifrc_go_id: bbox
+    2625: {
+        "type": "Polygon",
+        "coordinates": [
+            [
+                [157.2902351208018, 71.63748893168176],
+                [157.2902351208018, 61.69631188546927],
+                [191.45828382322276, 61.69631188546927],
+                [191.45828382322276, 71.63748893168176],
+                [157.2902351208018, 71.63748893168176],
+            ],
+        ],
+    }
 }
 
 
@@ -211,14 +228,17 @@ class IfrcGoGeoInjector:
             if feature.get('is_deprecated'):
                 continue
 
-            ifrc_go_id = feature.get('district_id')
+            ifrc_go_id = int(feature.get('district_id'))
             name = self.clean_name(feature.get('name'))
             iso3 = feature.get('iso3')
             country = self.country_iso3_map.get(iso3)
 
             # XXX: Save lower precision to avoid large geometry?
             geometry = feature.geom.wkt
-            bbox = feature.geom.envelope.wkt
+            if ifrc_go_id in CUSTOM_ADMIN1_BBOX:
+                bbox = GEOSGeometry(json.dumps(CUSTOM_ADMIN1_BBOX[ifrc_go_id]))
+            else:
+                bbox = feature.geom.envelope.wkt
 
             if country is None:
                 self.log_warning(f'No country found for {name}... skipping')

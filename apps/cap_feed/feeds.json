@@ -38,7 +38,7 @@
     {
         "sourceId": "ar-smn-es",
         "name": "Argentina: Servicio Meteorologico Nacional",
-        "iso3": "AFG",
+        "iso3": "ARG",
         "language": "Spanish",
         "picUrl": "https://alert-hub.s3.amazonaws.com/images/ar-smn-es.png",
         "capAlertFeed": "https://ssl.smn.gob.ar/CAP/AR.php",

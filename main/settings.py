@@ -271,7 +271,7 @@ CACHES = {
 }
 
 REDIS_LOCK_EXPIRE = 60 * 10  # Lock expires in 10min (in seconds)
-CELERY_TASK_EXPIRE = 60 * 30  # Remove task data after 30min (in seconds)
+CELERY_TASK_EXPIRE = (60 * 60) * 2  # Remove task data after 2hr (in seconds)
 
 # Email - SMTP Settings
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
@@ -331,14 +331,14 @@ if DEBUG:
                 app: {
                     'handlers': ['colored_console'],
                     'level': 'INFO',
-                    'propagate': True,
+                    'propagate': False,
                 }
                 for app in ['apps', 'helix', 'utils', 'celery', 'django']
             },
             'profiling': {
                 'handlers': ['colored_console'],
                 'level': 'DEBUG',
-                'propagate': True,
+                'propagate': False,
             },
         },
     }

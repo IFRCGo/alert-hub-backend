@@ -29,6 +29,13 @@ from .models import (
 )
 
 
+def get_alert_queryset(queryset: models.QuerySet | None, is_list: bool):
+    qs = get_queryset_for_model(Alert, queryset)
+    if is_list:
+        return qs.filter(is_expired=False)
+    return qs
+
+
 @strawberry_django.type(Region)
 class RegionType:
     id: strawberry.ID
@@ -357,7 +364,7 @@ class AlertType:
 
     @staticmethod
     def get_queryset(_, queryset: models.QuerySet | None, info: Info):
-        return get_queryset_for_model(Alert, queryset).filter(is_expired=False)
+        return get_alert_queryset(queryset, is_list=True)
 
     # TODO: Create a separate country_name
     @strawberry.field

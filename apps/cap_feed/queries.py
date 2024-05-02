@@ -30,6 +30,7 @@ from .types import (
     CountryType,
     FeedType,
     RegionType,
+    get_alert_queryset,
 )
 
 
@@ -119,7 +120,7 @@ class PublicQuery:
 
     @strawberry_django.field
     async def alert(self, info: Info, pk: strawberry.ID) -> AlertType | None:
-        return await AlertType.get_queryset(None, None, info).filter(pk=pk).afirst()
+        return await get_alert_queryset(None, is_list=False).filter(pk=pk).afirst()
 
     @strawberry_django.field
     async def alert_info(self, info: Info, pk: strawberry.ID) -> AlertInfoType | None:
