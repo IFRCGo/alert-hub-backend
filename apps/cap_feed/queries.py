@@ -15,6 +15,7 @@ from .filters import (
     FeedFilter,
     RegionFilter,
 )
+from .models import Alert
 from .orders import (
     Admin1Order,
     AlertInfoOrder,
@@ -91,10 +92,14 @@ class PublicQuery:
             queryset = queryset.annotate(
                 filtered_alert_count=Coalesce(
                     models.Subquery(
-                        alert_queryset.filter(country=models.OuterRef('id'))
+                        # NOTE: alert_queryset already has group by for nested alert-info filter fields
+                        Alert.objects.filter(
+                            id__in=alert_queryset.values('id'),
+                            country=models.OuterRef('id'),
+                        )
                         .order_by()
-                        .values('country_id')
-                        .annotate(count=models.Count('id', distinct=True))
+                        .values('country')
+                        .annotate(count=models.Count('id'))
                         .values('count')[:1],
                         output_field=models.IntegerField(),
                     ),

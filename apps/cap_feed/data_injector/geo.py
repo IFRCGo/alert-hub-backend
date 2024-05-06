@@ -168,7 +168,13 @@ class IfrcGoGeoInjector:
                 self.log_success(f'Update region: {region}')
 
     def inject_countries(self):
-        go_data = self.handle_pagination('/api/v2/country/')
+        go_data = self.handle_pagination(
+            '/api/v2/country/',
+            params={
+                'is_independent': True,
+                'is_deprecated': False,
+            },
+        )
         mgr = BulkUpdateManager(update_fields=['ifrc_go_id', 'name', 'region', 'bbox'])
 
         for country_data in go_data:

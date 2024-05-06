@@ -103,7 +103,11 @@ class CountryType:
                 .annotate(
                     filtered_alert_count=Coalesce(
                         models.Subquery(
-                            alert_queryset.filter(admin1s=models.OuterRef('id'))
+                            # NOTE: alert_queryset already has group by for nested alert-info filter fields
+                            Alert.objects.filter(
+                                id__in=alert_queryset.values('id'),
+                                admin1s=models.OuterRef('id'),
+                            )
                             .order_by()
                             .values('admin1s')
                             .annotate(count=models.Count('id', distinct=True))
