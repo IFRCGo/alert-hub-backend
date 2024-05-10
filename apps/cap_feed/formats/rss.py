@@ -2,10 +2,13 @@ import logging
 import xml.etree.ElementTree as ET
 
 import requests
+import validators
 
 from apps.cap_feed.formats.cap_xml import get_alert
 from apps.cap_feed.models import Alert, ProcessedAlert
 from utils.common import logger_log_extra
+
+from .utils import COMMON_REQUESTS_HEADERS, fetch_alert_using_url
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +21,8 @@ def get_alerts_rss(feed, ns):
 
     # navigate list of alerts
     try:
-        response = requests.get(feed.url)
+        response = requests.get(feed.url, headers=COMMON_REQUESTS_HEADERS)
+        response.raise_for_status()
     except requests.exceptions.RequestException:
         logger.error(
             '[RSS] Failed to fetch feed alerts',
@@ -45,23 +49,25 @@ def get_alerts_rss(feed, ns):
             url = url_element.text
             if url is None:
                 raise Exception('URL is None')
-            alert_urls.add(url)
 
+            if not validators.url(url):
+                # TODO: Track this?
+                logger.warning(f'Invalid url {url}')
+                continue
+
+            alert_urls.add(url)
             # skip if alert has been processed before
             if ProcessedAlert.objects.filter(url=url).exists() or Alert.objects.filter(url=url).exists():
                 continue
-            alert_response = requests.get(url)
-            # navigate alert
 
-            # TODO: Add this to other formatting as well?
-            alert_response_content = alert_response.content
-            if alert_response_content is None or alert_response_content.strip() == '':
-                logger.warning('Skipping for url: {url}: Due to empty content')
+            # navigate alert
+            success, alert_root = fetch_alert_using_url(url)
+            if not success:
                 continue
 
-            alert_root = ET.fromstring(alert_response_content)
-            polled_alert_count = get_alert(url, alert_root, feed, ns)
-            polled_alerts_count += polled_alert_count
+            if get_alert(url, alert_root, feed, ns):
+                polled_alerts_count += 1
+
         except Exception:
             logger.error(
                 '[RSS] Failed to fetch url',

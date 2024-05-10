@@ -2,10 +2,13 @@ import logging
 import xml.etree.ElementTree as ET
 
 import requests
+import validators
 
 from apps.cap_feed.formats.cap_xml import get_alert
 from apps.cap_feed.models import Alert, ProcessedAlert
 from utils.common import logger_log_extra
+
+from .utils import COMMON_REQUESTS_HEADERS, fetch_alert_using_url
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +21,8 @@ def get_alerts_nws_us(feed, ns):
 
     # navigate list of alerts
     try:
-        response = requests.get(feed.url, headers={'Accept': 'application/atom+xml'})
+        response = requests.get(feed.url, headers={**COMMON_REQUESTS_HEADERS, 'Accept': 'application/atom+xml'})
+        response.raise_for_status()
     except requests.exceptions.RequestException:
         logger.error(
             '[NWS_US] Failed to fetch feed alerts',
@@ -41,7 +45,6 @@ def get_alerts_nws_us(feed, ns):
             url = url_element.text
             if url is None:
                 raise Exception('URL is None')
-            alert_urls.add(url)
 
             cap_link_element = alert_entry.find('atom:link', ns)
             if cap_link_element is None:
@@ -50,15 +53,24 @@ def get_alerts_nws_us(feed, ns):
             if cap_link is None:
                 raise Exception('cap_link is None')
 
+            if not validators.url(cap_link):
+                # TODO: Track this?
+                logger.warning(f'Invalid url {cap_link}')
+                continue
+
+            alert_urls.add(url)
+
             # skip if alert has been processed before
             if ProcessedAlert.objects.filter(url=url).exists() or Alert.objects.filter(url=url).exists():
                 continue
 
-            alert_response = requests.get(cap_link)
             # navigate alert
-            alert_root = ET.fromstring(alert_response.content)
-            polled_alert_count = get_alert(url, alert_root, feed, ns)
-            polled_alerts_count += polled_alert_count
+            success, alert_root = fetch_alert_using_url(cap_link)
+            if not success:
+                continue
+
+            if get_alert(url, alert_root, feed, ns):
+                polled_alerts_count += 1
         except Exception:
             logger.error(
                 '[NWS_US] Failed to fetch url',

@@ -1,6 +1,8 @@
+import json
 import typing
 
 import strawberry
+from django.contrib.gis.geos import GEOSGeometry
 from django.db import models
 from django.db.models.fields import Field as DjangoBaseField
 
@@ -13,6 +15,25 @@ GenericScalar = strawberry.scalar(
     description="The GenericScalar scalar type represents a generic GraphQL scalar value that could be: List or Object.",
     serialize=lambda v: v,
     parse_value=lambda v: v,
+)
+
+
+class GIS:
+    @staticmethod
+    def serialize(geometry):
+        return json.loads(geometry.geojson)
+
+    @classmethod
+    def parse_value(cls, node):
+        geometry = GEOSGeometry(node.value)
+        return json.loads(geometry.geojson)
+
+
+PolygonScalar = strawberry.scalar(
+    typing.NewType('PolygonScalar', typing.Any),  # type: ignore[reportGeneralTypeIssues]
+    description='',  # TODO: Add description
+    serialize=GIS.serialize,
+    parse_value=GIS.parse_value,
 )
 
 

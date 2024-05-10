@@ -1,5 +1,6 @@
 from django.apps import AppConfig
-from django.db.models.signals import post_delete, post_save, pre_delete
+
+# from django.db.models.signals import post_save, pre_delete
 
 
 class CapFeedConfig(AppConfig):
@@ -8,19 +9,16 @@ class CapFeedConfig(AppConfig):
 
     # Listen to the new registration event of feed
     def ready(self):
-        Feed = self.get_model("Feed")
-        Alert = self.get_model("Alert")
-        post_save.connect(notify_incoming_alert_for_subscription, sender=Alert)
-        post_delete.connect(notify_removed_alert_for_subscription, sender=Alert)
-        post_delete.connect(delete_feed, sender=Feed)
-        post_save.connect(update_cache_instructions, sender=Alert)
-        pre_delete.connect(update_cache_instructions, sender=Alert)
+        # Feed = self.get_model("Feed")
+        # Alert = self.get_model("Alert")
+        # post_save.connect(notify_incoming_alert_for_subscription, sender=Alert)
+        # post_delete.connect(notify_removed_alert_for_subscription, sender=Alert)
+        # TODO: Clean-up cache
+        # post_save.connect(update_cache_instructions, sender=Alert)
+        # pre_delete.connect(update_cache_instructions, sender=Alert)
+        import apps.cap_feed.receivers
 
-
-def delete_feed(sender, instance, *args, **kwargs):
-    from .models import remove_task
-
-    remove_task(instance)
+        apps.cap_feed.receivers
 
 
 def notify_incoming_alert_for_subscription(sender, instance, *args, **kwargs):
@@ -50,6 +48,7 @@ def notify_removed_alert_for_subscription(sender, instance, *args, **kwargs):
     )
 
 
+# TODO: Rmove this
 def update_cache_instructions(sender, instance, *args, **kwargs):
     from main.celery import app
 

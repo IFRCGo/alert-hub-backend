@@ -20,13 +20,15 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'main.settings')
 
 app = Celery('main')
 
+INTERNAL_CELERY_TASK_NAME_PREFIX = 'alert_hub_'
+
 app.conf.beat_schedule = {
-    'remove_expired_alerts': {
-        'task': 'apps.cap_feed.tasks.remove_expired_alerts',
+    f'{INTERNAL_CELERY_TASK_NAME_PREFIX}tag_expired_alerts': {
+        'task': 'apps.cap_feed.tasks.tag_expired_alerts',
         'schedule': timedelta(minutes=1),
         'options': {'queue': 'default'},
     },
-    'remove_expired_alert_records': {
+    f'{INTERNAL_CELERY_TASK_NAME_PREFIX}remove_expired_alert_records': {
         'task': 'apps.cap_feed.tasks.remove_expired_alert_records',
         'schedule': timedelta(days=1),
         'options': {'queue': 'default'},
@@ -42,13 +44,11 @@ app.config_from_object('django.conf:settings', namespace='CELERY')
 app.autodiscover_tasks()
 
 app.conf.task_default_queue = 'default'
-app.conf.task_queues = (
-    Queue('default', routing_key='poll.#', exchange='poll'),
-    Queue('inject', routing_key='inject.#', exchange='inject'),
-)
+app.conf.task_queues = (Queue('default', routing_key='poll.#', exchange='poll'),)
 app.conf.task_default_exchange = 'poll'
 app.conf.task_default_exchange_type = 'topic'
 app.conf.task_default_routing_key = 'poll.default'
+app.conf.result_expires = settings.CELERY_TASK_EXPIRE
 
 task_routes = {
     'apps.cap_feed.tasks.poll_feed': {
@@ -56,15 +56,10 @@ task_routes = {
         'routing_key': 'poll.#',
         'exchange': 'poll',
     },
-    'apps.cap_feed.tasks.remove_expired_alerts': {
+    'apps.cap_feed.tasks.tag_expired_alerts': {
         'queue': 'default',
         'routing_key': 'poll.#',
         'exchange': 'poll',
-    },
-    'apps.cap_feed.tasks.inject_data': {
-        'queue': 'inject',
-        'routing_key': 'inject.#',
-        'exchange': 'inject',
     },
 }
 

@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.0/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 import environ
@@ -39,10 +40,16 @@ env = environ.Env(
     DB_PASSWORD=str,
     DB_HOST=str,
     DB_PORT=(int, 5432),
+    # Static, Media configs
+    DJANGO_STATIC_URL=(str, '/static/'),
+    DJANGO_MEDIA_URL=(str, '/media/'),
+    # -- File System
+    DJANGO_STATIC_ROOT=(str, os.path.join(BASE_DIR, '/data/static')),  # Where to store
+    DJANGO_MEDIA_ROOT=(str, os.path.join(BASE_DIR, '/data/media')),  # Where to store
     # Celery
-    CELERY_BROKER_URL=str,
+    CELERY_BROKER_URL=str,  # redis://redis:6379/0
     # Cache
-    CACHE_REDIS_URL=str,
+    CACHE_REDIS_URL=str,  # redis://redis:6379/1
     # Email
     EMAIL_HOST=str,
     EMAIL_PORT=(int, 587),
@@ -82,12 +89,22 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.gis',
     # External
     'strawberry_django',
+    'admin_auto_filters',
     'django_celery_beat',
     'django_extensions',
     'corsheaders',
     'storages',
+    # External - Health-check
+    'health_check',  # required
+    'health_check.db',  # stock Django health checkers
+    'health_check.cache',
+    'health_check.storage',
+    'health_check.contrib.migrations',
+    'health_check.contrib.celery_ping',  # requires celery
+    'health_check.contrib.redis',  # requires Redis broker
     # Internal
     'apps.common',
     'apps.user',
@@ -163,7 +180,7 @@ CSRF_COOKIE_DOMAIN = env('CSRF_COOKIE_DOMAIN')
 # Database
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'ENGINE': 'django.contrib.gis.db.backends.postgis',
         'HOST': env('DB_HOST'),
         'PORT': env('DB_PORT'),
         'NAME': env('DB_NAME'),
@@ -204,11 +221,12 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.0/howto/static-files/
 # TODO: Use custom config for static files
 STATICFILES_DIRS = (str(BASE_DIR.joinpath('static')),)
-STATIC_URL = 'static/'
-STATIC_ROOT = '/data/static'
 
-MEDIA_URL = 'media/'
-MEDIA_ROOT = '/data/media'
+STATIC_URL = env('DJANGO_STATIC_URL')
+MEDIA_URL = env('DJANGO_MEDIA_URL')
+
+STATIC_ROOT = env('DJANGO_STATIC_ROOT')
+MEDIA_ROOT = env('DJANGO_MEDIA_ROOT')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
@@ -259,6 +277,14 @@ CACHES = {
         },
     }
 }
+
+# -- For health-check
+REDIS_URL = env('CACHE_REDIS_URL')
+HEALTHCHECK_CACHE_KEY = "alert_hub_healthcheck_key"
+
+
+REDIS_LOCK_EXPIRE = 60 * 10  # Lock expires in 10min (in seconds)
+CELERY_TASK_EXPIRE = (60 * 60) * 2  # Remove task data after 2hr (in seconds)
 
 # Email - SMTP Settings
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
@@ -318,14 +344,14 @@ if DEBUG:
                 app: {
                     'handlers': ['colored_console'],
                     'level': 'INFO',
-                    'propagate': True,
+                    'propagate': False,
                 }
                 for app in ['apps', 'helix', 'utils', 'celery', 'django']
             },
             'profiling': {
                 'handlers': ['colored_console'],
                 'level': 'DEBUG',
-                'propagate': True,
+                'propagate': False,
             },
         },
     }

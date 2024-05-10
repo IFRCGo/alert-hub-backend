@@ -141,13 +141,17 @@ class StrawberryDjangoCountList(StrawberryDjangoField):
             queryset = get_queryset(type_, queryset, info)
 
         queryset = apply_filters(filters, queryset, info, pk)
+
         queryset = apply_orders(order, queryset, info=info)
+        # Add a default order_by id if there is none defined/used
+        if not queryset.query.order_by:
+            queryset = queryset.order_by('-pk')
 
         _current_queryset = queryset._chain()  # type: ignore[reportGeneralTypeIssues]
 
         @sync_to_async
         def get_count():
-            return _current_queryset.count()
+            return _current_queryset.values('pk').count()
 
         pagination = process_pagination(pagination)
 

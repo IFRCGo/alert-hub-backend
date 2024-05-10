@@ -1,8 +1,19 @@
+import logging
+import typing
+import xml.etree.ElementTree as ET
 from datetime import datetime
 
 import pytz
+import requests
 
 from apps.cap_feed.models import FeedLog
+
+logger = logging.getLogger(__name__)
+
+
+COMMON_REQUESTS_HEADERS = {
+    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36',  # noqa
+}
 
 
 # converts CAP1.2 iso format datetime string to datetime object in UTC timezone
@@ -10,6 +21,27 @@ def convert_datetime(original_datetime):
     if original_datetime is None:
         return None
     return datetime.fromisoformat(original_datetime).astimezone(pytz.timezone('UTC'))
+
+
+def fetch_alert_using_url(url) -> tuple[typing.Literal[False], None] | tuple[typing.Literal[True], ET.Element]:
+    # navigate alert
+    alert_response = requests.get(url, headers=COMMON_REQUESTS_HEADERS)
+    alert_response_content = alert_response.content
+    if alert_response.status_code != 200:
+        logger.warning(f'Skipping for url {url}: Invalid status_code {alert_response.status_code}')
+        return False, None
+
+    if alert_response_content is None or alert_response_content.strip() == b'':
+        logger.warning(f'Skipping for url {url}: Due to empty content')
+        return False, None
+
+    try:
+        parsed_content = ET.fromstring(alert_response_content)
+    except ET.ParseError:
+        logger.warning(f'Skipping for url {url}: Fail to parse response as XML')
+        return False, None
+
+    return True, parsed_content
 
 
 def log_requestexception(feed, e, url):

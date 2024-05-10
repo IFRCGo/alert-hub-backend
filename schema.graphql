@@ -1,5 +1,6 @@
 input Admin1Filter {
   id: IDBaseFilterLookup
+  country: DjangoModelFilterInput
   AND: Admin1Filter
   OR: Admin1Filter
   NOT: Admin1Filter
@@ -13,16 +14,11 @@ input Admin1Order {
 
 type Admin1Type {
   id: ID!
+  ifrcGoId: ID
+  bbox: PolygonScalar
   countryId: ID!
   name: String!
-  polygon: String
-  multipolygon: String
-  minLatitude: String
-  maxLatitude: String
-  minLongitude: String
-  maxLongitude: String
   isUnknown: Boolean!
-  country: CountryType!
   alertCount: Int!
   filteredAlertCount: Int
 }
@@ -67,6 +63,7 @@ type AlertInfoAreaPolygonType {
   id: ID!
   alertInfoAreaId: ID!
   value: String!
+  valuePolygon: PolygonScalar
 }
 
 type AlertInfoAreaType {
@@ -198,6 +195,7 @@ enum AlertMsgTypeEnum {
 
 input AlertOrder {
   id: Ordering
+  sent: Ordering
 }
 
 enum AlertStatusEnum {
@@ -330,15 +328,14 @@ input CountryOrder {
 
 type CountryType {
   id: ID!
+  ifrcGoId: ID
+  bbox: PolygonScalar
   regionId: ID!
-  continentId: ID!
+  continentId: ID
   name: String!
   iso3: String!
-  polygon: String
-  multipolygon: String
-  centroid: String
   region: RegionType!
-  continent: ContinentType!
+  continent: ContinentType
   admin1s(alertFilters: AlertFilter = null, includeEmptyFilteredAlertCount: Boolean! = false): [Admin1Type!]!
   alertCount: Int!
   filteredAlertCount: Int
@@ -410,6 +407,7 @@ input FeedFilter {
   OR: FeedFilter
   NOT: FeedFilter
   DISTINCT: Boolean
+  name: String
 }
 
 enum FeedFormatEnum {
@@ -420,6 +418,7 @@ enum FeedFormatEnum {
 
 input FeedOrder {
   id: Ordering
+  name: Ordering
 }
 
 enum FeedPoolingIntervalEnum {
@@ -435,6 +434,7 @@ enum FeedPoolingIntervalEnum {
   I_50
   I_55
   I_60
+  I_10m
 }
 
 enum FeedStatusEnum {
@@ -548,6 +548,9 @@ enum Ordering {
   DESC_NULLS_LAST
 }
 
+""""""
+scalar PolygonScalar
+
 type PrivateMutation {
   id: ID!
 }
@@ -599,9 +602,9 @@ input RegionOrder {
 
 type RegionType {
   id: ID!
+  ifrcGoId: ID
+  bbox: PolygonScalar
   name: String!
-  polygon: String
-  centroid: String
 }
 
 type RegionTypeCountList {

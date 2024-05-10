@@ -37,14 +37,16 @@ class AlertFilter:
         return queryset, models.Q(**{f"{prefix}admin1s": value})
 
     def _info_enum_fields(self, field, queryset, value, prefix) -> tuple[models.QuerySet, models.Q]:
-        alias_field = f"_infos_{field}_list"
-        queryset = queryset.alias(
-            **{
-                # NOTE: To avoid duplicate alerts when joining infos
-                alias_field: ArrayAgg(f"{prefix}infos__{field}"),
-            }
-        )
-        return queryset, models.Q(**{f"{prefix}{alias_field}__overlap": value})
+        if value:
+            alias_field = f"_infos_{field}_list"
+            queryset = queryset.alias(
+                **{
+                    # NOTE: To avoid duplicate alerts when joining infos
+                    alias_field: ArrayAgg(f"{prefix}infos__{field}"),
+                }
+            )
+            return queryset, models.Q(**{f"{prefix}{alias_field}__overlap": value})
+        return queryset, models.Q()
 
     @strawberry_django.filter_field
     def urgency(
@@ -92,6 +94,27 @@ class AlertInfoFilter:
 class FeedFilter:
     id: strawberry.auto
 
+    def _language_field(self, field, queryset, value, prefix) -> tuple[models.QuerySet, models.Q]:
+        if value:
+            alias_field = f"_languageinfo_{field}_list"
+            queryset = queryset.alias(
+                **{
+                    # NOTE: To avoid duplicate feeds when joining lanauge_info
+                    alias_field: ArrayAgg(f"{prefix}languageinfo__{field}"),
+                }
+            )
+            return queryset, models.Q(**{f"{prefix}{alias_field}__icontains": value})
+        return queryset, models.Q()
+
+    @strawberry_django.filter_field
+    def name(
+        self,
+        queryset: models.QuerySet,
+        value: str,
+        prefix: str,
+    ) -> tuple[models.QuerySet, models.Q]:
+        return self._language_field("name", queryset, value, prefix)
+
 
 @strawberry_django.filters.filter(Country, lookups=True)
 class CountryFilter:
@@ -101,6 +124,7 @@ class CountryFilter:
 @strawberry_django.filters.filter(Admin1, lookups=True)
 class Admin1Filter:
     id: strawberry.auto
+    country: strawberry.auto
 
     @strawberry_django.filter_field
     def unknown(

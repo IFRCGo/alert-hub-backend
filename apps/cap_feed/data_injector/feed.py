@@ -1,9 +1,11 @@
 import json
+import logging
 import os
 
 from apps.cap_feed.models import Country, Feed, LanguageInfo
 
 module_dir = os.path.dirname(__file__)  # get current directory
+logger = logging.getLogger(__name__)
 
 
 # inject feed configurations if not already present
@@ -14,7 +16,7 @@ def inject_feeds():
     )
     with open(file_path, encoding='utf-8') as file:
         feeds = json.load(file)
-        print('Injecting feeds...')
+        logger.info('Injecting feeds...')
         unique_countries = set()
         feed_counter = 0
         for feed_entry in feeds:
@@ -27,7 +29,7 @@ def inject_feeds():
                 if Feed.objects.filter(url=feed.url).first():
                     continue
                 feed.format = feed_entry['format']
-                feed.polling_interval = 60
+                feed.polling_interval = Feed.PoolingInterval.I_10m
                 feed.enable_polling = True
                 feed.enable_rebroadcast = True
                 feed.official = True
@@ -40,8 +42,7 @@ def inject_feeds():
                 language_info.logo = feed_entry['picUrl']
                 language_info.save()
 
-            except Exception as e:
-                print(feed_entry['name'])
-                print(f'Error injecting feed: {e}')
+            except Exception:
+                logger.error(f"Error injecting feed: {feed_entry['name']}", exc_info=True)
 
-        print(f'Injected {feed_counter} feeds for {len(unique_countries)} unique countries')
+        logger.info(f'Injected {feed_counter} feeds for {len(unique_countries)} unique countries')

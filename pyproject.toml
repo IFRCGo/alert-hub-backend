@@ -16,10 +16,10 @@ django-environ = "*"
 django-extensions = "^3.2.3"
 django-redis = "^5.3.0"
 django-storages = "^1.13.2"
+django-admin-autocomplete-filter = "*"
 iso639-lang = "^2.1.0"
 graphene-django = "*"
 psycopg2-binary = "^2.9.9"
-shapely = "^2.0.3"
 pytz = "*"
 colorlog = "*"
 requests = "*"
@@ -27,6 +27,9 @@ strawberry-graphql = "^0.225.0"
 strawberry-graphql-django = "0.37.1"
 sentry-sdk = "*"
 djangorestframework = "*"
+validators = "*"
+django-health-check = "*"
+uwsgi = "*"
 
 [tool.poetry.dev-dependencies]
 pytest = "*"
@@ -45,6 +48,14 @@ extend-exclude = "(__pycache__|.*snap_test_.*\\.py|.+\\/.+\\/migrations\\/.*)"
 
 [tool.isort]
 profile = "black"
+multi_line_output = 3
+skip = [
+    "**/__pycache__",
+    "**/snap_test_*.py",
+    ".venv/",
+    "legacy/",
+    "**/migrations/*.py",
+]
 
 [tool.pyright]
 exclude = [

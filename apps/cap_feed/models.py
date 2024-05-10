@@ -1,15 +1,14 @@
-import json
 from datetime import timedelta
 from typing import TYPE_CHECKING
 
+from django.contrib.gis.db import models as gid_models
+from django.contrib.gis.geos import GEOSGeometry, Point, Polygon
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import IntegrityError, models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils import timezone
-from django_celery_beat.models import IntervalSchedule, PeriodicTask
 from iso639 import iter_langs
-from shapely.geometry import MultiPolygon, Polygon
 
 if TYPE_CHECKING:
     from django.db.models.fields.related_descriptors import ManyRelatedManager
@@ -32,25 +31,26 @@ class Continent(models.Model):
 
 
 class Region(models.Model):
+    ifrc_go_id = models.IntegerField(unique=True, null=True, editable=False)
     name = models.CharField()
-    polygon = models.TextField(blank=True, null=True)
-    centroid = models.CharField(blank=True, null=True)
+    bbox = gid_models.PolygonField(srid=4326, blank=True, null=True)
 
     def __str__(self):
         return self.name
 
 
 class Country(models.Model):
+    ifrc_go_id = models.IntegerField(unique=True, null=True, editable=False)
     name = models.CharField()
     iso3 = models.CharField(unique=True, validators=[MinValueValidator(3), MaxValueValidator(3)])
-    polygon = models.TextField(blank=True, null=True)
-    multipolygon = models.TextField(blank=True, null=True)
     region = models.ForeignKey(Region, on_delete=models.CASCADE)
-    continent = models.ForeignKey(Continent, on_delete=models.CASCADE)
-    centroid = models.CharField(blank=True, null=True)
+    bbox = gid_models.PolygonField(srid=4326, blank=True, null=True)
+
+    # XXX: Not used anywhere right now, maybe we can remove this. Need to confirm first
+    continent = models.ForeignKey(Continent, on_delete=models.CASCADE, null=True, blank=True)
 
     region_id: int
-    continent_id: int
+    continent_id: int | None
 
     def __str__(self):
         return self.iso3 + ' ' + self.name
@@ -63,14 +63,11 @@ def create_unknown_admin1(sender, instance, created, **kwargs):
 
 
 class Admin1(models.Model):
+    ifrc_go_id = models.IntegerField(unique=True, null=True, editable=False)
     name = models.CharField()
     country = models.ForeignKey(Country, on_delete=models.CASCADE)
-    polygon = models.TextField(blank=True, null=True)
-    multipolygon = models.TextField(blank=True, null=True)
-    min_latitude = models.FloatField(editable=False, null=True)
-    max_latitude = models.FloatField(editable=False, null=True)
-    min_longitude = models.FloatField(editable=False, null=True)
-    max_longitude = models.FloatField(editable=False, null=True)
+    bbox = gid_models.PolygonField(srid=4326, blank=True, null=True)
+    geometry = gid_models.GeometryField(null=True, blank=True, default=None)
 
     country_id: int
 
@@ -79,18 +76,6 @@ class Admin1(models.Model):
 
     def __str__(self):
         return self.name
-
-    def save(self, *args, **kwargs):
-        if self.polygon:
-            polygon_string = '{"coordinates": ' + str(self.polygon) + '}'
-            polygon = json.loads(polygon_string)['coordinates'][0]
-            self.min_longitude, self.min_latitude, self.max_longitude, self.max_latitude = Polygon(polygon).bounds
-        elif self.multipolygon:
-            multipolygon_string = '{"coordinates": ' + str(self.multipolygon) + '}'
-            polygon_list = json.loads(multipolygon_string)['coordinates']
-            polygons = [Polygon(x[0]) for x in polygon_list]
-            self.min_longitude, self.min_latitude, self.max_longitude, self.max_latitude = MultiPolygon(polygons).bounds
-        super(Admin1, self).save(*args, **kwargs)
 
 
 class LanguageInfo(models.Model):
@@ -132,6 +117,7 @@ class Feed(models.Model):
         I_50 = 50, '50 seconds'
         I_55 = 55, '55 seconds'
         I_60 = 60, '60 seconds'
+        I_10m = 600, '10 minutes'
 
     class Format(models.TextChoices):
         ATOM = 'atom', 'ATOM'
@@ -159,23 +145,11 @@ class Feed(models.Model):
 
     country_id: int
 
-    __old_polling_interval = None
-    __old_url = None
-
     def __init__(self, *args, **kwargs):
         super(Feed, self).__init__(*args, **kwargs)
-        self.__old_polling_interval = self.polling_interval
-        self.__old_url = self.url
 
     def __str__(self):
         return self.url
-
-    def save(self, force_insert=False, force_update=False, *args, **kwargs):
-        if self._state.adding:
-            add_task(self)
-        else:
-            update_task(self, self.__old_url, self.__old_polling_interval)
-        super(Feed, self).save(force_insert, force_update, *args, **kwargs)
 
 
 class ProcessedAlert(models.Model):
@@ -212,6 +186,9 @@ class Alert(models.Model):
     feed = models.ForeignKey(Feed, on_delete=models.CASCADE)
     url = models.CharField(unique=True)
 
+    # This is updated by the system to filter out is_expired
+    is_expired = models.BooleanField(default=False)
+
     identifier = models.CharField()
     sender = models.CharField()
     sent = models.DateTimeField()
@@ -242,8 +219,7 @@ class Alert(models.Model):
 
     @classmethod
     def get_queryset(cls) -> models.QuerySet:
-        # TODO: Add is_expired=False filter
-        return cls.objects.all()
+        return cls.objects.filter(is_expired=False)
 
     def info_has_been_added(self):
         self.__all_info_added = True
@@ -373,6 +349,17 @@ class AlertInfoAreaPolygon(models.Model):
 
     alert_info_area_id: int
 
+    @property
+    def value_geojson(self) -> GEOSGeometry | None:
+        """
+        NOTE: Value have data something like "50.532,55.692 50.905,56.234 50.902,56.356 51.075,56.53 ...."
+        """
+        try:
+            points = [point.split(',') for point in self.value.split(' ')]
+            return Polygon([Point(float(point[1]), float(point[0])) for point in points])
+        except Exception:
+            return
+
     def to_dict(self):
         alert_info_area_ploygon_dict = dict()
         alert_info_area_ploygon_dict['value'] = self.value
@@ -385,6 +372,8 @@ class AlertInfoAreaCircle(models.Model):
     value = models.TextField()
 
     alert_info_area_id: int
+
+    # NOTE: Circle can't be drawn using Geojson. A polygon needs to be created which holds large data then raw value
 
     def to_dict(self):
         alert_info_area_circle_dict = dict()
@@ -428,40 +417,3 @@ class FeedLog(models.Model):
             super(FeedLog, self).save(*args, **kwargs)
         except IntegrityError:
             pass
-
-
-# Add task to poll feed
-def add_task(feed):
-    interval = feed.polling_interval
-    interval_schedule = IntervalSchedule.objects.filter(every=interval, period='seconds').first()
-    if interval_schedule is None:
-        interval_schedule = IntervalSchedule.objects.create(every=interval, period='seconds')
-        interval_schedule.save()
-    # Create a new PeriodicTask
-    try:
-        new_task = PeriodicTask.objects.create(
-            interval=interval_schedule,
-            name='poll_feed_' + feed.url,
-            task='apps.cap_feed.tasks.poll_feed',
-            start_time=timezone.now(),
-            kwargs=json.dumps({"url": feed.url}),
-        )
-        new_task.save()
-    except Exception as e:
-        print('Error while adding new PeriodicTask', e)
-
-
-# Removes task to poll feed
-def remove_task(feed):
-    try:
-        existing_task = PeriodicTask.objects.get(name='poll_feed_' + feed.url)
-        existing_task.delete()
-    except PeriodicTask.DoesNotExist as e:
-        print('Error while removing unknown PeriodicTask', e)
-
-
-# Update task to poll feed
-def update_task(feed, old_url, old_interval):
-    if feed.url != old_url or feed.polling_interval != old_interval:
-        remove_task(feed)
-        add_task(feed)

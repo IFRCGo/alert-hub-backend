@@ -82,7 +82,7 @@ class AlertModelTests(TestCase):
         self.create_alert(days=-1)
         previous_alert_count = Alert.objects.count()
         previous_alert_info_count = AlertInfo.objects.count()
-        tasks.remove_expired_alerts()
+        tasks.tag_expired_alerts()
         assert Alert.objects.count() == previous_alert_count - 1
         assert AlertInfo.objects.count() == previous_alert_info_count - 1
 
@@ -91,11 +91,15 @@ class AlertModelTests(TestCase):
         Is an active alert identified and kept in the database?
         """
         self.create_alert(days=1)
-        previous_alert_count = Alert.objects.count()
-        previous_alert_info_count = AlertInfo.objects.count()
-        tasks.remove_expired_alerts()
-        assert Alert.objects.count() == previous_alert_count
-        assert AlertInfo.objects.count() == previous_alert_info_count
+        previous_alert_count = Alert.objects.filter(is_expired=False).count()
+        previous_alert_info_count = AlertInfo.objects.filter(is_expired=False).count()
+        total_previous_alert_count = Alert.objects.count()
+        total_previous_alert_info_count = AlertInfo.objects.count()
+        tasks.tag_expired_alerts()
+        assert Alert.objects.filter(is_expired=False).count() == previous_alert_count
+        assert AlertInfo.objects.filter(is_expired=False).count() == previous_alert_info_count
+        assert Alert.objects.count() == total_previous_alert_count
+        assert AlertInfo.objects.count() == total_previous_alert_info_count
 
     def test_deleted_alert_is_removed(self):
         """

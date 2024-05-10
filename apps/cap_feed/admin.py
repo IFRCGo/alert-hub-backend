@@ -1,3 +1,4 @@
+from admin_auto_filters.filters import AutocompleteFilterFactory
 from django.contrib import admin
 from django_celery_beat.models import (
     ClockedSchedule,
@@ -44,7 +45,10 @@ class AlertInfoAreaAdmin(admin.ModelAdmin):
 
 class AlertInfoAdmin(admin.ModelAdmin):
     list_display = ['alert', 'language']
-    list_filter = ['alert__feed', 'alert__country']
+    list_filter = (
+        AutocompleteFilterFactory('Feed', 'alert__feed'),
+        AutocompleteFilterFactory('Country', 'alert__country'),
+    )
     search_fields = ['alert__url']
     fieldsets = [
         ('Administration', {'fields': ['alert']}),
@@ -83,7 +87,11 @@ class AlertInfoInline(admin.StackedInline):
 
 class AlertAdmin(admin.ModelAdmin):
     list_display = ['url', 'country', 'feed', 'sent', 'status', 'msg_type', 'scope']
-    list_filter = ['feed', 'country']
+    list_filter = (
+        'is_expired',
+        AutocompleteFilterFactory('Feed', 'feed'),
+        AutocompleteFilterFactory('Country', 'country'),
+    )
     search_fields = ['url']
     fieldsets = [
         ('Administration', {'fields': ['country', 'feed']}),
@@ -113,13 +121,16 @@ class AlertAdmin(admin.ModelAdmin):
 
 class CountryAdmin(admin.ModelAdmin):
     list_display = ['name', 'iso3', 'region', 'continent']
-    list_filter = ['region', 'continent']
+    list_filter = (
+        'region',
+        'continent',
+    )
     search_fields = ['name', 'iso3']
 
 
 class Admin1Admin(admin.ModelAdmin):
     list_display = ['name', 'country']
-    list_filter = ['country']
+    list_filter = (AutocompleteFilterFactory('Country', 'country'),)
     search_fields = ['name']
 
 
@@ -135,7 +146,11 @@ class LanguageInfoInline(admin.StackedInline):
 
 class FeedAdmin(admin.ModelAdmin):
     list_display = ['name', 'country', 'url', 'format', 'polling_interval']
-    list_filter = ['format', 'country__region', 'country']
+    list_filter = (
+        'format',
+        'country__region',
+        AutocompleteFilterFactory('Country', 'country'),
+    )
     search_fields = ['url']
     inlines = [LanguageInfoInline]
 
@@ -153,7 +168,10 @@ class FeedAdmin(admin.ModelAdmin):
 
 class FeedLogAdmin(admin.ModelAdmin):
     list_display = ['exception', 'feed', 'description', 'alert_url', 'timestamp']
-    list_filter = ['exception', 'feed']
+    list_filter = (
+        'exception',
+        AutocompleteFilterFactory('Feed', 'feed'),
+    )
     search_fields = ['feed', 'exception', 'alert_url']
     fieldsets = [
         ('Log Context', {'fields': ['feed', 'alert_url', 'timestamp', 'notes']}),
@@ -163,13 +181,16 @@ class FeedLogAdmin(admin.ModelAdmin):
 
 class AlertAdmin1Admin(admin.ModelAdmin):
     list_display = ['alert', 'admin1']
-    list_filter = ['alert__country', 'admin1']
+    list_filter = (
+        AutocompleteFilterFactory('Admin1', 'admin1'),
+        AutocompleteFilterFactory('Country', 'alert__country'),
+    )
     search_fields = ['alert__url', 'admin1__name']
 
 
 class ProcessedAlertAdmin(admin.ModelAdmin):
     list_display = ['url', 'feed']
-    list_filter = ['feed']
+    list_filter = (AutocompleteFilterFactory('Feed', 'feed'),)
     search_fields = ['url']
 
 
