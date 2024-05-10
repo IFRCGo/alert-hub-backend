@@ -11,6 +11,11 @@ from apps.cap_feed.models import FeedLog
 logger = logging.getLogger(__name__)
 
 
+COMMON_REQUESTS_HEADERS = {
+    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36',  # noqa
+}
+
+
 # converts CAP1.2 iso format datetime string to datetime object in UTC timezone
 def convert_datetime(original_datetime):
     if original_datetime is None:
@@ -20,7 +25,7 @@ def convert_datetime(original_datetime):
 
 def fetch_alert_using_url(url) -> tuple[typing.Literal[False], None] | tuple[typing.Literal[True], ET.Element]:
     # navigate alert
-    alert_response = requests.get(url)
+    alert_response = requests.get(url, headers=COMMON_REQUESTS_HEADERS)
     alert_response_content = alert_response.content
     if alert_response.status_code != 200:
         logger.warning(f'Skipping for url {url}: Invalid status_code {alert_response.status_code}')

@@ -1,4 +1,6 @@
 import copy
+import datetime
+import functools
 import logging
 import re
 import time
@@ -58,3 +60,30 @@ def redis_lock(lock_id: str):
             # owned by someone else
             # also don't release the lock if we didn't acquire it
             cache.delete(lock_id)
+
+
+class RuntimeProfile:
+    label: str
+    start: typing.Optional[datetime.datetime]
+
+    def __init__(self, label: str = 'N/A'):
+        self.label = label
+        self.start = None
+
+    def __call__(self, func):
+        self.label = func.__name__
+
+        @functools.wraps(func)
+        def decorated(*args, **kwargs):
+            with self:
+                return func(*args, **kwargs)
+
+        return decorated
+
+    def __enter__(self):
+        self.start = datetime.datetime.now()
+
+    def __exit__(self, exc_type, exc_value, exc_traceback):
+        assert self.start is not None
+        time_delta = datetime.datetime.now() - self.start
+        logger.info(f'Runtime with <{self.label}>: {time_delta}')

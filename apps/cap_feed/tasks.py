@@ -7,7 +7,7 @@ from django.db import models
 from django.utils import timezone
 
 from main.cache import CacheKey
-from utils.common import redis_lock
+from utils.common import RuntimeProfile, redis_lock
 
 from .formats import format_handler as fh
 from .models import Alert, Feed, ProcessedAlert
@@ -27,7 +27,8 @@ def poll_feed(pk: int):
             feed = Feed.objects.get(pk=pk)
             if not feed.enable_polling:
                 return f"Feed with url {feed.url} is disabled for polling"
-            polled_alerts_count += fh.get_alerts(feed)
+            with RuntimeProfile(f"Feed: {feed.url} alerts pull"):
+                polled_alerts_count += fh.get_alerts(feed)
             return f"polled {polled_alerts_count} alerts from {feed.url}"
         except Feed.DoesNotExist:
             return f"Feed with ID: {pk} does not exist"

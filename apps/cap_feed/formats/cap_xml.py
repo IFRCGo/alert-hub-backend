@@ -216,7 +216,7 @@ def process_alert(
 
     mgr.done()
     if mrg_summary := mgr.summary(ignore_empty=True):
-        logger.info(f"DB ops summary for alert: {alert.pk}: {str(mrg_summary)}")
+        logger.debug(f"DB ops summary for alert: {alert.pk}: {str(mrg_summary)}")
     return alert
 
 

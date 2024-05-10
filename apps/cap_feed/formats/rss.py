@@ -8,7 +8,7 @@ from apps.cap_feed.formats.cap_xml import get_alert
 from apps.cap_feed.models import Alert, ProcessedAlert
 from utils.common import logger_log_extra
 
-from .utils import fetch_alert_using_url
+from .utils import COMMON_REQUESTS_HEADERS, fetch_alert_using_url
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +21,8 @@ def get_alerts_rss(feed, ns):
 
     # navigate list of alerts
     try:
-        response = requests.get(feed.url)
+        response = requests.get(feed.url, headers=COMMON_REQUESTS_HEADERS)
+        response.raise_for_status()
     except requests.exceptions.RequestException:
         logger.error(
             '[RSS] Failed to fetch feed alerts',
