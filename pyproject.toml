@@ -29,6 +29,7 @@ sentry-sdk = "*"
 djangorestframework = "*"
 validators = "*"
 django-health-check = "*"
+psutil = "*"
 uwsgi = "*"
 
 [tool.poetry.dev-dependencies]

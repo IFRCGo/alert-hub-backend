@@ -103,8 +103,10 @@ INSTALLED_APPS = [
     'health_check.cache',
     'health_check.storage',
     'health_check.contrib.migrations',
-    'health_check.contrib.celery_ping',  # requires celery
+    'health_check.contrib.psutil',  # disk and memory utilization; requires psutil
     'health_check.contrib.redis',  # requires Redis broker
+    # TODO: Add a separate Health-check for celery
+    # 'health_check.contrib.celery_ping',  # requires celery
     # Internal
     'apps.common',
     'apps.user',
@@ -278,9 +280,13 @@ CACHES = {
     }
 }
 
-# -- For health-check
+# HEALTH-CHECK
 REDIS_URL = env('CACHE_REDIS_URL')
 HEALTHCHECK_CACHE_KEY = "alert_hub_healthcheck_key"
+HEALTH_CHECK = {
+    'DISK_USAGE_MAX': 80,  # percent
+    'MEMORY_MIN': 100,  # in MB
+}
 
 
 REDIS_LOCK_EXPIRE = 60 * 10  # Lock expires in 10min (in seconds)
