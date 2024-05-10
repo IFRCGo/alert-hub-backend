@@ -26,11 +26,17 @@ def fetch_alert_using_url(url) -> tuple[typing.Literal[False], None] | tuple[typ
         logger.warning(f'Skipping for url {url}: Invalid status_code {alert_response.status_code}')
         return False, None
 
-    if alert_response_content is None or alert_response_content.strip() == '':
+    if alert_response_content is None or alert_response_content.strip() == b'':
         logger.warning(f'Skipping for url {url}: Due to empty content')
         return False, None
 
-    return True, ET.fromstring(alert_response_content)
+    try:
+        parsed_content = ET.fromstring(alert_response_content)
+    except ET.ParseError:
+        logger.warning(f'Skipping for url {url}: Fail to parse response as XML')
+        return False, None
+
+    return True, parsed_content
 
 
 def log_requestexception(feed, e, url):
