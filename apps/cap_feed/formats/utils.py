@@ -1,8 +1,14 @@
+import logging
+import typing
+import xml.etree.ElementTree as ET
 from datetime import datetime
 
 import pytz
+import requests
 
 from apps.cap_feed.models import FeedLog
+
+logger = logging.getLogger(__name__)
 
 
 # converts CAP1.2 iso format datetime string to datetime object in UTC timezone
@@ -10,6 +16,21 @@ def convert_datetime(original_datetime):
     if original_datetime is None:
         return None
     return datetime.fromisoformat(original_datetime).astimezone(pytz.timezone('UTC'))
+
+
+def fetch_alert_using_url(url) -> tuple[typing.Literal[False], None] | tuple[typing.Literal[True], ET.Element]:
+    # navigate alert
+    alert_response = requests.get(url)
+    alert_response_content = alert_response.content
+    if alert_response.status_code != 200:
+        logger.warning(f'Skipping for url {url}: Invalid status_code {alert_response.status_code}')
+        return False, None
+
+    if alert_response_content is None or alert_response_content.strip() == '':
+        logger.warning(f'Skipping for url {url}: Due to empty content')
+        return False, None
+
+    return True, ET.fromstring(alert_response_content)
 
 
 def log_requestexception(feed, e, url):

@@ -97,6 +97,14 @@ INSTALLED_APPS = [
     'django_extensions',
     'corsheaders',
     'storages',
+    # External - Health-check
+    'health_check',  # required
+    'health_check.db',  # stock Django health checkers
+    'health_check.cache',
+    'health_check.storage',
+    'health_check.contrib.migrations',
+    'health_check.contrib.celery_ping',  # requires celery
+    'health_check.contrib.redis',  # requires Redis broker
     # Internal
     'apps.common',
     'apps.user',
@@ -269,6 +277,11 @@ CACHES = {
         },
     }
 }
+
+# -- For health-check
+REDIS_URL = env('CACHE_REDIS_URL')
+HEALTHCHECK_CACHE_KEY = "alert_hub_healthcheck_key"
+
 
 REDIS_LOCK_EXPIRE = 60 * 10  # Lock expires in 10min (in seconds)
 CELERY_TASK_EXPIRE = (60 * 60) * 2  # Remove task data after 2hr (in seconds)

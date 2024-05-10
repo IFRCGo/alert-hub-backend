@@ -8,6 +8,8 @@ from apps.cap_feed.formats.cap_xml import get_alert
 from apps.cap_feed.models import Alert, ProcessedAlert
 from utils.common import logger_log_extra
 
+from .utils import fetch_alert_using_url
+
 logger = logging.getLogger(__name__)
 
 
@@ -61,9 +63,11 @@ def get_alerts_nws_us(feed, ns):
             if ProcessedAlert.objects.filter(url=url).exists() or Alert.objects.filter(url=url).exists():
                 continue
 
-            alert_response = requests.get(cap_link)
             # navigate alert
-            alert_root = ET.fromstring(alert_response.content)
+            success, alert_root = fetch_alert_using_url(cap_link)
+            if not success:
+                continue
+
             if get_alert(url, alert_root, feed, ns):
                 polled_alerts_count += 1
         except Exception:

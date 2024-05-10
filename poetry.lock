@@ -475,6 +475,24 @@ files = [
 Django = ">=3.2"
 
 [[package]]
+name = "django-health-check"
+version = "3.18.2"
+description = "Run checks on services like databases, queue servers, celery processes, etc."
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "django_health_check-3.18.2-py2.py3-none-any.whl", hash = "sha256:16f9c9186236cbc2858fa0d0ecc3566ba2ad2b72683e5678d0d58eb9e8bbba1a"},
+    {file = "django_health_check-3.18.2.tar.gz", hash = "sha256:21235120f8d756fa75ba430d0b0dbb04620fbd7bfac92ed6a0b911915ba38918"},
+]
+
+[package.dependencies]
+django = ">=2.2"
+
+[package.extras]
+docs = ["sphinx"]
+test = ["boto3", "celery", "django-storages", "pytest", "pytest-cov", "pytest-django", "redis"]
+
+[[package]]
 name = "django-redis"
 version = "5.4.0"
 description = "Full featured redis cache backend for Django."
@@ -1448,4 +1466,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "8f62ff39df7d5a08d7efb71450c0ed08aee3ac6a6917a2ac6e4521a60a191405"
+content-hash = "bc6d101c5ccee86a00fe303097b2af47973a6153d8064d73101f273a04192eb9"

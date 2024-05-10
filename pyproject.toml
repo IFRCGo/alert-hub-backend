@@ -28,6 +28,7 @@ strawberry-graphql-django = "0.37.1"
 sentry-sdk = "*"
 djangorestframework = "*"
 validators = "*"
+django-health-check = "*"
 uwsgi = "*"
 
 [tool.poetry.dev-dependencies]
