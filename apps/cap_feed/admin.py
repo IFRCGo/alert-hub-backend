@@ -1,12 +1,5 @@
 from admin_auto_filters.filters import AutocompleteFilterFactory
 from django.contrib import admin
-from django_celery_beat.models import (
-    ClockedSchedule,
-    CrontabSchedule,
-    IntervalSchedule,
-    PeriodicTask,
-    SolarSchedule,
-)
 
 from .models import (
     Admin1,
@@ -203,9 +196,3 @@ admin.site.register(Admin1, Admin1Admin)
 admin.site.register(AlertAdmin1, AlertAdmin1Admin)
 admin.site.register(Feed, FeedAdmin)
 admin.site.register(FeedLog, FeedLogAdmin)
-
-admin.site.unregister(CrontabSchedule)
-admin.site.unregister(ClockedSchedule)
-admin.site.unregister(SolarSchedule)
-admin.site.unregister(IntervalSchedule)
-admin.site.unregister(PeriodicTask)

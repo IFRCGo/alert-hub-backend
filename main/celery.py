@@ -1,11 +1,15 @@
+import logging
 import os
 from datetime import timedelta
 
 import celery
+import requests
 from django.conf import settings
 from kombu import Queue
 
 from main import sentry
+
+logger = logging.getLogger(__name__)
 
 
 class Celery(celery.Celery):
@@ -33,7 +37,13 @@ app.conf.beat_schedule = {
         'schedule': timedelta(days=1),
         'options': {'queue': 'default'},
     },
+    f'{INTERNAL_CELERY_TASK_NAME_PREFIX}uptime_push': {
+        'task': 'main.celery.uptime_push',
+        'schedule': timedelta(minutes=30),
+        'options': {'queue': 'default'},
+    },
 }
+
 # Using a string here means the worker doesn't have to serialize
 # the configuration object to child processes.
 # - namespace='CELERY' means all celery-related configuration keys
@@ -67,3 +77,9 @@ task_routes = {
 @app.task(bind=True, ignore_result=True)
 def debug_task(self):
     print(f'Request: {self.request!r}')
+
+
+@app.task(bind=False)
+def uptime_push():
+    if settings.UPTIME_WORKER_HEARTBEAT:
+        requests.get(settings.UPTIME_WORKER_HEARTBEAT)

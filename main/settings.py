@@ -61,6 +61,7 @@ env = environ.Env(
     SENTRY_TRACES_SAMPLE_RATE=(float, 0.2),
     SENTRY_PROFILE_SAMPLE_RATE=(float, 0.2),
     # Misc
+    UPTIME_WORKER_HEARTBEAT=(str, None),
 )
 
 # SECURITY WARNING: keep the secret key used in production secret!
@@ -105,8 +106,7 @@ INSTALLED_APPS = [
     'health_check.contrib.migrations',
     'health_check.contrib.psutil',  # disk and memory utilization; requires psutil
     'health_check.contrib.redis',  # requires Redis broker
-    # TODO: Add a separate Health-check for celery
-    # 'health_check.contrib.celery_ping',  # requires celery
+    # Using custom push check for celery workers
     # Internal
     'apps.common',
     'apps.user',
@@ -287,6 +287,7 @@ HEALTH_CHECK = {
     'DISK_USAGE_MAX': 80,  # percent
     'MEMORY_MIN': 100,  # in MB
 }
+UPTIME_WORKER_HEARTBEAT = env('UPTIME_WORKER_HEARTBEAT')
 
 
 REDIS_LOCK_EXPIRE = 60 * 10  # Lock expires in 10min (in seconds)
