@@ -60,6 +60,9 @@ env = environ.Env(
     SENTRY_DSN=(str, None),
     SENTRY_TRACES_SAMPLE_RATE=(float, 0.2),
     SENTRY_PROFILE_SAMPLE_RATE=(float, 0.2),
+    # CORS
+    CORS_ALLOWED_ORIGINS=(list, []),
+    CORS_ALLOWED_ORIGIN_REGEXES=(list, []),
     # Misc
     UPTIME_WORKER_HEARTBEAT=(str, None),
 )
@@ -238,8 +241,15 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CELERY_RESULT_BACKEND = CELERY_BROKER_URL = env('CELERY_BROKER_URL')
 CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 
+
 # CORS
-CORS_ORIGIN_ALLOW_ALL = True  # TODO: Use whitelist instead
+CORS_ALLOWED_ORIGINS = env('CORS_ALLOWED_ORIGINS')
+CORS_ALLOWED_ORIGIN_REGEXES = env('CORS_ALLOWED_ORIGIN_REGEXES')
+
+if not (CORS_ALLOWED_ORIGINS or CORS_ALLOWED_ORIGIN_REGEXES):
+    # Fallback, XXX: Avoid using this in production
+    CORS_ORIGIN_ALLOW_ALL = True
+
 CORS_ALLOW_CREDENTIALS = True
 CORS_URLS_REGEX = r'(^/media/.*$)|(^/graphql/$)'
 CORS_ALLOW_METHODS = (
