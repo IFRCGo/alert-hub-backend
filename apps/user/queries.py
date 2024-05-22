@@ -29,7 +29,6 @@ class PublicQuery:
     @sync_to_async
     def me(self, info: Info) -> UserMeType | None:
         user = info.context.request.user
-        print(info.context.request.user)
         if user.is_authenticated:
             return user  # type: ignore[reportGeneralTypeIssues]
 
