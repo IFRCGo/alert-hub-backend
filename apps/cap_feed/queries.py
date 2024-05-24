@@ -1,7 +1,6 @@
 import strawberry
 import strawberry_django
 from django.db import models
-from django.db.models.functions import Coalesce
 from strawberry_django.filters import apply as apply_filters
 
 from main.graphql.context import Info
@@ -89,25 +88,33 @@ class PublicQuery:
         if alert_filters:
             alert_queryset = AlertType.get_queryset(None, None, info)
             alert_queryset = apply_filters(alert_filters, alert_queryset, info, None)
-            queryset = queryset.annotate(
-                filtered_alert_count=Coalesce(
-                    models.Subquery(
+
+            filtered_alert_count_map = {
+                country_id: count
+                async for country_id, count in (
+                    Alert.objects.filter(
                         # NOTE: alert_queryset already has group by for nested alert-info filter fields
-                        Alert.objects.filter(
-                            id__in=alert_queryset.values('id'),
-                            country=models.OuterRef('id'),
-                        )
-                        .order_by()
-                        .values('country')
-                        .annotate(count=models.Count('id'))
-                        .values('count')[:1],
-                        output_field=models.IntegerField(),
-                    ),
-                    0,
-                ),
-            ).order_by('-filtered_alert_count')
-            if not include_empty_filtered_alert_count:
-                queryset = queryset.exclude(filtered_alert_count=0)
+                        pk__in=alert_queryset.values('id'),
+                    )
+                    .order_by()
+                    .values('country')
+                    .annotate(count=models.Count('id', distinct=True))
+                    .values_list('country', 'count')
+                )
+            }
+
+            queryset = queryset.filter(pk__in=filtered_alert_count_map.keys())
+
+            countries = []
+            async for country in queryset.all():
+                country.filtered_alert_count = filtered_alert_count_map.get(country.pk, 0)
+                if include_empty_filtered_alert_count or country.filtered_alert_count > 0:
+                    countries.append(country)
+            return sorted(
+                countries,
+                key=lambda x: (x.filtered_alert_count, x.pk),
+                reverse=True,
+            )
 
         return [country async for country in queryset.all()]
 
