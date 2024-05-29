@@ -4,6 +4,7 @@ import os
 import re
 
 import requests
+from django.conf import settings
 from django.contrib.gis.gdal import DataSource
 from django.contrib.gis.geos import GEOSGeometry
 from django.core.management.base import BaseCommand
@@ -19,52 +20,25 @@ CUSTOM_COUNTRY_REGION = {
     'OMN': 4,  # Middle East & North Africa
 }
 
-CUSTOM_COUNTRY_BBOX = {
-    # ISO3: bbox
-    'RUS': {
-        "type": "Polygon",
-        "coordinates": [
-            [
-                [
-                    28.463593736068475,
-                    81.94013976473988,
-                ],
-                [
-                    28.463593736068475,
-                    40.78757459314673,
-                ],
-                [
-                    191.12635723119286,
-                    40.78757459314673,
-                ],
-                [
-                    191.12635723119286,
-                    81.94013976473988,
-                ],
-                [
-                    28.463593736068475,
-                    81.94013976473988,
-                ],
-            ],
-        ],
-    },
-}
 
-CUSTOM_ADMIN1_BBOX = {
+def get_custom_country_bbox():
+    # ISO3: bbox
+    f_path = os.path.join(
+        settings.BASE_DIR,
+        'apps/cap_feed/data_injector/country-bbox.json',
+    )
+    with open(f_path, mode='rb') as fp:
+        return {country_data['iso3'].upper(): country_data['bbox'] for country_data in json.load(fp)}
+
+
+def get_custom_admin1_bbox():
     # ifrc_go_id: bbox
-    2625: {
-        "type": "Polygon",
-        "coordinates": [
-            [
-                [157.2902351208018, 71.63748893168176],
-                [157.2902351208018, 61.69631188546927],
-                [191.45828382322276, 61.69631188546927],
-                [191.45828382322276, 71.63748893168176],
-                [157.2902351208018, 71.63748893168176],
-            ],
-        ],
-    }
-}
+    f_path = os.path.join(
+        settings.BASE_DIR,
+        'apps/cap_feed/data_injector/admin1-bbox.json',
+    )
+    with open(f_path, mode='rb') as fp:
+        return {int(admin1_data['ifrc_go_id']): admin1_data['bbox'] for admin1_data in json.load(fp)}
 
 
 class IfrcGoGeoInjector:
@@ -177,6 +151,8 @@ class IfrcGoGeoInjector:
         )
         mgr = BulkUpdateManager(update_fields=['ifrc_go_id', 'name', 'region', 'bbox'])
 
+        CUSTOM_COUNTRY_BBOX = get_custom_country_bbox()
+
         for country_data in go_data:
             ifrc_go_id = country_data['id']
             country_name = self.clean_name(country_data['name'])
@@ -184,13 +160,14 @@ class IfrcGoGeoInjector:
             bbox_raw = country_data['bbox']
 
             # NOTE: country_data['region'] is ifrc_go_id for region
+            if iso3 is None:
+                self.log_warning(f'No iso3 found for {country_name}... skipping')
+                continue
+            iso3 = iso3.upper()
             if iso3 in CUSTOM_COUNTRY_REGION:
                 region = self.region_map.get(CUSTOM_COUNTRY_REGION[iso3])
             else:
                 region = self.region_map.get(country_data['region'])
-            if iso3 is None:
-                self.log_warning(f'No iso3 found for {country_name}... skipping')
-                continue
             if bbox_raw is None and iso3 not in CUSTOM_COUNTRY_BBOX:
                 self.log_warning(f'Empty bbox for {country_name}... skipping')
                 continue
@@ -230,7 +207,9 @@ class IfrcGoGeoInjector:
     def inject_admin1s(self):
         mgr = BulkUpdateManager(update_fields=['ifrc_go_id', 'name', 'country', 'bbox', 'geometry'])
 
-        def get_goejson_data():
+        def get_geojson_data():
+            # https://ifrcorg.sharepoint.com/sites/IFRCSharing/Shared%20Documents/Forms/AllItems.aspx?id=%2Fsites%2FIFRCSharing%2FShared%20Documents%2FInformation%20Management%20Team%2FGIS%2FGO%20Geospatial%20Layers%20sharing&p=true&ga=1
+            # - GO-admin1-json -> ./geographical/ifrc-go-admin1-geojson
             geojson_directory = os.path.join(os.path.dirname(module_dir), 'geographical/ifrc-go-admin1-geojson')
             all_files = glob.glob(geojson_directory + '/**/*.json', recursive=True)
             for file in all_files:
@@ -238,7 +217,9 @@ class IfrcGoGeoInjector:
                 for feature in layer:
                     yield feature
 
-        for feature in get_goejson_data():
+        CUSTOM_ADMIN1_BBOX = get_custom_admin1_bbox()
+        # TODO: Throw error or warning if empty
+        for feature in get_geojson_data():
             if feature.get('is_deprecated'):
                 continue
 

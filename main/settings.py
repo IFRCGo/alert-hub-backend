@@ -60,7 +60,11 @@ env = environ.Env(
     SENTRY_DSN=(str, None),
     SENTRY_TRACES_SAMPLE_RATE=(float, 0.2),
     SENTRY_PROFILE_SAMPLE_RATE=(float, 0.2),
+    # CORS
+    CORS_ALLOWED_ORIGINS=(list, []),
+    CORS_ALLOWED_ORIGIN_REGEXES=(list, []),
     # Misc
+    UPTIME_WORKER_HEARTBEAT=(str, None),
 )
 
 # SECURITY WARNING: keep the secret key used in production secret!
@@ -103,8 +107,9 @@ INSTALLED_APPS = [
     'health_check.cache',
     'health_check.storage',
     'health_check.contrib.migrations',
-    'health_check.contrib.celery_ping',  # requires celery
+    'health_check.contrib.psutil',  # disk and memory utilization; requires psutil
     'health_check.contrib.redis',  # requires Redis broker
+    # Using custom push check for celery workers
     # Internal
     'apps.common',
     'apps.user',
@@ -236,8 +241,15 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CELERY_RESULT_BACKEND = CELERY_BROKER_URL = env('CELERY_BROKER_URL')
 CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 
+
 # CORS
-CORS_ORIGIN_ALLOW_ALL = True  # TODO: Use whitelist instead
+CORS_ALLOWED_ORIGINS = env('CORS_ALLOWED_ORIGINS')
+CORS_ALLOWED_ORIGIN_REGEXES = env('CORS_ALLOWED_ORIGIN_REGEXES')
+
+if not (CORS_ALLOWED_ORIGINS or CORS_ALLOWED_ORIGIN_REGEXES):
+    # Fallback, XXX: Avoid using this in production
+    CORS_ORIGIN_ALLOW_ALL = True
+
 CORS_ALLOW_CREDENTIALS = True
 CORS_URLS_REGEX = r'(^/media/.*$)|(^/graphql/$)'
 CORS_ALLOW_METHODS = (
@@ -278,9 +290,14 @@ CACHES = {
     }
 }
 
-# -- For health-check
+# HEALTH-CHECK
 REDIS_URL = env('CACHE_REDIS_URL')
 HEALTHCHECK_CACHE_KEY = "alert_hub_healthcheck_key"
+HEALTH_CHECK = {
+    'DISK_USAGE_MAX': 80,  # percent
+    'MEMORY_MIN': 100,  # in MB
+}
+UPTIME_WORKER_HEARTBEAT = env('UPTIME_WORKER_HEARTBEAT')
 
 
 REDIS_LOCK_EXPIRE = 60 * 10  # Lock expires in 10min (in seconds)

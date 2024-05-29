@@ -127,7 +127,7 @@ class CreateSubscription(graphene.Mutation):
             subscribe_by,
             sent_flag,
         )
-        return cls(subscription=subscription)
+        return cls(subscription=subscription)  # type: ignore[reportCallIssue]
 
 
 class CreateSubscriptionTest(graphene.Mutation):
@@ -169,7 +169,7 @@ class CreateSubscriptionTest(graphene.Mutation):
             subscribe_by,
             sent_flag,
         )
-        return cls(subscription=subscription)
+        return cls(subscription=subscription)  # type: ignore[reportCallIssue]
 
 
 class DeleteSubscription(graphene.Mutation):
@@ -185,9 +185,12 @@ class DeleteSubscription(graphene.Mutation):
         subscription = Subscription.objects.get(id=subscription_id)
         login_user_id = info.context.user.id
         if subscription.user_id != login_user_id:
-            return cls(success=False, error_message='Delete operation is not authorized ' 'to this user.')
+            return cls(
+                success=False,
+                error_message='Delete operation is not authorized to this user.',
+            )  # type: ignore[reportCallIssue]
         subscription.delete()
-        return cls(success=True)
+        return cls(success=True)  # type: ignore[reportCallIssue]
 
 
 class UpdateSubscription(graphene.Mutation):
@@ -222,7 +225,10 @@ class UpdateSubscription(graphene.Mutation):
         subscription = Subscription.objects.get(id=subscription_id)
         login_user_id = info.context.user.id
         if subscription.user_id != login_user_id:
-            return cls(success=False, error_message='Update operation is not authorized ' 'to this user.')
+            return cls(
+                success=False,
+                error_message='Update operation is not authorized to this user.',
+            )  # type: ignore[reportCallIssue]
         subscription.subscription_name = subscription_name
         subscription.country_ids = country_ids
         subscription.admin1_ids = admin1_ids
@@ -232,7 +238,7 @@ class UpdateSubscription(graphene.Mutation):
         subscription.subscribe_by = subscribe_by
         subscription.sent_flag = sent_flag
         subscription.save()
-        return cls(success=True)
+        return cls(success=True)  # type: ignore[reportCallIssue]
 
 
 @patch.object(Subscription, 'save', mock_save)
@@ -251,7 +257,7 @@ class GenerateTestSubscriptions(graphene.Mutation):
             return cls(
                 success=False,
                 error_message='You should not be add cases ' 'more than 10000 at one time.',
-            )
+            )  # type: ignore[reportCallIssue]
         with patch.object(Subscription, 'save', mock_save):
             for _ in range(0, case_numbers):
                 subscription = create_subscription(
@@ -266,7 +272,7 @@ class GenerateTestSubscriptions(graphene.Mutation):
                     0,
                 )
                 subscription.save()
-        return cls(success=True)
+        return cls(success=True)  # type: ignore[reportCallIssue]
 
 
 class Mutation(graphene.ObjectType):

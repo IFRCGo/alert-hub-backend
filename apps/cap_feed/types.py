@@ -3,7 +3,6 @@ import typing
 import strawberry
 import strawberry_django
 from django.db import models
-from django.db.models.functions import Coalesce
 from strawberry_django.filters import apply as apply_filters
 
 from main.graphql.context import Info
@@ -97,31 +96,33 @@ class CountryType:
             alert_queryset = AlertType.get_queryset(None, None, info)
             alert_queryset = apply_filters(alert_filters, alert_queryset, info, None)
 
-            queryset = (
-                Admin1Type.get_queryset(None, None, info)
-                .filter(country=self)
-                .annotate(
-                    filtered_alert_count=Coalesce(
-                        models.Subquery(
-                            # NOTE: alert_queryset already has group by for nested alert-info filter fields
-                            Alert.objects.filter(
-                                id__in=alert_queryset.values('id'),
-                                admin1s=models.OuterRef('id'),
-                            )
-                            .order_by()
-                            .values('admin1s')
-                            .annotate(count=models.Count('id', distinct=True))
-                            .values('count')[:1],
-                            output_field=models.IntegerField(),
-                        ),
-                        0,
-                    ),
+            filtered_alert_count_map = {
+                admin1_id: count
+                async for admin1_id, count in (
+                    Alert.objects.filter(
+                        # NOTE: alert_queryset already has group by for nested alert-info filter fields
+                        pk__in=alert_queryset.values('id'),
+                        admin1s__country=self,
+                    )
+                    .order_by()
+                    .values('admin1s')
+                    .annotate(count=models.Count('id', distinct=True))
+                    .values_list('admin1s', 'count')
                 )
-            ).order_by('-filtered_alert_count')
-            if not include_empty_filtered_alert_count:
-                queryset = queryset.exclude(filtered_alert_count=0)
+            }
 
-            return [admin1 async for admin1 in queryset.all()]
+            queryset = Admin1Type.get_queryset(None, None, info).filter(pk__in=filtered_alert_count_map.keys())
+
+            admin1s = []
+            async for admin1 in queryset.all():
+                admin1.filtered_alert_count = filtered_alert_count_map.get(admin1.pk, 0)
+                if include_empty_filtered_alert_count or admin1.filtered_alert_count > 0:
+                    admin1s.append(admin1)
+            return sorted(
+                admin1s,
+                key=lambda x: (x.filtered_alert_count, x.pk),
+                reverse=True,
+            )
 
         return await info.context.dl.cap_feed.load_admin1s_by_country.load(self.pk)
 

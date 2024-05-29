@@ -1501,5 +1501,14 @@
         "picUrl": "https://alert-hub.s3.amazonaws.com/images/zw-msd-sn.png",
         "capAlertFeed": "https://cap-sources.s3.amazonaws.com/zw-msd-sn/rss.xml",
         "format": "rss"
+    },
+    {
+        "sourceId": "us-msd-en",
+        "name": "USA: FEMA",
+        "iso3": "USA",
+        "language": "English",
+        "picUrl": "https://www.fema.gov/profiles/femad8_gov/themes/fema_uswds/images/fema-logo-blue.svg",
+        "capAlertFeed": "https://apps.fema.gov/IPAWSOPEN_EAS_SERVICE/rest/feed",
+        "format": "rss"
     }
 ]

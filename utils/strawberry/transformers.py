@@ -38,77 +38,77 @@ def get_strawberry_type_from_serializer_field(field):
 
 @get_strawberry_type_from_serializer_field.register(serializers.ListField)
 @get_strawberry_type_from_serializer_field.register(serializers.ListSerializer)
-@get_strawberry_type_from_serializer_field.register(serializers.MultipleChoiceField)
+@get_strawberry_type_from_serializer_field.register(serializers.MultipleChoiceField)  # type: ignore[reportArgumentType]
 def convert_list_serializer_to_field(field):
     child_type = get_strawberry_type_from_serializer_field(field.child)
     return list[child_type]
 
 
 @get_strawberry_type_from_serializer_field.register(serializers.Serializer)
-@get_strawberry_type_from_serializer_field.register(serializers.ModelSerializer)
+@get_strawberry_type_from_serializer_field.register(serializers.ModelSerializer)  # type: ignore[reportArgumentType]
 def convert_serializer_to_field(_):
     return strawberry.field
 
 
-@get_strawberry_type_from_serializer_field.register(serializers.ManyRelatedField)
+@get_strawberry_type_from_serializer_field.register(serializers.ManyRelatedField)  # type: ignore[reportArgumentType]
 def convert_serializer_field_to_many_related_id(_):
     return list[strawberry.ID]
 
 
 @get_strawberry_type_from_serializer_field.register(serializers.PrimaryKeyRelatedField)
 @get_strawberry_type_from_serializer_field.register(IntegerIDField)
-@get_strawberry_type_from_serializer_field.register(StringIDField)
+@get_strawberry_type_from_serializer_field.register(StringIDField)  # type: ignore[reportArgumentType]
 def convert_serializer_field_to_id(_):
     return strawberry.ID
 
 
 @get_strawberry_type_from_serializer_field.register(serializers.JSONField)
-@get_strawberry_type_from_serializer_field.register(serializers.DictField)
+@get_strawberry_type_from_serializer_field.register(serializers.DictField)  # type: ignore[reportArgumentType]
 def convert_serializer_field_to_generic_scalar(_):
     return types.GenericScalar
 
 
-@get_strawberry_type_from_serializer_field.register(serializers.Field)
+@get_strawberry_type_from_serializer_field.register(serializers.Field)  # type: ignore[reportArgumentType]
 def convert_serializer_field_to_string(field):
     return str
 
 
-@get_strawberry_type_from_serializer_field.register(serializers.IntegerField)
+@get_strawberry_type_from_serializer_field.register(serializers.IntegerField)  # type: ignore[reportArgumentType]
 def convert_serializer_field_to_int(_):
     return int
 
 
-@get_strawberry_type_from_serializer_field.register(serializers.BooleanField)
+@get_strawberry_type_from_serializer_field.register(serializers.BooleanField)  # type: ignore[reportArgumentType]
 def convert_serializer_field_to_bool(_):
     return bool
 
 
-@get_strawberry_type_from_serializer_field.register(serializers.FloatField)
+@get_strawberry_type_from_serializer_field.register(serializers.FloatField)  # type: ignore[reportArgumentType]
 def convert_serializer_field_to_float(_):
     return float
 
 
-@get_strawberry_type_from_serializer_field.register(serializers.DecimalField)
+@get_strawberry_type_from_serializer_field.register(serializers.DecimalField)  # type: ignore[reportArgumentType]
 def convert_serializer_field_to_decimal(_):
     return decimal.Decimal
 
 
-@get_strawberry_type_from_serializer_field.register(serializers.DateTimeField)
+@get_strawberry_type_from_serializer_field.register(serializers.DateTimeField)  # type: ignore[reportArgumentType]
 def convert_serializer_field_to_datetime_time(_):
     return datetime.datetime
 
 
-@get_strawberry_type_from_serializer_field.register(serializers.DateField)
+@get_strawberry_type_from_serializer_field.register(serializers.DateField)  # type: ignore[reportArgumentType]
 def convert_serializer_field_to_date_time(_):
     return datetime.date
 
 
-@get_strawberry_type_from_serializer_field.register(serializers.TimeField)
+@get_strawberry_type_from_serializer_field.register(serializers.TimeField)  # type: ignore[reportArgumentType]
 def convert_serializer_field_to_time(_):
     return datetime.time
 
 
-@get_strawberry_type_from_serializer_field.register(serializers.FileField)
+@get_strawberry_type_from_serializer_field.register(serializers.FileField)  # type: ignore[reportArgumentType]
 def convert_serializer_field_to_file_field(_):
     return StrawberryUploadField
 
