@@ -144,15 +144,6 @@
         "format": "rss"
     },
     {
-        "sourceId": "uk-bviddm-en",
-        "name": "British Virgin Islands: Department of Disaster Management",
-        "iso3": "VGB",
-        "language": "English",
-        "picUrl": "https://alert-hub.s3.amazonaws.com/images/uk-bviddm-en.png",
-        "capAlertFeed": "https://cap-sources.s3.amazonaws.com/uk-bviddm-en/rss.xml",
-        "format": "rss"
-    },
-    {
         "sourceId": "bg-meteo-bg",
         "name": "Bulgaria: НАЦИОНАЛЕН ИНСТИТУТ ПО МЕТЕОРОЛОГИЯ И ХИДРОЛОГИЯ - ФИЛИАЛ ПЛОВДИВ",
         "iso3": "BGR",
