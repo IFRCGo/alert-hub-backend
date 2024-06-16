@@ -242,3 +242,8 @@ Start celery worker and scheduler on deployment:
 celery multi start w1 -A main -l info
 celery -A main beat --detach -l info
 ```
+
+### Infrastructure model
+![Infrastructure main model](.infragenie/infrastructure_main_model.svg)
+
+---
