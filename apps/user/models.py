@@ -82,7 +82,7 @@ class User(AbstractUser):
     )
 
     # avatar = models.CharField(null=True, blank=True, max_length=255)
-    phone_number = models.CharField(verbose_name=_('phone'), unique=True, null=True, max_length=20)
+    phone_number = models.CharField(verbose_name=_('phone'), unique=True, null=True, blank=True, max_length=20)
 
     # TODO: Need validation for these?
     country = models.CharField(null=True, blank=True, max_length=255)
