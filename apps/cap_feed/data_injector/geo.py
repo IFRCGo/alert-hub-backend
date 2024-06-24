@@ -21,6 +21,32 @@ CUSTOM_COUNTRY_REGION = {
 }
 
 
+# Manual skip... some are district in nature without any metadata
+SKIP_COUNTRY_ISO3 = [
+    # https://docs.google.com/spreadsheets/d/1kIexehv8LGdmugSwS5vjOzRvyCa0b1gv/edit#gid=985999600
+    'ASM',  # American Samoa
+    'BVT',  # Bouvet Island
+    'IOT',  # British Indian Ocean Territory
+    'VGB',  # British Virgin Islands
+    'CYM',  # Cayman Islands
+    'CXR',  # Christmas Island
+    'CCK',  # Cocos (Keeling) Islands
+    'FRO',  # Faroe Islands
+    'GRL',  # Greenland
+    'GUM',  # Guam
+    'GGY',  # Guernsey
+    'HMD',  # Heard Island and McDonald Islands
+    'IMN',  # Isle of Man
+    'JEY',  # Jersey
+    'MSR',  # Montserrat
+    'MNP',  # Northern Mariana Islands
+    'SGS',  # South Georgia and the South Sandwich Island
+    'TKL',  # Tokelau
+    'TCA',  # Turks and Caicos islands
+    'VIR',  # United States Virgin Islands
+]
+
+
 def get_custom_country_bbox():
     # ISO3: bbox
     f_path = os.path.join(
@@ -158,6 +184,9 @@ class IfrcGoGeoInjector:
             country_name = self.clean_name(country_data['name'])
             iso3 = country_data['iso3']
             bbox_raw = country_data['bbox']
+
+            if iso3 in SKIP_COUNTRY_ISO3:
+                continue
 
             # NOTE: country_data['region'] is ifrc_go_id for region
             if iso3 is None:
