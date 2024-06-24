@@ -22,10 +22,10 @@ for _logger in IGNORED_LOGGERS:
 
 def init_sentry(app_type, tags={}, **config):
     integrations = [
+        StrawberryIntegration(async_execution=True),
         DjangoIntegration(),
         CeleryIntegration(),
         RedisIntegration(),
-        StrawberryIntegration(async_execution=True),
     ]
     sentry_sdk.init(
         **config,
