@@ -1501,5 +1501,50 @@
         "picUrl": "https://www.fema.gov/profiles/femad8_gov/themes/fema_uswds/images/fema-logo-blue.svg",
         "capAlertFeed": "https://apps.fema.gov/IPAWSOPEN_EAS_SERVICE/rest/feed",
         "format": "rss"
+    },
+    {
+        "sourceId": "fi-fmi-en",
+        "name": "Finland: Finnish Meteorological Institute",
+        "iso3": "FIN",
+        "language": "English",
+        "picUrl": "https://alert-hub.s3.amazonaws.com/images/fi-fmi-en.png",
+        "capAlertFeed": "https://alerts.fmi.fi/cap/feed/rss_en-GB.rss",
+        "format": "rss"
+    },
+    {
+        "sourceId": "fi-fmi-sv",
+        "name": "Finland: Meteorologiska institutet",
+        "iso3": "FIN",
+        "language": "Swedish",
+        "picUrl": "https://alert-hub.s3.amazonaws.com/images/fi-fmi-sv.png",
+        "capAlertFeed": "https://alerts.fmi.fi/cap/feed/rss_sv-FI.rss",
+        "format": "rss"
+    },
+    {
+        "sourceId": "fi-fmi-fi",
+        "name": "Finland: Ilmatieteen laitos",
+        "iso3": "FIN",
+        "language": "Finnish",
+        "picUrl": "https://alert-hub.s3.amazonaws.com/images/fi-fmi-fi.png",
+        "capAlertFeed": "https://alerts.fmi.fi/cap/feed/rss_fi-FI.rss",
+        "format": "rss"
+    },
+    {
+        "sourceId": "gn-anm-fr",
+        "name": "Guinea: Agence Nationale de la Météorologie",
+        "iso3": "GIN",
+        "language": "French",
+        "picUrl": "https://alert-hub.s3.amazonaws.com/images/gn-anm-fr.png",
+        "capAlertFeed": "https://cap-sources.s3.amazonaws.com/gn-anm-fr/rss.xml",
+        "format": "rss"
+    },
+    {
+        "sourceId": "gn-anm-en",
+        "name": "Guinea: National Agency of Meteorology",
+        "iso3": "GIN",
+        "language": "English",
+        "picUrl": "https://alert-hub.s3.amazonaws.com/images/gn-anm-en.png",
+        "capAlertFeed": "https://cap-sources.s3.amazonaws.com/gn-anm-en/rss.xml",
+        "format": "rss"
     }
 ]
