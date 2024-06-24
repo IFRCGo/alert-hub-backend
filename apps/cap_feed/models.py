@@ -8,6 +8,7 @@ from django.db import IntegrityError, models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 from iso639 import iter_langs
 
 if TYPE_CHECKING:
@@ -105,30 +106,30 @@ class Feed(models.Model):
         Generated using: range(5, 65, 5):
         """
 
-        I_05 = 5, '5 seconds'
-        I_10 = 10, '10 seconds'
-        I_15 = 15, '15 seconds'
-        I_20 = 20, '20 seconds'
-        I_25 = 25, '25 seconds'
-        I_30 = 30, '30 seconds'
-        I_35 = 35, '35 seconds'
-        I_40 = 40, '40 seconds'
-        I_45 = 45, '45 seconds'
-        I_50 = 50, '50 seconds'
-        I_55 = 55, '55 seconds'
-        I_60 = 60, '60 seconds'
-        I_10m = 600, '10 minutes'
+        I_05 = 5, _('5 seconds')
+        I_10 = 10, _('10 seconds')
+        I_15 = 15, _('15 seconds')
+        I_20 = 20, _('20 seconds')
+        I_25 = 25, _('25 seconds')
+        I_30 = 30, _('30 seconds')
+        I_35 = 35, _('35 seconds')
+        I_40 = 40, _('40 seconds')
+        I_45 = 45, _('45 seconds')
+        I_50 = 50, _('50 seconds')
+        I_55 = 55, _('55 seconds')
+        I_60 = 60, _('60 seconds')
+        I_10m = 600, _('10 minutes')
 
     class Format(models.TextChoices):
-        ATOM = 'atom', 'ATOM'
-        RSS = 'rss', 'RSS'
-        NWS_US = 'nws_us', 'NWS_US'
+        ATOM = 'atom', _('ATOM')
+        RSS = 'rss', _('RSS')
+        NWS_US = 'nws_us', _('NWS_US')
 
     class Status(models.TextChoices):
-        ACTIVE = 'active', 'Active'
-        TESTING = 'testing', 'Testing'
-        INACTIVE = 'inactive', 'Inactive'
-        UNUSABLE = 'unusable', 'Unusable'
+        ACTIVE = 'active', _('Active')
+        TESTING = 'testing', _('Testing')
+        INACTIVE = 'inactive', _('Inactive')
+        UNUSABLE = 'unusable', _('Unusable')
 
     url = models.CharField(unique=True)
     country = models.ForeignKey(Country, on_delete=models.CASCADE)
@@ -163,23 +164,23 @@ class ProcessedAlert(models.Model):
 
 class Alert(models.Model):
     class Status(models.TextChoices):
-        ACTUAL = 'Actual', 'Actual'
-        EXERCISE = 'Exercise', 'Exercise'
-        SYSTEM = 'System', 'System'
-        TEST = 'Test', 'Test'
-        DRAFT = 'Draft', 'Draft'
+        ACTUAL = 'Actual', _('Actual')
+        EXERCISE = 'Exercise', _('Exercise')
+        SYSTEM = 'System', _('System')
+        TEST = 'Test', _('Test')
+        DRAFT = 'Draft', _('Draft')
 
     class MsgType(models.TextChoices):
-        ALERT = 'Alert', 'Alert'
-        UPDATE = 'Update', 'Update'
-        CANCEL = 'Cancel', 'Cancel'
-        ACK = 'Ack', 'Ack'
-        ERROR = 'Error', 'Error'
+        ALERT = 'Alert', _('Alert')
+        UPDATE = 'Update', _('Update')
+        CANCEL = 'Cancel', _('Cancel')
+        ACK = 'Ack', _('Ack')
+        ERROR = 'Error', _('Error')
 
     class Scope(models.TextChoices):  # XXX: Not used, maybe we need to use this in scope field?
-        PUBLIC = 'Public', 'Public'
-        RESTRICTED = 'Restricted', 'Restricted'
-        PRIVATE = 'Private', 'Private'
+        PUBLIC = 'Public', _('Public')
+        RESTRICTED = 'Restricted', _('Restricted')
+        PRIVATE = 'Private', _('Private')
 
     country = models.ForeignKey(Country, on_delete=models.CASCADE)
     admin1s = models.ManyToManyField(Admin1, through='AlertAdmin1')
@@ -240,50 +241,50 @@ class AlertAdmin1(models.Model):
 
 class AlertInfo(models.Model):
     class Category(models.TextChoices):
-        GEO = 'Geo', 'Geo'
-        MET = 'Met', 'Met'
-        SAFETY = 'Safety', 'Safety'
-        SECURITY = 'Security', 'Security'
-        RESCUE = 'Rescue', 'Rescue'
-        FIRE = 'Fire', 'Fire'
-        HEALTH = 'Health', 'Health'
-        ENV = 'Env', 'Env'
-        TRANSPORT = 'Transport', 'Transport'
-        INFRA = 'Infra', 'Infra'
-        CBRNE = 'CBRNE', 'CBRNE'
-        OTHER = 'Other', 'Other'
+        GEO = 'Geo', _('Geo')
+        MET = 'Met', _('Met')
+        SAFETY = 'Safety', _('Safety')
+        SECURITY = 'Security', _('Security')
+        RESCUE = 'Rescue', _('Rescue')
+        FIRE = 'Fire', _('Fire')
+        HEALTH = 'Health', _('Health')
+        ENV = 'Env', _('Env')
+        TRANSPORT = 'Transport', _('Transport')
+        INFRA = 'Infra', _('Infra')
+        CBRNE = 'CBRNE', _('CBRNE')
+        OTHER = 'Other', _('Other')
 
     class ResponseType(models.TextChoices):
-        SHELTER = 'Shelter', 'Shelter'
-        EVACUATE = 'Evacuate', 'Evacuate'
-        PREPARE = 'Prepare', 'Prepare'
-        EXECUTE = 'Execute', 'Execute'
-        AVOID = 'Avoid', 'Avoid'
-        MONITOR = 'Monitor', 'Monitor'
-        ASSESS = 'Assess', 'Assess'
-        ALLCLEAR = 'AllClear', 'AllClear'
-        NONE = 'None', 'None'
+        SHELTER = 'Shelter', _('Shelter')
+        EVACUATE = 'Evacuate', _('Evacuate')
+        PREPARE = 'Prepare', _('Prepare')
+        EXECUTE = 'Execute', _('Execute')
+        AVOID = 'Avoid', _('Avoid')
+        MONITOR = 'Monitor', _('Monitor')
+        ASSESS = 'Assess', _('Assess')
+        ALLCLEAR = 'AllClear', _('AllClear')
+        NONE = 'None', _('None')
 
     class Urgency(models.TextChoices):
-        IMMEDIATE = 'Immediate', 'Immediate'
-        EXPECTED = 'Expected', 'Expected'
-        FUTURE = 'Future', 'Future'
-        PAST = 'Past', 'Past'
-        UNKNOWN = 'Unknown', 'Unknown'
+        IMMEDIATE = 'Immediate', _('Immediate')
+        EXPECTED = 'Expected', _('Expected')
+        FUTURE = 'Future', _('Future')
+        PAST = 'Past', _('Past')
+        UNKNOWN = 'Unknown', _('Unknown')
 
     class Severity(models.TextChoices):
-        EXTREME = 'Extreme', 'Extreme'
-        SEVERE = 'Severe', 'Severe'
-        MODERATE = 'Moderate', 'Moderate'
-        MINOR = 'Minor', 'Minor'
-        UNKNOWN = 'Unknown', 'Unknown'
+        EXTREME = 'Extreme', _('Extreme')
+        SEVERE = 'Severe', _('Severe')
+        MODERATE = 'Moderate', _('Moderate')
+        MINOR = 'Minor', _('Minor')
+        UNKNOWN = 'Unknown', _('Unknown')
 
     class Certainty(models.TextChoices):
-        OBSERVED = 'Observed', 'Observed'
-        LIKELY = 'Likely', 'Likely'
-        POSSIBLE = 'Possible', 'Possible'
-        UNLIKELY = 'Unlikely', 'Unlikely'
-        UNKNOWN = 'Unknown', 'Unknown'
+        OBSERVED = 'Observed', _('Observed')
+        LIKELY = 'Likely', _('Likely')
+        POSSIBLE = 'Possible', _('Possible')
+        UNLIKELY = 'Unlikely', _('Unlikely')
+        UNKNOWN = 'Unknown', _('Unknown')
 
     alert = models.ForeignKey(Alert, on_delete=models.CASCADE, related_name='infos')
 

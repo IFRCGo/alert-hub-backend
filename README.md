@@ -242,3 +242,8 @@ Start celery worker and scheduler on deployment:
 celery multi start w1 -A main -l info
 celery -A main beat --detach -l info
 ```
+
+Translation
+```
+docker compose exec web ./manage.py makemessages -l es -l ar -l fr --ignore legacy --ignore main
+```
