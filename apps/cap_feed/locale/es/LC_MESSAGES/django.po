@@ -151,51 +151,51 @@ msgstr ""
 
 #: apps/cap_feed/models.py:244
 msgid "Geo"
-msgstr ""
+msgstr "Geofísico"
 
 #: apps/cap_feed/models.py:245
 msgid "Met"
-msgstr ""
+msgstr "Meteorológico"
 
 #: apps/cap_feed/models.py:246
 msgid "Safety"
-msgstr ""
+msgstr "Protección"
 
 #: apps/cap_feed/models.py:247
 msgid "Security"
-msgstr ""
+msgstr "Seguridad"
 
 #: apps/cap_feed/models.py:248
 msgid "Rescue"
-msgstr ""
+msgstr "Rescate"
 
 #: apps/cap_feed/models.py:249
 msgid "Fire"
-msgstr ""
+msgstr "Incendio"
 
 #: apps/cap_feed/models.py:250
 msgid "Health"
-msgstr ""
+msgstr "Salud"
 
 #: apps/cap_feed/models.py:251
 msgid "Env"
-msgstr ""
+msgstr "Medioambiental"
 
 #: apps/cap_feed/models.py:252
 msgid "Transport"
-msgstr ""
+msgstr "Transporte"
 
 #: apps/cap_feed/models.py:253
 msgid "Infra"
-msgstr ""
+msgstr "Infraestructura"
 
 #: apps/cap_feed/models.py:254
 msgid "CBRNE"
-msgstr ""
+msgstr "CBRNE"
 
 #: apps/cap_feed/models.py:255
 msgid "Other"
-msgstr ""
+msgstr "Otro"
 
 #: apps/cap_feed/models.py:258
 msgid "Shelter"
@@ -235,53 +235,53 @@ msgstr ""
 
 #: apps/cap_feed/models.py:269
 msgid "Immediate"
-msgstr ""
+msgstr "Inmediata"
 
 #: apps/cap_feed/models.py:270
 msgid "Expected"
-msgstr ""
+msgstr "Prevista"
 
 #: apps/cap_feed/models.py:271
 msgid "Future"
-msgstr ""
+msgstr "Futura"
 
 #: apps/cap_feed/models.py:272
 msgid "Past"
-msgstr ""
+msgstr "Pasada"
 
 #: apps/cap_feed/models.py:273 apps/cap_feed/models.py:280
 #: apps/cap_feed/models.py:287
 msgid "Unknown"
-msgstr ""
+msgstr "Desconocida"
 
 #: apps/cap_feed/models.py:276
 msgid "Extreme"
-msgstr ""
+msgstr "Extrema"
 
 #: apps/cap_feed/models.py:277
 msgid "Severe"
-msgstr ""
+msgstr "Severa"
 
 #: apps/cap_feed/models.py:278
 msgid "Moderate"
-msgstr ""
+msgstr "Moderada"
 
 #: apps/cap_feed/models.py:279
 msgid "Minor"
-msgstr ""
+msgstr "Menor"
 
 #: apps/cap_feed/models.py:283
 msgid "Observed"
-msgstr ""
+msgstr "Observada"
 
 #: apps/cap_feed/models.py:284
 msgid "Likely"
-msgstr ""
+msgstr "Probable"
 
 #: apps/cap_feed/models.py:285
 msgid "Possible"
-msgstr ""
+msgstr "Posible"
 
 #: apps/cap_feed/models.py:286
 msgid "Unlikely"
-msgstr ""
+msgstr "Improbable"
