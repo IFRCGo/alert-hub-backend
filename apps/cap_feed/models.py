@@ -101,6 +101,8 @@ class LanguageInfo(models.Model):
 
 
 class Feed(models.Model):
+    MAX_REQUEST_TIMEOUT = 60 * 4
+
     class PoolingInterval(models.IntegerChoices):
         """
         Generated using: range(5, 65, 5):

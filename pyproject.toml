@@ -41,6 +41,15 @@ pytest-django = "*"
 django-stubs = "==4.2.6"  # NOTE: 4.2.7 is messing with TextChoices/IntergerChoices
 celery-types = "*"
 
+[tool.ruff]
+exclude = [
+    "**/__pycache__",
+    "**/snap_test_*.py",
+    ".venv/",
+    "legacy/",
+    "**/migrations/*.py",
+]
+
 [tool.black]
 line-length = 125
 skip-string-normalization = true
