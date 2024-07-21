@@ -5,6 +5,7 @@ import strawberry
 from django.contrib.gis.geos import GEOSGeometry
 from django.db import models
 from django.db.models.fields import Field as DjangoBaseField
+from modeltranslation.fields import TranslationFieldDescriptor
 
 if typing.TYPE_CHECKING:
     from django.db.models.fields import _FieldDescriptor
@@ -56,6 +57,8 @@ def string_field(
 
     _field = field
     if isinstance(field, models.query_utils.DeferredAttribute):
+        _field = field.field
+    elif isinstance(field, TranslationFieldDescriptor):
         _field = field.field
 
     def _get_value(root) -> None | str:
