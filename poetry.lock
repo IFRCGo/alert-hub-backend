@@ -1310,13 +1310,13 @@ tests = ["cython", "littleutils", "pygments", "pytest", "typeguard"]
 
 [[package]]
 name = "strawberry-graphql"
-version = "0.232.0"
+version = "0.236.0"
 description = "A library for creating GraphQL APIs"
 optional = false
 python-versions = "<4.0,>=3.8"
 files = [
-    {file = "strawberry_graphql-0.232.0-py3-none-any.whl", hash = "sha256:57198bfe8db29760259f71c8d0d3f052719ad19ff2cd0ecb7d8ef85d6dfa0977"},
-    {file = "strawberry_graphql-0.232.0.tar.gz", hash = "sha256:c297d12554c2e9016f62e461f6cfe222acdca1d61556ceaf99e719ee10ae5209"},
+    {file = "strawberry_graphql-0.236.0-py3-none-any.whl", hash = "sha256:685f775be47c0753c39e0ef601d7f2b6f0e15dd4dfe5d57094d29a9cceb066f4"},
+    {file = "strawberry_graphql-0.236.0.tar.gz", hash = "sha256:26dcae2c0b506330db60624194cdd0b49c1e773166791bd4f729126bf872b65c"},
 ]
 
 [package.dependencies]
@@ -1496,4 +1496,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "ec116a8b574c8c5e7604038c0e93d35cc66ab5e3e5ce739f855fb8a8af554d11"
+content-hash = "d94341efa3b4cacfde5408c0e5e7a14d2f3e70acbcf5f259fcb8e57d0e9d736f"
