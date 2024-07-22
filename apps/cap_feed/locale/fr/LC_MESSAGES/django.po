@@ -67,221 +67,221 @@ msgstr "60 secondes"
 
 #: apps/cap_feed/models.py:121
 msgid "10 minutes"
-msgstr ""
+msgstr "10 minutes"
 
 #: apps/cap_feed/models.py:124
 msgid "ATOM"
-msgstr ""
+msgstr "ATOM"
 
 #: apps/cap_feed/models.py:125
 msgid "RSS"
-msgstr ""
+msgstr "RSS"
 
 #: apps/cap_feed/models.py:126
 msgid "NWS_US"
-msgstr ""
+msgstr "NWS_US"
 
 #: apps/cap_feed/models.py:129
 msgid "Active"
-msgstr ""
+msgstr "Actif"
 
 #: apps/cap_feed/models.py:130
 msgid "Testing"
-msgstr ""
+msgstr "Test"
 
 #: apps/cap_feed/models.py:131
 msgid "Inactive"
-msgstr ""
+msgstr "Inactif"
 
 #: apps/cap_feed/models.py:132
 msgid "Unusable"
-msgstr ""
+msgstr "Inutilisable"
 
 #: apps/cap_feed/models.py:167
 msgid "Actual"
-msgstr ""
+msgstr "Réel"
 
 #: apps/cap_feed/models.py:168
 msgid "Exercise"
-msgstr ""
+msgstr "Exercice"
 
 #: apps/cap_feed/models.py:169
 msgid "System"
-msgstr ""
+msgstr "Système"
 
 #: apps/cap_feed/models.py:170
 msgid "Test"
-msgstr ""
+msgstr "Test"
 
 #: apps/cap_feed/models.py:171
 msgid "Draft"
-msgstr ""
+msgstr "Brouillon"
 
 #: apps/cap_feed/models.py:174
 msgid "Alert"
-msgstr ""
+msgstr "Alerte"
 
 #: apps/cap_feed/models.py:175
 msgid "Update"
-msgstr ""
+msgstr "Mise à jour"
 
 #: apps/cap_feed/models.py:176
 msgid "Cancel"
-msgstr ""
+msgstr "Annuler"
 
 #: apps/cap_feed/models.py:177
 msgid "Ack"
-msgstr ""
+msgstr "Accusé"
 
 #: apps/cap_feed/models.py:178
 msgid "Error"
-msgstr ""
+msgstr "Erreur"
 
 #: apps/cap_feed/models.py:181
 msgid "Public"
-msgstr ""
+msgstr "Public"
 
 #: apps/cap_feed/models.py:182
 msgid "Restricted"
-msgstr ""
+msgstr "Restreint"
 
 #: apps/cap_feed/models.py:183
 msgid "Private"
-msgstr ""
+msgstr "Privé"
 
 #: apps/cap_feed/models.py:244
 msgid "Geo"
-msgstr ""
+msgstr "Géo (géophysique)"
 
 #: apps/cap_feed/models.py:245
 msgid "Met"
-msgstr ""
+msgstr "Met (météorologique)"
 
 #: apps/cap_feed/models.py:246
 msgid "Safety"
-msgstr ""
+msgstr "Sécurité"
 
 #: apps/cap_feed/models.py:247
 msgid "Security"
-msgstr ""
+msgstr "Sécurité"
 
 #: apps/cap_feed/models.py:248
 msgid "Rescue"
-msgstr ""
+msgstr "Sauvetage"
 
 #: apps/cap_feed/models.py:249
 msgid "Fire"
-msgstr ""
+msgstr "Incendie"
 
 #: apps/cap_feed/models.py:250
 msgid "Health"
-msgstr ""
+msgstr "Santé"
 
 #: apps/cap_feed/models.py:251
 msgid "Env"
-msgstr ""
+msgstr "Env (environnemental)"
 
 #: apps/cap_feed/models.py:252
 msgid "Transport"
-msgstr ""
+msgstr "Transport"
 
 #: apps/cap_feed/models.py:253
 msgid "Infra"
-msgstr ""
+msgstr "Infra (infrastructure)"
 
 #: apps/cap_feed/models.py:254
 msgid "CBRNE"
-msgstr ""
+msgstr "CBRNE (Chimique, biologique, radiologique, nucléaire et explosif)"
 
 #: apps/cap_feed/models.py:255
 msgid "Other"
-msgstr ""
+msgstr "Autres"
 
 #: apps/cap_feed/models.py:258
 msgid "Shelter"
-msgstr ""
+msgstr "Abri"
 
 #: apps/cap_feed/models.py:259
 msgid "Evacuate"
-msgstr ""
+msgstr "Évacuer"
 
 #: apps/cap_feed/models.py:260
 msgid "Prepare"
-msgstr ""
+msgstr "Préparer"
 
 #: apps/cap_feed/models.py:261
 msgid "Execute"
-msgstr ""
+msgstr "Exécuter"
 
 #: apps/cap_feed/models.py:262
 msgid "Avoid"
-msgstr ""
+msgstr "Éviter"
 
 #: apps/cap_feed/models.py:263
 msgid "Monitor"
-msgstr ""
+msgstr "Surveiller"
 
 #: apps/cap_feed/models.py:264
 msgid "Assess"
-msgstr ""
+msgstr "Évaluer"
 
 #: apps/cap_feed/models.py:265
 msgid "AllClear"
-msgstr ""
+msgstr "Tout est clair"
 
 #: apps/cap_feed/models.py:266
 msgid "None"
-msgstr ""
+msgstr "Aucun"
 
 #: apps/cap_feed/models.py:269
 msgid "Immediate"
-msgstr ""
+msgstr "Immédiat"
 
 #: apps/cap_feed/models.py:270
 msgid "Expected"
-msgstr ""
+msgstr "Attendu"
 
 #: apps/cap_feed/models.py:271
 msgid "Future"
-msgstr ""
+msgstr "Futur"
 
 #: apps/cap_feed/models.py:272
 msgid "Past"
-msgstr ""
+msgstr "Passé"
 
 #: apps/cap_feed/models.py:273 apps/cap_feed/models.py:280
 #: apps/cap_feed/models.py:287
 msgid "Unknown"
-msgstr ""
+msgstr "Inconnu"
 
 #: apps/cap_feed/models.py:276
 msgid "Extreme"
-msgstr ""
+msgstr "Extrême"
 
 #: apps/cap_feed/models.py:277
 msgid "Severe"
-msgstr ""
+msgstr "Sévère"
 
 #: apps/cap_feed/models.py:278
 msgid "Moderate"
-msgstr ""
+msgstr "Modéré"
 
 #: apps/cap_feed/models.py:279
 msgid "Minor"
-msgstr ""
+msgstr "Mineur"
 
 #: apps/cap_feed/models.py:283
 msgid "Observed"
-msgstr ""
+msgstr "Observé"
 
 #: apps/cap_feed/models.py:284
 msgid "Likely"
-msgstr ""
+msgstr "Probable"
 
 #: apps/cap_feed/models.py:285
 msgid "Possible"
-msgstr ""
+msgstr "Possible"
 
 #: apps/cap_feed/models.py:286
 msgid "Unlikely"
-msgstr ""
+msgstr "Improbable"

@@ -20,269 +20,269 @@ msgstr ""
 "&& n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5;\n"
 #: apps/cap_feed/models.py:109
 msgid "5 seconds"
-msgstr ""
+msgstr "5 ثوانٍ"
 
 #: apps/cap_feed/models.py:110
 msgid "10 seconds"
-msgstr ""
+msgstr "10 ثوانٍ"
 
 #: apps/cap_feed/models.py:111
 msgid "15 seconds"
-msgstr ""
+msgstr "15 ثانية"
 
 #: apps/cap_feed/models.py:112
 msgid "20 seconds"
-msgstr ""
+msgstr "20 ثانية"
 
 #: apps/cap_feed/models.py:113
 msgid "25 seconds"
-msgstr ""
+msgstr "25 ثانية"
 
 #: apps/cap_feed/models.py:114
 msgid "30 seconds"
-msgstr ""
+msgstr "30 ثانية"
 
 #: apps/cap_feed/models.py:115
 msgid "35 seconds"
-msgstr ""
+msgstr "35 ثانية"
 
 #: apps/cap_feed/models.py:116
 msgid "40 seconds"
-msgstr ""
+msgstr "40 ثانية"
 
 #: apps/cap_feed/models.py:117
 msgid "45 seconds"
-msgstr ""
+msgstr "45 ثانية"
 
 #: apps/cap_feed/models.py:118
 msgid "50 seconds"
-msgstr ""
+msgstr "50 ثانية"
 
 #: apps/cap_feed/models.py:119
 msgid "55 seconds"
-msgstr ""
+msgstr "55 ثانية"
 
 #: apps/cap_feed/models.py:120
 msgid "60 seconds"
-msgstr ""
+msgstr "60 ثانية"
 
 #: apps/cap_feed/models.py:121
 msgid "10 minutes"
-msgstr ""
+msgstr "10 دقائق"
 
 #: apps/cap_feed/models.py:124
 msgid "ATOM"
-msgstr ""
+msgstr "ATOM"
 
 #: apps/cap_feed/models.py:125
 msgid "RSS"
-msgstr ""
+msgstr "RSS"
 
 #: apps/cap_feed/models.py:126
 msgid "NWS_US"
-msgstr ""
+msgstr "NWS_US"
 
 #: apps/cap_feed/models.py:129
 msgid "Active"
-msgstr ""
+msgstr "نشط"
 
 #: apps/cap_feed/models.py:130
 msgid "Testing"
-msgstr ""
+msgstr "اختبار"
 
 #: apps/cap_feed/models.py:131
 msgid "Inactive"
-msgstr ""
+msgstr "غير نشط"
 
 #: apps/cap_feed/models.py:132
 msgid "Unusable"
-msgstr ""
+msgstr "غير قابل للاستخدام"
 
 #: apps/cap_feed/models.py:167
 msgid "Actual"
-msgstr ""
+msgstr "فعلي"
 
 #: apps/cap_feed/models.py:168
 msgid "Exercise"
-msgstr ""
+msgstr "تمرين"
 
 #: apps/cap_feed/models.py:169
 msgid "System"
-msgstr ""
+msgstr "نظام"
 
 #: apps/cap_feed/models.py:170
 msgid "Test"
-msgstr ""
+msgstr "اختبار"
 
 #: apps/cap_feed/models.py:171
 msgid "Draft"
-msgstr ""
+msgstr "مسودة"
 
 #: apps/cap_feed/models.py:174
 msgid "Alert"
-msgstr ""
+msgstr "تنبيه"
 
 #: apps/cap_feed/models.py:175
 msgid "Update"
-msgstr ""
+msgstr "تحديث"
 
 #: apps/cap_feed/models.py:176
 msgid "Cancel"
-msgstr ""
+msgstr "إلغاء"
 
 #: apps/cap_feed/models.py:177
 msgid "Ack"
-msgstr ""
+msgstr "إقرار"
 
 #: apps/cap_feed/models.py:178
 msgid "Error"
-msgstr ""
+msgstr "خطأ"
 
 #: apps/cap_feed/models.py:181
 msgid "Public"
-msgstr ""
+msgstr "عام"
 
 #: apps/cap_feed/models.py:182
 msgid "Restricted"
-msgstr ""
+msgstr "مقيد"
 
 #: apps/cap_feed/models.py:183
 msgid "Private"
-msgstr ""
+msgstr "خاص"
 
 #: apps/cap_feed/models.py:244
 msgid "Geo"
-msgstr ""
+msgstr "جيو (جيوفيزيائي)"
 
 #: apps/cap_feed/models.py:245
 msgid "Met"
-msgstr ""
+msgstr "جوي (الأرصاد الجوية)"
 
 #: apps/cap_feed/models.py:246
 msgid "Safety"
-msgstr ""
+msgstr "السلامة"
 
 #: apps/cap_feed/models.py:247
 msgid "Security"
-msgstr ""
+msgstr "أمن"
 
 #: apps/cap_feed/models.py:248
 msgid "Rescue"
-msgstr ""
+msgstr "إنقاذ"
 
 #: apps/cap_feed/models.py:249
 msgid "Fire"
-msgstr ""
+msgstr "حريق أو اشتعال"
 
 #: apps/cap_feed/models.py:250
 msgid "Health"
-msgstr ""
+msgstr "الصحة"
 
 #: apps/cap_feed/models.py:251
 msgid "Env"
-msgstr ""
+msgstr "بيئية"
 
 #: apps/cap_feed/models.py:252
 msgid "Transport"
-msgstr ""
+msgstr "نقل"
 
 #: apps/cap_feed/models.py:253
 msgid "Infra"
-msgstr ""
+msgstr "البنية التحتية"
 
 #: apps/cap_feed/models.py:254
 msgid "CBRNE"
-msgstr ""
+msgstr "المتفجرات الكيميائية، والحيوية، والإشعاعية، والنووية (CBRNE)"
 
 #: apps/cap_feed/models.py:255
 msgid "Other"
-msgstr ""
+msgstr "أخرى"
 
 #: apps/cap_feed/models.py:258
 msgid "Shelter"
-msgstr ""
+msgstr "مأوى"
 
 #: apps/cap_feed/models.py:259
 msgid "Evacuate"
-msgstr ""
+msgstr "إخلاء"
 
 #: apps/cap_feed/models.py:260
 msgid "Prepare"
-msgstr ""
+msgstr "تحضير"
 
 #: apps/cap_feed/models.py:261
 msgid "Execute"
-msgstr ""
+msgstr "تنفيذ"
 
 #: apps/cap_feed/models.py:262
 msgid "Avoid"
-msgstr ""
+msgstr "تجنب"
 
 #: apps/cap_feed/models.py:263
 msgid "Monitor"
-msgstr ""
+msgstr "مراقبة"
 
 #: apps/cap_feed/models.py:264
 msgid "Assess"
-msgstr ""
+msgstr "تقييم"
 
 #: apps/cap_feed/models.py:265
 msgid "AllClear"
-msgstr ""
+msgstr "الكل واضح"
 
 #: apps/cap_feed/models.py:266
 msgid "None"
-msgstr ""
+msgstr "لا شيء"
 
 #: apps/cap_feed/models.py:269
 msgid "Immediate"
-msgstr ""
+msgstr "فوري"
 
 #: apps/cap_feed/models.py:270
 msgid "Expected"
-msgstr ""
+msgstr "متوقع"
 
 #: apps/cap_feed/models.py:271
 msgid "Future"
-msgstr ""
+msgstr "مستقبلي"
 
 #: apps/cap_feed/models.py:272
 msgid "Past"
-msgstr ""
+msgstr "ماضي"
 
 #: apps/cap_feed/models.py:273 apps/cap_feed/models.py:280
 #: apps/cap_feed/models.py:287
 msgid "Unknown"
-msgstr ""
+msgstr "غير معروف"
 
 #: apps/cap_feed/models.py:276
 msgid "Extreme"
-msgstr ""
+msgstr "شديد"
 
 #: apps/cap_feed/models.py:277
 msgid "Severe"
-msgstr ""
+msgstr "شديد"
 
 #: apps/cap_feed/models.py:278
 msgid "Moderate"
-msgstr ""
+msgstr "معتدل"
 
 #: apps/cap_feed/models.py:279
 msgid "Minor"
-msgstr ""
+msgstr "طفيف"
 
 #: apps/cap_feed/models.py:283
 msgid "Observed"
-msgstr ""
+msgstr "ملاحظ"
 
 #: apps/cap_feed/models.py:284
 msgid "Likely"
-msgstr ""
+msgstr "محتمل"
 
 #: apps/cap_feed/models.py:285
 msgid "Possible"
-msgstr ""
+msgstr "ممكن"
 
 #: apps/cap_feed/models.py:286
 msgid "Unlikely"
-msgstr ""
+msgstr "غير محتمل"

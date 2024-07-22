@@ -245,5 +245,11 @@ celery -A main beat --detach -l info
 
 Translation
 ```
+# Static translation
 docker compose exec web ./manage.py makemessages -l es -l ar -l fr --ignore legacy --ignore main
+
+# Dynamic translation
+# -- Run after adding new field to translations
+:wa
+docker compose exec web ./manage.py update_translation_fields
 ```
