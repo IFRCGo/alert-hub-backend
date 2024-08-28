@@ -213,6 +213,15 @@ class Alert(models.Model):
         alertinfo_set: ManyRelatedManager['AlertInfo']
     __all_info_added = None
 
+    class Meta:  # type: ignore [reportIncompatibleVariableOverride]
+        indexes = [
+            models.Index(
+                fields=['is_expired'],
+                name='%(app_label)s_%(class)s_not_expired_idx',
+                condition=models.Q(is_expired=False),
+            )
+        ]
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.__all_info_added = False
