@@ -90,15 +90,6 @@
         "format": "rss"
     },
     {
-        "sourceId": "bj-meteo-fr",
-        "name": "Benin: Agence Nationale de la Météorologie",
-        "iso3": "BEN",
-        "language": "French",
-        "picUrl": "https://alert-hub.s3.amazonaws.com/images/bj-meteo-fr.png",
-        "capAlertFeed": "https://cap-sources.s3.amazonaws.com/bj-meteo-fr/rss.xml",
-        "format": "rss"
-    },
-    {
         "sourceId": "ba-fhmzbih-bs",
         "name": "Bosnia and Herzegovina: Federalni hidrometeorološki zavod BiH",
         "iso3": "BIH",
