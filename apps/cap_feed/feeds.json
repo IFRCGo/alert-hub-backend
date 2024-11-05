@@ -90,15 +90,6 @@
         "format": "rss"
     },
     {
-        "sourceId": "bj-meteo-fr",
-        "name": "Benin: Agence Nationale de la Météorologie",
-        "iso3": "BEN",
-        "language": "French",
-        "picUrl": "https://alert-hub.s3.amazonaws.com/images/bj-meteo-fr.png",
-        "capAlertFeed": "https://cap-sources.s3.amazonaws.com/bj-meteo-fr/rss.xml",
-        "format": "rss"
-    },
-    {
         "sourceId": "ba-fhmzbih-bs",
         "name": "Bosnia and Herzegovina: Federalni hidrometeorološki zavod BiH",
         "iso3": "BIH",
@@ -1545,6 +1536,294 @@
         "language": "English",
         "picUrl": "https://alert-hub.s3.amazonaws.com/images/gn-anm-en.png",
         "capAlertFeed": "https://cap-sources.s3.amazonaws.com/gn-anm-en/rss.xml",
+        "format": "rss"
+    },
+    {
+        "sourceId": "bh-meteo-ar",
+        "name": "Bahrain: Bahrain Meteorological Service",
+        "iso3": "BHR",
+        "language": "Arabic",
+        "picUrl": "https://alert-hub.s3.amazonaws.com/images/bh-meteo-ar.png",
+        "capAlertFeed": "https://cap-sources.s3.amazonaws.com/bh-meteo-ar/rss.xml",
+        "format": "rss"
+    },
+    {
+        "sourceId": "bh-meteo-en",
+        "name": "Bahrain: Bahrain Meteorological Service",
+        "iso3": "BHR",
+        "language": "English",
+        "picUrl": "https://alert-hub.s3.amazonaws.com/images/bh-meteo-en.png",
+        "capAlertFeed": "https://cap-sources.s3.amazonaws.com/bh-meteo-en/rss.xml",
+        "format": "rss"
+    },
+    {
+        "sourceId": "by-belhydromet-en",
+        "name": "Belarus: State institution \"Republican center for hydrometeorology, control of radioactive contamination and environmental monitoring\" (Belhydromet)",
+        "iso3": "BLR",
+        "language": "English",
+        "picUrl": "https://alert-hub.s3.amazonaws.com/images/by-belhydromet-en.png",
+        "capAlertFeed": "https://meteoalert.meteoinfo.ru/belarus/cap-feed/en/atom.xml",
+        "format": "atom"
+    },
+    {
+        "sourceId": "by-belhydromet-ru",
+        "name": "Belarus: State institution \"Republican center for hydrometeorology, control of radioactive contamination and environmental monitoring\" (Belhydromet)",
+        "iso3": "BLR",
+        "language": "Russian",
+        "picUrl": "https://alert-hub.s3.amazonaws.com/images/by-belhydromet-ru.png",
+        "capAlertFeed": "https://meteoalert.meteoinfo.ru/belarus/cap-feed/ru/atom.xml",
+        "format": "atom"
+    },
+    {
+        "sourceId": "bz-nms-en",
+        "name": "Belize: National Meteorological Service",
+        "iso3": "BLZ",
+        "language": "English",
+        "picUrl": "https://alert-hub.s3.amazonaws.com/images/bz-nms-en.png",
+        "capAlertFeed": "https://cap-sources.s3.amazonaws.com/bz-nms-en/rss.xml",
+        "format": "rss"
+    },
+    {
+        "sourceId": "bz-nms-es",
+        "name": "Belize: National Meteorological Service",
+        "iso3": "BLZ",
+        "language": "Spanish",
+        "picUrl": "https://alert-hub.s3.amazonaws.com/images/bz-nms-es.png",
+        "capAlertFeed": "https://cap-sources.s3.amazonaws.com/bz-nms-es/rss.xml",
+        "format": "rss"
+    },
+    {
+        "sourceId": "bj-smn-fr",
+        "name": "Benin: Service Météorologique National",
+        "iso3": "BEN",
+        "language": "French",
+        "picUrl": "https://alert-hub.s3.amazonaws.com/images/bj-meteo-fr.png",
+        "capAlertFeed": "https://www.meteobenin.bj/api/cap/rss.xml",
+        "format": "rss"
+    },
+    {
+        "sourceId": "td-anam-fr",
+        "name": "Chad: Agence Nationale de la Météorologie",
+        "iso3": "TCD",
+        "language": "French",
+        "picUrl": "https://alert-hub.s3.amazonaws.com/images/td-anam-fr.png",
+        "capAlertFeed": "https://cap-sources.s3.amazonaws.com/td-anam-fr/rss.xml",
+        "format": "rss"
+    },
+    {
+        "sourceId": "td-anam-en",
+        "name": "Chad: Agence Nationale de la Météorologie",
+        "iso3": "TCD",
+        "language": "English",
+        "picUrl": "https://alert-hub.s3.amazonaws.com/images/td-anam-en.png",
+        "capAlertFeed": "https://cap-sources.s3.amazonaws.com/td-anam-en/rss.xml",
+        "format": "rss"
+    },
+    {
+        "sourceId": "td-anam-ha",
+        "name": "Chad: Agence Nationale de la Météorologie",
+        "iso3": "TCD",
+        "language": "Hausa",
+        "picUrl": "https://alert-hub.s3.amazonaws.com/images/td-anam-ha.png",
+        "capAlertFeed": "https://cap-sources.s3.amazonaws.com/td-anam-ha/rss.xml",
+        "format": "rss"
+    },
+    {
+        "sourceId": "cl-dmc-es",
+        "name": "Chile: Direccion Meteorologica de Chile",
+        "iso3": "CHL",
+        "language": "Spanish",
+        "picUrl": "https://alert-hub.s3.amazonaws.com/images/cl-meteo-es.png",
+        "capAlertFeed": "https://archivos.meteochile.gob.cl/portaldmc/rss/rss.php",
+        "format": "rss"
+    },
+    {
+        "sourceId": "do-indomet-es",
+        "name": "Dominican Republic: Instituto Dominicano de Meteorología",
+        "iso3": "DOM",
+        "language": "Spanish",
+        "picUrl": "https://alert-hub.s3.amazonaws.com/images/do-indomet-es.png",
+        "capAlertFeed": "https://cap-sources.s3.amazonaws.com/do-indomet-es/rss.xml",
+        "format": "rss"
+    },
+    {
+        "sourceId": "et-emi-en",
+        "name": "Ethiopia: National Meteorological Agency",
+        "iso3": "ETH",
+        "language": "English",
+        "picUrl": "https://alert-hub.s3.amazonaws.com/images/et-emi-en.png",
+        "capAlertFeed": "https://cap-sources.s3.amazonaws.com/et-emi-en/rss.xml",
+        "format": "rss"
+    },
+    {
+        "sourceId": "et-emi-om",
+        "name": "Ethiopia: National Meteorological Agency",
+        "iso3": "ETH",
+        "language": "Oromo",
+        "picUrl": "https://alert-hub.s3.amazonaws.com/images/et-emi-om.png",
+        "capAlertFeed": "https://cap-sources.s3.amazonaws.com/et-emi-om/rss.xml",
+        "format": "rss"
+    },
+    {
+        "sourceId": "et-emi-am",
+        "name": "Ethiopia: National Meteorological Agency",
+        "iso3": "ETH",
+        "language": "Amharic",
+        "picUrl": "https://alert-hub.s3.amazonaws.com/images/et-emi-am.png",
+        "capAlertFeed": "https://cap-sources.s3.amazonaws.com/et-emi-am/rss.xml",
+        "format": "rss"
+    },
+    {
+        "sourceId": "et-emi-so",
+        "name": "Ethiopia: National Meteorological Agency",
+        "iso3": "ETH",
+        "language": "Somali",
+        "picUrl": "https://alert-hub.s3.amazonaws.com/images/et-emi-so.png",
+        "capAlertFeed": "https://cap-sources.s3.amazonaws.com/et-emi-so/rss.xml",
+        "format": "rss"
+    },
+    {
+        "sourceId": "gy-hsg-en",
+        "name": "Guyana: Hydrometeorological Service of Guyana",
+        "iso3": "GUY",
+        "language": "English",
+        "picUrl": "https://alert-hub.s3.amazonaws.com/images/gy-hms-en.png",
+        "capAlertFeed": "https://hydromet.gov.gy/cap/en/alerts/rss.xml",
+        "format": "rss"
+    },
+    {
+        "sourceId": "kz-kazhydromet-ru",
+        "name": "Kazakhstan: Kazhydromet",
+        "iso3": "KAZ",
+        "language": "Russian",
+        "picUrl": "https://alert-hub.s3.amazonaws.com/images/kz-kazhydromet-ru.png",
+        "capAlertFeed": "https://meteoalert.meteoinfo.ru/kazakhstan/cap-feed/ru/atom.xml",
+        "format": "atom"
+    },
+    {
+        "sourceId": "kz-kazhydromet-en",
+        "name": "Kazakhstan: Kazhydromet",
+        "iso3": "KAZ",
+        "language": "English",
+        "picUrl": "https://alert-hub.s3.amazonaws.com/images/kz-kazhydromet-en.png",
+        "capAlertFeed": "https://meteoalert.meteoinfo.ru/kazakhstan/cap-feed/en/atom.xml",
+        "format": "atom"
+    },
+    {
+        "sourceId": "mv-mms-en",
+        "name": "Maldives: Maldives Meteorological Service",
+        "iso3": "MDV",
+        "language": "English",
+        "picUrl": "https://alert-hub.s3.amazonaws.com/images/mv-met-en.png",
+        "capAlertFeed": "https://cap.meteorology.gov.mv/rss/alerts/",
+        "format": "rss"
+    },
+    {
+        "sourceId": "pw-wso-en",
+        "name": "Palau: Palau Weather Service Office",
+        "iso3": "PLW",
+        "language": "English",
+        "picUrl": "https://alert-hub.s3.amazonaws.com/images/pw-wso-en.png",
+        "capAlertFeed": "https://api.weather.gov/alerts/active.atom?zone=PMZ153",
+        "format": "atom"
+    },
+    {
+        "sourceId": "qa-caa-ar",
+        "name": "Qatar: Civil Aviation Authority",
+        "iso3": "QAT",
+        "language": "Arabic",
+        "picUrl": "https://alert-hub.s3.amazonaws.com/images/qa-caa-ar.png",
+        "capAlertFeed": "https://cap-sources.s3.amazonaws.com/qa-caa-ar/rss.xml",
+        "format": "rss"
+    },
+    {
+        "sourceId": "qa-caa-en",
+        "name": "Qatar: Civil Aviation Authority",
+        "iso3": "QAT",
+        "language": "English",
+        "picUrl": "https://alert-hub.s3.amazonaws.com/images/qa-caa-en.png",
+        "capAlertFeed": "https://cap-sources.s3.amazonaws.com/qa-caa-en/rss.xml",
+        "format": "rss"
+    },
+    {
+        "sourceId": "kr-kma-ko-eqk",
+        "name": "Republic of Korea: Korea Meteorological Administration",
+        "iso3": "KOR",
+        "language": "Korean",
+        "picUrl": "https://alert-hub.s3.amazonaws.com/images/kr-kma-en.png",
+        "capAlertFeed": "https://www.weather.go.kr/w/rss/cap/eqk.do",
+        "format": "rss"
+    },
+    {
+        "sourceId": "kr-kma-ko-warning",
+        "name": "Republic of Korea: Korea Meteorological Administration",
+        "iso3": "KOR",
+        "language": "Korean",
+        "picUrl": "https://alert-hub.s3.amazonaws.com/images/kr-kma-en.png",
+        "capAlertFeed": "https://www.weather.go.kr/w/rss/cap/warning.do",
+        "format": "rss"
+    },
+    {
+        "sourceId": "sl-slmet-en",
+        "name": "Sierra Leone: Sierra Leone Meteorological Agency",
+        "iso3": "SLE",
+        "language": "English",
+        "picUrl": "https://alert-hub.s3.amazonaws.com/images/sl-slmet-en.png",
+        "capAlertFeed": "https://cap-sources.s3.amazonaws.com/sl-slmet-en/rss.xml",
+        "format": "rss"
+    },
+    {
+        "sourceId": "sg-mss-en",
+        "name": "Singapore: Meteorological Services Singapore",
+        "iso3": "SGP",
+        "language": "English",
+        "picUrl": "https://alert-hub.s3.amazonaws.com/images/sg-mss-en.png",
+        "capAlertFeed": "http://www.weather.gov.sg/files/rss/rsscapalert/rsscapalert.xml",
+        "format": "rss"
+    },
+    {
+        "sourceId": "sd-sma-ar",
+        "name": "Sudan: Sudan Meteorological Authority",
+        "iso3": "SDN",
+        "language": "Arabic",
+        "picUrl": "https://alert-hub.s3.amazonaws.com/images/sd-sma-ar.png",
+        "capAlertFeed": "https://meteosudan.sd/api/cap/rss.xml",
+        "format": "rss"
+    },
+  {
+        "sourceId": "th-tmd-en",
+        "name": "Thailand: Thai Meteorological Department (TMD)",
+        "iso3": "THA",
+        "language": "English",
+        "picUrl": "https://alert-hub.s3.amazonaws.com/images/th-tmd-en.png",
+        "capAlertFeed": "https://www.tmd.go.th/en/api/xml/CAP",
+        "format": "atom"
+    },
+    {
+        "sourceId": "th-tmd-th",
+        "name": "Thailand: Thai Meteorological Department (TMD)",
+        "iso3": "THA",
+        "language": "Thai",
+        "picUrl": "https://alert-hub.s3.amazonaws.com/images/th-tmd-th.png",
+        "capAlertFeed": "https://www.tmd.go.th/api/xml/CAP",
+        "format": "atom"
+    },
+    {
+        "sourceId": "ua-uhmc-uk",
+        "name": "Ukraine: Ukrainian Hydrometeorological Center",
+        "iso3": "UKR",
+        "language": "Ukrainian",
+        "picUrl": "https://alert-hub.s3.amazonaws.com/images/ua-meteo-en.png",
+        "capAlertFeed": "https://feeds.meteoalarm.org/feeds/meteoalarm-legacy-atom-ukraine",
+        "format": "atom"
+    },
+    {
+        "sourceId": "ye-yms-ar",
+        "name": "Yemen: Yemen Meteorological Service",
+        "iso3": "YEM",
+        "language": "Arabic",
+        "picUrl": "https://alert-hub.s3.amazonaws.com/images/ye-yms-ar.png",
+        "capAlertFeed": "https://cap-sources.s3.amazonaws.com/ye-yms-ar/rss.xml",
         "format": "rss"
     }
 ]

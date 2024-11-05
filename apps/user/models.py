@@ -42,10 +42,10 @@ class CustomUserManager(BaseUserManager):
 
 class EmailNotificationType(models.IntegerChoices):
     # Generic email types
-    ACCOUNT_ACTIVATION = 1, 'Account Activation'
-    PASSWORD_RESET = 2, 'Password Reset'
-    PASSWORD_CHANGED = 3, 'Password Changed'
-    NEWS_AND_OFFERS = 4, 'News And Offers'
+    ACCOUNT_ACTIVATION = 1, _('Account Activation')
+    PASSWORD_RESET = 2, _('Password Reset')
+    PASSWORD_CHANGED = 3, _('Password Changed')
+    NEWS_AND_OFFERS = 4, _('News And Offers')
     # Other emails are configured using subscriptions
 
     @classmethod

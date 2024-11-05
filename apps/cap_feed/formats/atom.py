@@ -4,7 +4,7 @@ import xml.etree.ElementTree as ET
 import requests
 import validators
 
-from apps.cap_feed.models import Alert, ProcessedAlert
+from apps.cap_feed.models import Alert, Feed, ProcessedAlert
 from utils.common import logger_log_extra
 
 from .cap_xml import get_alert
@@ -21,7 +21,11 @@ def get_alerts_atom(feed, ns):
 
     # navigate list of alerts
     try:
-        response = requests.get(feed.url, headers=COMMON_REQUESTS_HEADERS)
+        response = requests.get(
+            feed.url,
+            headers=COMMON_REQUESTS_HEADERS,
+            timeout=Feed.MAX_REQUEST_TIMEOUT,
+        )
         response.raise_for_status()
     except requests.exceptions.RequestException:
         logger.error(

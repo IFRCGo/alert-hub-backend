@@ -12,6 +12,8 @@ RUN apt-get update -y \
     && apt-get install -y --no-install-recommends \
         # Build required packages
         gcc libc-dev gdal-bin libproj-dev \
+        # Django translation
+        gettext \
         # Helper packages
         wait-for-it \
     # Upgrade pip and install python packages for code

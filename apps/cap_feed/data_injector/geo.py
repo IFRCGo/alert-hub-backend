@@ -2,6 +2,7 @@ import glob
 import json
 import os
 import re
+from collections import defaultdict
 
 import requests
 from django.conf import settings
@@ -9,6 +10,7 @@ from django.contrib.gis.gdal import DataSource
 from django.contrib.gis.geos import GEOSGeometry
 from django.core.management.base import BaseCommand
 from django.db import models, transaction
+from modeltranslation.utils import build_localized_fieldname
 
 from apps.cap_feed.models import Admin1, Country, Region
 from main.managers import BulkUpdateManager
@@ -116,6 +118,9 @@ class IfrcGoGeoInjector:
 
     @staticmethod
     def clean_name(name: str | None) -> str | None:
+        """
+        Removes excessive spaces and newlines
+        """
         if name is None:
             return
 
@@ -126,8 +131,9 @@ class IfrcGoGeoInjector:
         ).strip()
 
     def handle_pagination(self, url, **requests_kwargs):
-        _url = f'{self.GO_DOMAIN}{url}?limit=50'
-        self.log_info('Fetching data from IFRC-GO:', _url)
+        _url = f'{self.GO_DOMAIN}{url}'
+        _lang = requests_kwargs.get('headers', {}).get('Accept-Language', 'en')
+        self.log_info(f'Fetching data from IFRC-GO: ({_lang})', _url)
         # TODO: Add some check to avoid infinite run
         while True:
             resp = requests.get(_url, **requests_kwargs).json()
@@ -145,6 +151,19 @@ class IfrcGoGeoInjector:
     def inject_regions(self):
         go_data = self.handle_pagination('/api/v2/region/')
 
+        lang_map = defaultdict(dict)
+        for lang, _ in settings.LANGUAGES:
+            if lang == 'en':
+                continue
+            lang_go_data = self.handle_pagination(
+                '/api/v2/region/',
+                headers={"Accept-Language": lang},
+            )
+            for region_data in lang_go_data:
+                ifrc_go_id = region_data['id']
+                if translated_name := self.clean_name(region_data['region_name']):
+                    lang_map[ifrc_go_id][lang] = translated_name
+
         for region_data in go_data:
             ifrc_go_id = region_data['id']
             region_name = self.clean_name(region_data['region_name'])
@@ -153,12 +172,19 @@ class IfrcGoGeoInjector:
                 models.Q(ifrc_go_id=ifrc_go_id) | models.Q(name__iexact=region_name),
             ).get_or_create(
                 defaults={
-                    # 'name': region_name,
+                    'name': region_name,
                 },
             )
 
             region.ifrc_go_id = ifrc_go_id
+
             region.name = region_name
+            for lang, _ in settings.LANGUAGES:
+                translated_name = lang_map[ifrc_go_id].get(lang)
+                if lang == 'en' or translated_name == region.name:
+                    continue
+                setattr(region, build_localized_fieldname('name', lang), translated_name)
+
             region.bbox = GEOSGeometry(str(region_data['bbox']))
             region.save()
             self.region_map[region.ifrc_go_id] = region
@@ -168,14 +194,38 @@ class IfrcGoGeoInjector:
                 self.log_success(f'Update region: {region}')
 
     def inject_countries(self):
+        fetch_params = {
+            'is_independent': True,
+            'is_deprecated': False,
+            'limit': 300,
+        }
         go_data = self.handle_pagination(
             '/api/v2/country/',
-            params={
-                'is_independent': True,
-                'is_deprecated': False,
-            },
+            params=fetch_params,
         )
-        mgr = BulkUpdateManager(update_fields=['ifrc_go_id', 'name', 'region', 'bbox'])
+
+        lang_map = defaultdict(dict)
+        for lang, _ in settings.LANGUAGES:
+            if lang == 'en':
+                continue
+            lang_go_data = self.handle_pagination(
+                '/api/v2/country/',
+                params=fetch_params,
+                headers={"Accept-Language": lang},
+            )
+            for country_data in lang_go_data:
+                ifrc_go_id = country_data['id']
+                if translated_name := self.clean_name(country_data['name']):
+                    lang_map[ifrc_go_id][lang] = translated_name
+
+        mgr = BulkUpdateManager(
+            update_fields=[
+                'ifrc_go_id',
+                'region',
+                'bbox',
+                *[build_localized_fieldname('name', lang) for lang, _ in settings.LANGUAGES],
+            ]
+        )
 
         CUSTOM_COUNTRY_BBOX = get_custom_country_bbox()
 
@@ -215,7 +265,14 @@ class IfrcGoGeoInjector:
             )
 
             country.ifrc_go_id = ifrc_go_id
+
             country.name = country_name
+            for lang, _ in settings.LANGUAGES:
+                translated_name = lang_map[ifrc_go_id].get(lang)
+                if lang == 'en' or translated_name == country.name:
+                    continue
+                setattr(country, build_localized_fieldname('name', lang), translated_name)
+
             country.region = region
             if iso3 in CUSTOM_COUNTRY_BBOX:
                 country.bbox = GEOSGeometry(json.dumps(CUSTOM_COUNTRY_BBOX[iso3]))
@@ -294,15 +351,15 @@ class IfrcGoGeoInjector:
         self.log_success(str(mgr.summary()))
 
     @transaction.atomic
-    def sync(self):
+    def sync(
+        self,
+        # NOTE: Admin1s sync takes a lot of time
+        skip_admin1s_sync: bool = False,
+    ):
         # NOTE: Inject order matters here
         self.inject_continents()
         self.inject_regions()
         self.inject_countries()
-        self.inject_admin1s()
+        if not skip_admin1s_sync:
+            self.inject_admin1s()
         # TODO: Show change summary
-
-
-# inject region and country data if not already present
-def inject_geographical_data():
-    IfrcGoGeoInjector().sync()

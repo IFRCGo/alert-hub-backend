@@ -31,6 +31,7 @@ urlpatterns = [
             schema=graphql_schema,
             graphiql=False,
         ),
+        name='graphql',
     ),
     path('', include('apps.cap_feed.urls')),
 ]

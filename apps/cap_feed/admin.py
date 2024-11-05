@@ -1,5 +1,6 @@
 from admin_auto_filters.filters import AutocompleteFilterFactory
 from django.contrib import admin
+from modeltranslation.admin import TranslationAdmin
 
 from .models import (
     Admin1,
@@ -78,6 +79,7 @@ class AlertInfoInline(admin.StackedInline):
     extra = 0
 
 
+@admin.register(Alert)
 class AlertAdmin(admin.ModelAdmin):
     list_display = ['url', 'country', 'feed', 'sent', 'status', 'msg_type', 'scope']
     list_filter = (
@@ -112,7 +114,14 @@ class AlertAdmin(admin.ModelAdmin):
     inlines = [AlertInfoInline]
 
 
-class CountryAdmin(admin.ModelAdmin):
+@admin.register(Region)
+class RegionAdmin(TranslationAdmin):
+    list_display = ['name']
+    search_fields = ['name']
+
+
+@admin.register(Country)
+class CountryAdmin(TranslationAdmin):
     list_display = ['name', 'iso3', 'region', 'continent']
     list_filter = (
         'region',
@@ -121,6 +130,7 @@ class CountryAdmin(admin.ModelAdmin):
     search_fields = ['name', 'iso3']
 
 
+@admin.register(Admin1)
 class Admin1Admin(admin.ModelAdmin):
     list_display = ['name', 'country']
     list_filter = (AutocompleteFilterFactory('Country', 'country'),)
@@ -137,6 +147,7 @@ class LanguageInfoInline(admin.StackedInline):
         return super().get_formset(validate_min=self.validate_min, *args, **kwargs)
 
 
+@admin.register(Feed)
 class FeedAdmin(admin.ModelAdmin):
     list_display = ['name', 'country', 'url', 'format', 'polling_interval']
     list_filter = (
@@ -159,6 +170,7 @@ class FeedAdmin(admin.ModelAdmin):
         return feed_name
 
 
+@admin.register(FeedLog)
 class FeedLogAdmin(admin.ModelAdmin):
     list_display = ['exception', 'feed', 'description', 'alert_url', 'timestamp']
     list_filter = (
@@ -172,6 +184,7 @@ class FeedLogAdmin(admin.ModelAdmin):
     ]
 
 
+@admin.register(AlertAdmin1)
 class AlertAdmin1Admin(admin.ModelAdmin):
     list_display = ['alert', 'admin1']
     list_filter = (
@@ -181,18 +194,11 @@ class AlertAdmin1Admin(admin.ModelAdmin):
     search_fields = ['alert__url', 'admin1__name']
 
 
+@admin.register(ProcessedAlert)
 class ProcessedAlertAdmin(admin.ModelAdmin):
     list_display = ['url', 'feed']
     list_filter = (AutocompleteFilterFactory('Feed', 'feed'),)
     search_fields = ['url']
 
 
-admin.site.register(ProcessedAlert, ProcessedAlertAdmin)
-admin.site.register(Alert, AlertAdmin)
 admin.site.register(Continent)
-admin.site.register(Region)
-admin.site.register(Country, CountryAdmin)
-admin.site.register(Admin1, Admin1Admin)
-admin.site.register(AlertAdmin1, AlertAdmin1Admin)
-admin.site.register(Feed, FeedAdmin)
-admin.site.register(FeedLog, FeedLogAdmin)

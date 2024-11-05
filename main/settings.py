@@ -14,6 +14,7 @@ import os
 from pathlib import Path
 
 import environ
+from django.utils.translation import gettext_lazy as _
 
 from main import sentry
 
@@ -86,6 +87,7 @@ DJANGO_APP_ENVIRONMENT = env('DJANGO_APP_ENVIRONMENT')
 
 # Application definition
 INSTALLED_APPS = [
+    "modeltranslation",  # https://django-modeltranslation.readthedocs.io/en/latest/installation.html#installed-apps
     # Native
     'django.contrib.admin',
     'django.contrib.auth',
@@ -122,11 +124,13 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'main.middlewares.SentryTransactionMiddleware',
 ]
 
 AUTHENTICATION_BACKENDS = [
@@ -394,3 +398,16 @@ if SENTRY_DSN:
         },
     }
     sentry.init_sentry(**SENTRY_CONFIG)
+
+
+# Translation
+LANGUAGES = (
+    ("en", _("English")),
+    ("es", _("Spanish")),
+    ("fr", _("French")),
+    ("ar", _("Arabic")),
+)
+
+# modeltranslation configs
+# -- NOTE: "en" is used as default languages in the codebase, changing this will break logics
+MODELTRANSLATION_DEFAULT_LANGUAGE = "en"  # Also the fallback

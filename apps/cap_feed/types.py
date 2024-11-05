@@ -28,9 +28,9 @@ from .models import (
 )
 
 
-def get_alert_queryset(queryset: models.QuerySet | None, is_list: bool):
+def get_alert_queryset(queryset: models.QuerySet | None, is_active: bool):
     qs = get_queryset_for_model(Alert, queryset)
-    if is_list:
+    if is_active:
         return qs.filter(is_expired=False)
     return qs
 
@@ -369,7 +369,7 @@ class AlertType:
 
     @staticmethod
     def get_queryset(_, queryset: models.QuerySet | None, info: Info):
-        return get_alert_queryset(queryset, is_list=True)
+        return get_alert_queryset(queryset, is_active=True)
 
     # TODO: Create a separate country_name
     @strawberry.field

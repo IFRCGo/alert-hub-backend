@@ -1,0 +1,63 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-06-24 16:20+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 "
+"&& n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5;\n"
+#: apps/user/admin.py:27
+msgid "Personal info"
+msgstr "Informations personnelles"
+
+#: apps/user/admin.py:39
+msgid "Permissions"
+msgstr "Autorisations"
+
+#: apps/user/admin.py:50
+msgid "Important dates"
+msgstr "Rendez-vous importants"
+
+#: apps/user/models.py:18
+msgid "The email must be set"
+msgstr "L'email doit être paramétré"
+
+#: apps/user/models.py:45
+msgid "Account Activation"
+msgstr "Activation de compte"
+
+#: apps/user/models.py:46
+msgid "Password Reset"
+msgstr "Réinitialisation du mot de passe"
+
+#: apps/user/models.py:47
+msgid "Password Changed"
+msgstr "Mot de passe changé"
+
+#: apps/user/models.py:48
+msgid "News And Offers"
+msgstr "Nouvelles et offres"
+
+#: apps/user/models.py:67
+msgid "email"
+msgstr "e-mail"
+
+#: apps/user/models.py:81
+msgid "system generated user display name"
+msgstr "nom d'affichage de l'utilisateur généré par le système"
+
+#: apps/user/models.py:85
+msgid "phone"
+msgstr "téléphone"

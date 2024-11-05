@@ -1,0 +1,287 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-06-24 16:20+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+#: apps/cap_feed/models.py:109
+msgid "5 seconds"
+msgstr "5 secondes"
+
+#: apps/cap_feed/models.py:110
+msgid "10 seconds"
+msgstr "10 secondes"
+
+#: apps/cap_feed/models.py:111
+msgid "15 seconds"
+msgstr "15 secondes"
+
+#: apps/cap_feed/models.py:112
+msgid "20 seconds"
+msgstr "20 secondes"
+
+#: apps/cap_feed/models.py:113
+msgid "25 seconds"
+msgstr "25 secondes"
+
+#: apps/cap_feed/models.py:114
+msgid "30 seconds"
+msgstr "30 secondes"
+
+#: apps/cap_feed/models.py:115
+msgid "35 seconds"
+msgstr "35 secondes"
+
+#: apps/cap_feed/models.py:116
+msgid "40 seconds"
+msgstr "40 secondes"
+
+#: apps/cap_feed/models.py:117
+msgid "45 seconds"
+msgstr "45 secondes"
+
+#: apps/cap_feed/models.py:118
+msgid "50 seconds"
+msgstr "50 secondes"
+
+#: apps/cap_feed/models.py:119
+msgid "55 seconds"
+msgstr "55 secondes"
+
+#: apps/cap_feed/models.py:120
+msgid "60 seconds"
+msgstr "60 secondes"
+
+#: apps/cap_feed/models.py:121
+msgid "10 minutes"
+msgstr "10 minutes"
+
+#: apps/cap_feed/models.py:124
+msgid "ATOM"
+msgstr "ATOM"
+
+#: apps/cap_feed/models.py:125
+msgid "RSS"
+msgstr "RSS"
+
+#: apps/cap_feed/models.py:126
+msgid "NWS_US"
+msgstr "NWS_US"
+
+#: apps/cap_feed/models.py:129
+msgid "Active"
+msgstr "Actif"
+
+#: apps/cap_feed/models.py:130
+msgid "Testing"
+msgstr "Test"
+
+#: apps/cap_feed/models.py:131
+msgid "Inactive"
+msgstr "Inactif"
+
+#: apps/cap_feed/models.py:132
+msgid "Unusable"
+msgstr "Inutilisable"
+
+#: apps/cap_feed/models.py:167
+msgid "Actual"
+msgstr "Réel"
+
+#: apps/cap_feed/models.py:168
+msgid "Exercise"
+msgstr "Exercice"
+
+#: apps/cap_feed/models.py:169
+msgid "System"
+msgstr "Système"
+
+#: apps/cap_feed/models.py:170
+msgid "Test"
+msgstr "Test"
+
+#: apps/cap_feed/models.py:171
+msgid "Draft"
+msgstr "Brouillon"
+
+#: apps/cap_feed/models.py:174
+msgid "Alert"
+msgstr "Alerte"
+
+#: apps/cap_feed/models.py:175
+msgid "Update"
+msgstr "Mise à jour"
+
+#: apps/cap_feed/models.py:176
+msgid "Cancel"
+msgstr "Annuler"
+
+#: apps/cap_feed/models.py:177
+msgid "Ack"
+msgstr "Accusé"
+
+#: apps/cap_feed/models.py:178
+msgid "Error"
+msgstr "Erreur"
+
+#: apps/cap_feed/models.py:181
+msgid "Public"
+msgstr "Public"
+
+#: apps/cap_feed/models.py:182
+msgid "Restricted"
+msgstr "Restreint"
+
+#: apps/cap_feed/models.py:183
+msgid "Private"
+msgstr "Privé"
+
+#: apps/cap_feed/models.py:244
+msgid "Geo"
+msgstr "Géo (géophysique)"
+
+#: apps/cap_feed/models.py:245
+msgid "Met"
+msgstr "Met (météorologique)"
+
+#: apps/cap_feed/models.py:246
+msgid "Safety"
+msgstr "Sécurité"
+
+#: apps/cap_feed/models.py:247
+msgid "Security"
+msgstr "Sécurité"
+
+#: apps/cap_feed/models.py:248
+msgid "Rescue"
+msgstr "Sauvetage"
+
+#: apps/cap_feed/models.py:249
+msgid "Fire"
+msgstr "Incendie"
+
+#: apps/cap_feed/models.py:250
+msgid "Health"
+msgstr "Santé"
+
+#: apps/cap_feed/models.py:251
+msgid "Env"
+msgstr "Env (environnemental)"
+
+#: apps/cap_feed/models.py:252
+msgid "Transport"
+msgstr "Transport"
+
+#: apps/cap_feed/models.py:253
+msgid "Infra"
+msgstr "Infra (infrastructure)"
+
+#: apps/cap_feed/models.py:254
+msgid "CBRNE"
+msgstr "CBRNE (Chimique, biologique, radiologique, nucléaire et explosif)"
+
+#: apps/cap_feed/models.py:255
+msgid "Other"
+msgstr "Autres"
+
+#: apps/cap_feed/models.py:258
+msgid "Shelter"
+msgstr "Abri"
+
+#: apps/cap_feed/models.py:259
+msgid "Evacuate"
+msgstr "Évacuer"
+
+#: apps/cap_feed/models.py:260
+msgid "Prepare"
+msgstr "Préparer"
+
+#: apps/cap_feed/models.py:261
+msgid "Execute"
+msgstr "Exécuter"
+
+#: apps/cap_feed/models.py:262
+msgid "Avoid"
+msgstr "Éviter"
+
+#: apps/cap_feed/models.py:263
+msgid "Monitor"
+msgstr "Surveiller"
+
+#: apps/cap_feed/models.py:264
+msgid "Assess"
+msgstr "Évaluer"
+
+#: apps/cap_feed/models.py:265
+msgid "AllClear"
+msgstr "Tout est clair"
+
+#: apps/cap_feed/models.py:266
+msgid "None"
+msgstr "Aucun"
+
+#: apps/cap_feed/models.py:269
+msgid "Immediate"
+msgstr "Immédiat"
+
+#: apps/cap_feed/models.py:270
+msgid "Expected"
+msgstr "Attendu"
+
+#: apps/cap_feed/models.py:271
+msgid "Future"
+msgstr "Futur"
+
+#: apps/cap_feed/models.py:272
+msgid "Past"
+msgstr "Passé"
+
+#: apps/cap_feed/models.py:273 apps/cap_feed/models.py:280
+#: apps/cap_feed/models.py:287
+msgid "Unknown"
+msgstr "Inconnu"
+
+#: apps/cap_feed/models.py:276
+msgid "Extreme"
+msgstr "Extrême"
+
+#: apps/cap_feed/models.py:277
+msgid "Severe"
+msgstr "Sévère"
+
+#: apps/cap_feed/models.py:278
+msgid "Moderate"
+msgstr "Modéré"
+
+#: apps/cap_feed/models.py:279
+msgid "Minor"
+msgstr "Mineur"
+
+#: apps/cap_feed/models.py:283
+msgid "Observed"
+msgstr "Observé"
+
+#: apps/cap_feed/models.py:284
+msgid "Likely"
+msgstr "Probable"
+
+#: apps/cap_feed/models.py:285
+msgid "Possible"
+msgstr "Possible"
+
+#: apps/cap_feed/models.py:286
+msgid "Unlikely"
+msgstr "Improbable"
