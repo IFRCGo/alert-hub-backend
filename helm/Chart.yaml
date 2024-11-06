@@ -1,0 +1,14 @@
+apiVersion: v2
+name: ifrcgo-alert-hub-helm
+description: "Helm Chart to deploy the IFRC GO Risk Module Infrastructure"
+type: application
+version: 0.0.1-SET-BY-CICD
+sources:
+  - https://github.com/IFRCGo/go-risk-module-api
+
+dependencies:
+  - name: redis
+    version: "20.2.1"
+    repository: "oci://registry-1.docker.io/bitnamicharts"
+    condition: redis.enabled
+    alias: redis

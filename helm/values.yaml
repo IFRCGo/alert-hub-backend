@@ -1,0 +1,94 @@
+environment: prod
+
+image:
+  name: SET-BY-CICD-IMAGE
+  tag: SET-BY-CICD-TAG
+
+ingress:
+  enabled: false
+  host:
+
+redis:
+  enabled: true
+  architecture: standalone
+  fullnameOverride: alert-hub-redis
+  master:
+    persistence:
+      enabled: true
+      size: .5Gi
+      storageClass: "longhorn"
+
+api:
+  enabled: true
+  replicaCount: 1
+  containerPort: 80
+  resources:
+    requests:
+      cpu: "2"
+      memory: 0.5Gi
+    limits:
+      cpu: "2"
+      memory: 1Gi
+
+worker:
+  enabled: true
+  replicaCount: 1
+  resources:
+    requests:
+      cpu: "1"
+      memory: 1Gi
+    limits:
+      cpu: "1"
+      memory: 2Gi
+  beat:
+    resources:
+      requests:
+        cpu: "1"
+        memory: 0.5Gi
+      limits:
+        cpu: "1"
+        memory: 1Gi
+
+
+env:
+  # DJANGO_APP_ENVIRONMENT: using .environment
+  # APP_RELEASE: using .image.tag
+  DJANGO_DEBUG: false
+  DJANGO_TIME_ZONE: UTC
+  # App Domain
+  APP_DOMAIN:
+  APP_HTTP_PROTOCOL: https
+  APP_FRONTEND_HOST:
+  DJANGO_ALLOWED_HOSTS: "*"
+  SESSION_COOKIE_DOMAIN:
+  CSRF_COOKIE_DOMAIN:
+  # CORS
+  CORS_ALLOWED_ORIGINS:
+  CORS_ALLOWED_ORIGIN_REGEXES:
+  # Misc
+  UPTIME_WORKER_HEARTBEAT:
+  DEFAULT_FROM_EMAIL:
+  # Sentry
+  SENTRY_TRACES_SAMPLE_RATE: 0.2
+  SENTRY_PROFILE_SAMPLE_RATE: 0.2
+
+secrets:
+  DJANGO_SECRET_KEY:
+  # Database
+  DB_NAME:
+  DB_USER:
+  DB_PASSWORD:
+  DB_HOST:
+  DB_PORT:
+  # Email
+  EMAIL_HOST:
+  EMAIL_PORT:
+  EMAIL_HOST_USER:
+  EMAIL_HOST_PASSWORD:
+  # Sentry
+  SENTRY_DSN:
+  # Redis (Provide: if not redis.enabled)
+  # - Celery
+  CELERY_BROKER_URL:
+  # - Cache
+  CACHE_REDIS_URL:

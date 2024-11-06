@@ -1,0 +1,54 @@
+{{- if .Values.api.enabled }}
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "ifrcgo-alert-hub.fullname" . }}-api
+  labels:
+    component: api-deployment
+    environment: {{ .Values.environment }}
+    release: {{ .Release.Name }}
+    # XXX: Add global lables?
+spec:
+  replicas: {{ .Values.api.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ template "ifrcgo-alert-hub.name" . }}
+      release: {{ .Release.Name }}
+      run: {{ .Release.Name }}-api
+  template:
+    metadata:
+      annotations:
+        checksum/secret: {{ include (print .Template.BasePath "/config/secret.yaml") . | sha256sum }}
+        checksum/configmap: {{ include (print .Template.BasePath "/config/configmap.yaml") . | sha256sum }}
+      labels:
+        app: {{ template "ifrcgo-alert-hub.name" . }}
+        release: {{ .Release.Name }}
+        run: {{ .Release.Name }}-api
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}-api
+          image: "{{ .Values.image.name }}:{{ .Values.image.tag }}"
+          command: ["/code/deploy/run_web.sh"]
+          ports:
+            - name: http
+              containerPort: {{ .Values.api.containerPort }}
+              protocol: TCP
+          # TODO: livenessProbe
+          resources:
+            requests:
+              cpu: {{ .Values.api.resources.requests.cpu }}
+              memory: {{ .Values.api.resources.requests.memory }}
+            limits:
+              cpu: {{ .Values.api.resources.limits.cpu }}
+              memory: {{ .Values.api.resources.limits.memory }}
+          env:
+            - name: DJANGO_APP_TYPE
+              value: web
+          envFrom:
+            - secretRef:
+                name: {{ template "ifrcgo-alert-hub.fullname" . }}-api-secret
+            - configMapRef:
+                name: {{ template "ifrcgo-alert-hub.fullname" . }}-api-configmap
+
+{{- end }}
