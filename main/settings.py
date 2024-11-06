@@ -100,7 +100,6 @@ INSTALLED_APPS = [
     'strawberry_django',
     'admin_auto_filters',
     'django_celery_beat',
-    'django_extensions',
     'corsheaders',
     'storages',
     # External - Health-check
@@ -116,8 +115,6 @@ INSTALLED_APPS = [
     'apps.common',
     'apps.user',
     'apps.cap_feed',
-    'apps.subscription',
-    'apps.subscription_manager',
 ]
 
 MIDDLEWARE = [
