@@ -1,0 +1,50 @@
+{{- if .Values.worker.enabled }}
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "ifrcgo-alert-hub.fullname" . }}-worker
+  labels:
+    component: worker-deployment
+    environment: {{ .Values.environment }}
+    release: {{ .Release.Name }}
+    # XXX: Add global lables?
+spec:
+  replicas: {{ .Values.worker.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ template "ifrcgo-alert-hub.name" . }}
+      release: {{ .Release.Name }}
+      run: {{ .Release.Name }}-worker
+  template:
+    metadata:
+      annotations:
+        checksum/secret: {{ include (print .Template.BasePath "/config/secret.yaml") . | sha256sum }}
+        checksum/configmap: {{ include (print .Template.BasePath "/config/configmap.yaml") . | sha256sum }}
+      labels:
+        app: {{ template "ifrcgo-alert-hub.name" . }}
+        release: {{ .Release.Name }}
+        run: {{ .Release.Name }}-worker
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}-worker
+          image: "{{ .Values.image.name }}:{{ .Values.image.tag }}"
+          command: ["/code/deploy/run_worker.sh"]
+          # TODO: livenessProbe
+          resources:
+            requests:
+              cpu: {{ .Values.worker.resources.requests.cpu }}
+              memory: {{ .Values.worker.resources.requests.memory }}
+            limits:
+              cpu: {{ .Values.worker.resources.limits.cpu }}
+              memory: {{ .Values.worker.resources.limits.memory }}
+          env:
+            - name: DJANGO_APP_TYPE
+              value: worker
+          envFrom:
+            - secretRef:
+                name: {{ template "ifrcgo-alert-hub.fullname" . }}-api-secret
+            - configMapRef:
+                name: {{ template "ifrcgo-alert-hub.fullname" . }}-api-configmap
+
+{{- end }}

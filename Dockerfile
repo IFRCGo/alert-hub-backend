@@ -1,8 +1,9 @@
 FROM python:3.11-slim-buster
 
 LABEL maintainer="Alert-Hub Dev"
+LABEL org.opencontainers.image.source="https://github.com/IFRCGo/alert-hub-backend"
 
-ENV PYTHONUNBUFFERED 1
+ENV PYTHONUNBUFFERED=1
 
 WORKDIR /code
 

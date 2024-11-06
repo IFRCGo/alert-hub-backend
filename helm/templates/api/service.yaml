@@ -1,0 +1,24 @@
+{{- if .Values.api.enabled -}}
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "ifrcgo-alert-hub.fullname" . }}-api-svc
+  labels:
+    app: {{ template "ifrcgo-alert-hub.name" . }}
+    component: api-service
+    environment: {{ .Values.environment }}
+    release: {{ .Release.Name }}
+spec:
+  type: ClusterIP
+  selector:
+    app: {{ template "ifrcgo-alert-hub.name" . }}
+    release: {{ .Release.Name }}
+    run: {{ .Release.Name }}-api
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: {{ .Values.api.containerPort }}
+      nodePort: null
+
+{{- end }}
