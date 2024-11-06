@@ -4,7 +4,7 @@ description: "Helm Chart to deploy the IFRC GO Risk Module Infrastructure"
 type: application
 version: 0.0.1-SET-BY-CICD
 sources:
-  - https://github.com/IFRCGo/go-risk-module-api
+  - https://github.com/IFRCGo/alert-hub-backend
 
 dependencies:
   - name: redis
