@@ -88,6 +88,7 @@ env:
   CORS_ALLOWED_ORIGIN_REGEXES:
   # Misc
   UPTIME_WORKER_HEARTBEAT:
+  EMAIL_USE_TLS: true
   DEFAULT_FROM_EMAIL:
   # Sentry
   SENTRY_TRACES_SAMPLE_RATE: 0.2
@@ -114,6 +115,9 @@ secrets:
   CELERY_BROKER_URL:
   # - Cache
   CACHE_REDIS_URL:
+  # Hcaptcha
+  HCAPTCHA_SITEKEY:
+  HCAPTCHA_SECRET:
 
 # Azure configurations
 azure:
