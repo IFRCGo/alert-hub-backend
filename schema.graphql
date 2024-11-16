@@ -348,6 +348,9 @@ type CountryTypeCountList {
   items: [CountryType!]!
 }
 
+"""A generic type to return error messages"""
+scalar CustomErrorType
+
 """Date with time (isoformat)"""
 scalar DateTime
 
@@ -530,6 +533,11 @@ type Mutation {
   private: PrivateMutation!
 }
 
+type MutationEmptyResponseType {
+  ok: Boolean!
+  errors: CustomErrorType
+}
+
 input OffsetPaginationInput {
   offset: Int! = 0
   limit: Int! = -1
@@ -552,6 +560,9 @@ enum Ordering {
 scalar PolygonScalar
 
 type PrivateMutation {
+  logout: MutationEmptyResponseType!
+  changeUserPassword(data: UserPasswordChangeInput!): MutationEmptyResponseType!
+  updateMe(data: UserMeInput!): UserMeTypeMutationResponseType!
   id: ID!
 }
 
@@ -561,6 +572,11 @@ type PrivateQuery {
 }
 
 type PublicMutation {
+  login(data: UserLoginInput!): UserMeTypeMutationResponseType!
+  register(data: UserRegisterInput!): MutationEmptyResponseType!
+  accountActivation(data: UserActivationInput!): MutationEmptyResponseType!
+  passwordResetTrigger(data: UserPasswordResetTriggerInput!): MutationEmptyResponseType!
+  passwordResetConfirm(data: UserPasswordResetConfirmInput!): MutationEmptyResponseType!
   id: ID!
 }
 
@@ -614,6 +630,22 @@ type RegionTypeCountList {
   items: [RegionType!]!
 }
 
+input UserActivationInput {
+  uuid: String!
+  token: String!
+}
+
+input UserLoginInput {
+  email: String!
+  password: String!
+}
+
+input UserMeInput {
+  firstName: String
+  lastName: String
+  emailOptOuts: [OptEmailNotificationTypeEnum!]
+}
+
 type UserMeType {
   id: ID!
   firstName: String
@@ -623,4 +655,35 @@ type UserMeType {
   phoneNumber: String
   country: String
   city: String
+}
+
+type UserMeTypeMutationResponseType {
+  ok: Boolean!
+  errors: CustomErrorType
+  result: UserMeType
+}
+
+input UserPasswordChangeInput {
+  oldPassword: String!
+  newPassword: String!
+}
+
+input UserPasswordResetConfirmInput {
+  captcha: String!
+  uuid: String!
+  token: String!
+  newPassword: String!
+}
+
+input UserPasswordResetTriggerInput {
+  captcha: String!
+  email: String!
+}
+
+input UserRegisterInput {
+  captcha: String!
+  firstName: String!
+  lastName: String!
+  email: String!
+  password: String!
 }
