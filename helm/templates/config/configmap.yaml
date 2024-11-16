@@ -24,6 +24,7 @@ data:
   # Misc
   UPTIME_WORKER_HEARTBEAT: {{ .Values.env.UPTIME_WORKER_HEARTBEAT | quote }}
   DEFAULT_FROM_EMAIL: {{ required "env.DEFAULT_FROM_EMAIL" .Values.env.DEFAULT_FROM_EMAIL | quote }}
+  EMAIL_USE_TLS: {{ required "env.EMAIL_USE_TLS" .Values.env.EMAIL_USE_TLS | quote }}
   # Sentry
   SENTRY_TRACES_SAMPLE_RATE: {{ required "env.SENTRY_TRACES_SAMPLE_RATE" .Values.env.SENTRY_TRACES_SAMPLE_RATE | quote }}
   SENTRY_PROFILE_SAMPLE_RATE: {{ required "env.SENTRY_PROFILE_SAMPLE_RATE" .Values.env.SENTRY_PROFILE_SAMPLE_RATE | quote }}
