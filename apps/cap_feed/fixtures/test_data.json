@@ -18,7 +18,8 @@
       "pk": 1,
       "fields": {
         "name": "test_country",
-        "iso3": "ISO"
+        "iso3": "ISO",
+        "region": 1
       }
     },
     {
