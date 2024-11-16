@@ -1,0 +1,13 @@
+{% block head %}{% endblock %}
+
+{% block title %}{% endblock %}
+
+{% block body %}{% endblock %}
+
+Thank you for using Alert Hub
+The Alert Hub team
+
+{% if email_type in unsubscribe_email_types %}
+Would you prefer to not receive these kinds of emails anymore?
+Use this link to unsubscribe "{{ protocol }}://{{ domain }}{% url 'unsubscribe_email' uidb64=unsubscribe_email_id token=unsubscribe_email_token email_type=email_type %}"
+{% endif %}

@@ -51,8 +51,10 @@ env = environ.Env(
     CELERY_BROKER_URL=str,  # redis://redis:6379/0
     # Cache
     CACHE_REDIS_URL=str,  # redis://redis:6379/1
+    TEST_CACHE_REDIS_URL=(str, None),  # redis://redis:6379/11
     # Email
     EMAIL_HOST=str,
+    EMAIL_USE_TLS=(bool, True),
     EMAIL_PORT=(int, 587),
     EMAIL_HOST_USER=str,
     EMAIL_HOST_PASSWORD=str,
@@ -66,6 +68,8 @@ env = environ.Env(
     CORS_ALLOWED_ORIGIN_REGEXES=(list, []),
     # Misc
     UPTIME_WORKER_HEARTBEAT=(str, None),
+    HCAPTCHA_SITEKEY=str,
+    HCAPTCHA_SECRET=str,
 )
 
 # SECURITY WARNING: keep the secret key used in production secret!
@@ -102,6 +106,7 @@ INSTALLED_APPS = [
     'django_celery_beat',
     'corsheaders',
     'storages',
+    'django_premailer',
     # External - Health-check
     'health_check',  # required
     'health_check.db',  # stock Django health checkers
@@ -286,10 +291,13 @@ STRAWBERRY_DEFAULT_PAGINATION_LIMIT = 50
 STRAWBERRY_MAX_PAGINATION_LIMIT = 100
 
 # Cache
+CACHE_REDIS_URL = env('CACHE_REDIS_URL')
+TEST_CACHE_REDIS_URL = env('TEST_CACHE_REDIS_URL')
+
 CACHES = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': env('CACHE_REDIS_URL'),
+        'LOCATION': CACHE_REDIS_URL,
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
         },
@@ -297,7 +305,8 @@ CACHES = {
 }
 
 # HEALTH-CHECK
-REDIS_URL = env('CACHE_REDIS_URL')
+REDIS_URL = CACHE_REDIS_URL
+TEST_CACHE_REDIS_URL = env('TEST_CACHE_REDIS_URL')
 HEALTHCHECK_CACHE_KEY = "alert_hub_healthcheck_key"
 HEALTH_CHECK = {
     'DISK_USAGE_MAX': 80,  # percent
@@ -311,7 +320,7 @@ CELERY_TASK_EXPIRE = (60 * 60) * 2  # Remove task data after 2hr (in seconds)
 
 # Email - SMTP Settings
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_USE_TLS = True
+EMAIL_USE_TLS = env('EMAIL_USE_TLS')
 EMAIL_HOST = env('EMAIL_HOST')
 EMAIL_PORT = env('EMAIL_PORT')
 EMAIL_HOST_USER = env('EMAIL_HOST_USER')
@@ -413,3 +422,11 @@ LANGUAGES = (
 # modeltranslation configs
 # -- NOTE: "en" is used as default languages in the codebase, changing this will break logics
 MODELTRANSLATION_DEFAULT_LANGUAGE = "en"  # Also the fallback
+
+# CAPTCHA
+HCAPTCHA_SITEKEY = env('HCAPTCHA_SITEKEY')
+HCAPTCHA_SECRET = env('HCAPTCHA_SECRET')
+
+PREMAILER_OPTIONS = dict(
+    disable_validation=not DEBUG,  # Disable validation in production
+)

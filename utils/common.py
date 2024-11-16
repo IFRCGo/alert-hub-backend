@@ -9,6 +9,7 @@ from contextlib import contextmanager
 
 from django.conf import settings
 from django.db import models
+from user_agents import parse
 
 from main.cache import cache
 
@@ -42,6 +43,23 @@ def logger_log_extra(context_data):
     return {
         'context': context_data,
     }
+
+
+def get_client_ip(request):
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        ip = x_forwarded_for.split(',')[-1].strip()
+    else:
+        ip = request.META.get('REMOTE_ADDR')
+    return ip
+
+
+def get_device_type(request):
+    http_agent = request.META.get('HTTP_USER_AGENT')
+    if http_agent:
+        user_agent = parse(http_agent)
+        return user_agent.browser.family + ',' + user_agent.os.family
+    return
 
 
 @contextmanager
