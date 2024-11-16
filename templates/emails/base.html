@@ -1,0 +1,47 @@
+{% load premailer %}
+{% load custom_tags %}
+{% load static %}
+
+{% premailer %}
+
+<html>
+    <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600" rel="stylesheet">
+    <head>
+        {% block head %}{% endblock %}
+    </head>
+
+    <body>
+        <div class="mail">
+
+            <div class="header-container">
+                <table class="header">
+                    <tr class="header-content">
+                        {% load i18n %}{% autoescape off %}
+                        <th class="header-description">
+                            {% block title %}{% endblock %}
+                        </th>
+                        <th class="logo-container">
+                            <img
+                                width="120"
+                                height="auto"
+                                src="{{ 'images/go-logo-long.png' | static_full_path }}"
+                                />
+                        </th>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="mail-body">
+                {% block body %}{% endblock %}
+                <div class="thank-you-container">
+                    <p class="thank-you">Thank you for using Alert Hub</p>
+                    <p>The Alert Hub team</p>
+                </div>
+            </div>
+
+            {% endautoescape %}
+        </div>
+    <body>
+</html>
+
+{% endpremailer %}

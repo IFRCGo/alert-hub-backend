@@ -1,0 +1,15 @@
+{% extends "emails/base.html" %}
+
+{% block body %}
+    <div class="actions-container">
+        <p>
+            Please click on the link below to activate your account:
+        </p>
+        <a
+            href="{{ activation_url }}"
+            >
+            Activate your account
+        </a>
+    </div>
+
+{% endblock %}

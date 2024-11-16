@@ -22,12 +22,12 @@ class CustomUserManager(BaseUserManager):
         user.save(using=self._db)
         return user
 
-    def create_user(self, email=None, password=None, **extra_fields):
+    def create_user(self, email, password=None, **extra_fields):
         extra_fields.setdefault('is_staff', False)
         extra_fields.setdefault('is_superuser', False)
         return self._create_user(email, password, **extra_fields)
 
-    def create_superuser(self, email=None, password=None, **extra_fields):
+    def create_superuser(self, email, password=None, **extra_fields):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
         extra_fields.setdefault('is_active', True)
@@ -48,14 +48,6 @@ class EmailNotificationType(models.IntegerChoices):
     NEWS_AND_OFFERS = 4, _('News And Offers')
     # Other emails are configured using subscriptions
 
-    @classmethod
-    def get_opt_emails(cls):
-        always_send = [
-            cls.ACCOUNT_ACTIVATION,
-            cls.PASSWORD_RESET,
-        ]
-        return {enum.name: (enum.value, enum.label) for enum in cls if enum.value not in always_send}
-
 
 class User(AbstractUser):
     class OptEmailNotificationType(models.IntegerChoices):
@@ -65,7 +57,6 @@ class User(AbstractUser):
 
     username = None
     email = models.EmailField(verbose_name=_('email'), unique=True, blank=False, max_length=255)
-    # bounced_email = models.BooleanField(verbose_name=_('Email tagged as bounced'), default=False)
 
     email_opt_outs = ArrayField(
         models.IntegerField(
@@ -91,7 +82,14 @@ class User(AbstractUser):
     EMAIL_FIELD = USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
 
-    objects = CustomUserManager()  # type: ignore [reportAssignmentType,reportGeneralTypeIssues]
+    objects: CustomUserManager = CustomUserManager()  # type: ignore [reportAssignmentType,reportGeneralTypeIssues]
+
+    # TODO: Make first_name and last_name not nullable
+    def get_full_name(self):
+        """
+        Return the first_name plus the last_name, with a space in between.
+        """
+        return (" ".join([val for val in [self.first_name, self.last_name] if val])).strip()
 
     def save(self, *args, **kwargs):
         self.display_name = self.get_full_name() or f'User#{self.pk}'
@@ -110,4 +108,4 @@ class User(AbstractUser):
             self.save(update_fields=('email_opt_outs',))
 
     def is_email_subscribed_for(self, email_type) -> bool:
-        return email_type in self.email_opt_outs and email_type in self.OPT_EMAIL_NOTIFICATION_TYPES
+        return not (email_type in self.email_opt_outs and email_type in self.OPT_EMAIL_NOTIFICATION_TYPES)

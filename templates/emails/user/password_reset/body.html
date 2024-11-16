@@ -1,0 +1,45 @@
+{% extends "emails/base.html" %}
+
+{% block head %}
+    <style>
+        .reset-link {
+            margin: 12px 0;
+        }
+    </style>
+{% endblock %}
+{% block title %}
+    Reset Password
+{% endblock %}
+{% block body %}
+    <p>
+        It seems you've forgotten your password.
+    </p>
+    <div class="actions-container">
+        <p>
+            If you didn't request to reset your password, you may simply ignore this email.
+        </p>
+        <a
+            class="button-like-link reset-link"
+            href="{{ password_reset_url }}"
+        >
+            Reset your password
+        </a>
+    </div>
+    {% if location or device %}
+    <p>More detail on password reset trigger</p>
+    <table class="table">
+        <tr>
+            <th class="cell label">Time</th>
+            <th class="cell">{{time}}</th>
+        </tr>
+        <tr>
+            <th class="cell label">Location</th>
+            <th class="cell">{{location}}</th>
+        </tr>
+        <tr>
+            <th class="cell label">Device</th>
+            <th class="cell">{{device}}</th>
+        </tr>
+    </table>
+    {% endif %}
+{% endblock %}
