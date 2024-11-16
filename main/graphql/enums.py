@@ -28,20 +28,23 @@ def generate_app_enum_collection_data(name):
     return type(
         name,
         (),
-        {field_name: [AppEnumData(e) for e in enum] for field_name, enum in ENUM_TO_STRAWBERRY_ENUM_MAP.items()},
+        {
+            field_name: [AppEnumData(e) for e in enum]  # type: ignore[reportGeneralTypeIssues]
+            for field_name, enum in ENUM_TO_STRAWBERRY_ENUM_MAP.items()
+        },
     )
 
 
-AppEnumCollectionData = generate_app_enum_collection_data('AppEnumCollectionData')
+AppEnumCollectionData = generate_app_enum_collection_data("AppEnumCollectionData")
 
 
 def generate_type_for_enum(name, Enum):
     return strawberry.type(
         dataclasses.make_dataclass(
-            f'AppEnumCollection{name}',
+            f"AppEnumCollection{name}",
             [
-                ('key', Enum),
-                ('label', str),
+                ("key", Enum),
+                ("label", str),
             ],
         )
     )
@@ -73,7 +76,7 @@ def generate_type_for_enums():
     ]
     return strawberry.type(
         dataclasses.make_dataclass(
-            'AppEnumCollection',
+            "AppEnumCollection",
             enum_fields,
         )
     )

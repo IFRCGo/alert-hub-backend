@@ -13,9 +13,9 @@ from django.utils.module_loading import import_string
 from rest_framework import fields as drf_fields
 from rest_framework import serializers
 from strawberry.annotation import StrawberryAnnotation
-from strawberry.field import StrawberryField
 from strawberry.file_uploads import Upload as StrawberryUploadField
-from strawberry.type import get_object_definition
+from strawberry.types.base import get_object_definition
+from strawberry.types.field import StrawberryField
 from strawberry_django.type import _process_type
 
 from . import types
@@ -69,7 +69,7 @@ def convert_serializer_field_to_generic_scalar(_):
 
 
 @get_strawberry_type_from_serializer_field.register(serializers.Field)  # type: ignore[reportArgumentType]
-def convert_serializer_field_to_string(field):
+def convert_serializer_field_to_string(_):
     return str
 
 
@@ -123,7 +123,7 @@ def convert_serializer_field_to_enum(field):
         # Try django_enumfield (NOTE: Let's try to avoid this)
         custom_name = type(list(field.choices.values())[-1]).__name__
     if custom_name is None:
-        raise Exception(f'Enum name generation failed for {field=}')
+        raise Exception(f"Enum name generation failed for {field=}")
     return ENUM_TO_STRAWBERRY_ENUM_MAP[custom_name]
 
 
@@ -138,10 +138,10 @@ def convert_serializer_to_type(serializer_class, name=None, partial=False):
     ref_name = name
     if ref_name is None:
         serializer_name = serializer_class.__name__
-        serializer_name = ''.join(''.join(serializer_name.split('ModelSerializer')).split('Serializer'))
-        ref_name = f'{serializer_name}NestInputType'
+        serializer_name = "".join("".join(serializer_name.split("ModelSerializer")).split("Serializer"))
+        ref_name = f"{serializer_name}NestInputType"
         if partial:
-            ref_name = f'{serializer_name}NestUpdateInputType'
+            ref_name = f"{serializer_name}NestUpdateInputType"
 
     cached_type = convert_serializer_to_type_cache.get(ref_name, None)
     if cached_type:
@@ -167,20 +167,16 @@ def convert_serializer_field(field, convert_choices_to_enum=True, force_optional
     is_required = field.required and not force_optional
     if field.default != drf_fields.empty:
         if field.default.__class__.__hash__ is None:  # Mutable
-            kwargs['default_factory'] = lambda: field.default  # type: ignore[reportGeneralTypeIssues] FIXME
+            kwargs["default_factory"] = lambda: field.default  # type: ignore[reportGeneralTypeIssues] FIXME
         else:
-            kwargs['default'] = field.default
+            kwargs["default"] = field.default
     else:
-        kwargs['default'] = dataclasses.MISSING
+        kwargs["default"] = dataclasses.MISSING
 
     if isinstance(field, serializers.ChoiceField) and not convert_choices_to_enum:
         graphql_type = str
     else:
         graphql_type = get_strawberry_type_from_serializer_field(field)
-        # if graphql_type == str:
-        #   is_required = not field.null and not field.blank
-        #   kwargs['parse_value'] -> null -> '' -- when not is_required
-        #   XXX: does UNSET has any issue here?
 
     # if it is a tuple or a list it means that we are returning
     # the graphql type and the child type
@@ -196,8 +192,8 @@ def convert_serializer_field(field, convert_choices_to_enum=True, force_optional
         graphql_type = list[of_type]
 
     if not is_required:
-        if 'default' not in kwargs or 'default_factory' not in kwargs:
-            kwargs['default'] = strawberry.UNSET
+        if "default" not in kwargs or "default_factory" not in kwargs:
+            kwargs["default"] = strawberry.UNSET
         graphql_type = typing.Optional[graphql_type]
 
     return graphql_type, StrawberryField(
@@ -293,9 +289,9 @@ class MonkeyPatch:
         obj_definition = get_object_definition(response)
         assert obj_definition is not None
         for field in obj_definition.fields:
-            if field.name.endswith('_id'):
+            if field.name.endswith("_id"):
                 field.django_name = field.name  # type: ignore[reportGeneralTypeIssues] FIXME
         return response
 
 
-import_module('strawberry_django.type')._process_type = MonkeyPatch._process_type  # type: ignore[reportGeneralTypeIssues]
+import_module("strawberry_django.type")._process_type = MonkeyPatch._process_type  # type: ignore[reportGeneralTypeIssues]

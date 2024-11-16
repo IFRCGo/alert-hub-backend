@@ -18,6 +18,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
+from django.views.decorators.csrf import csrf_exempt
 
 from main.graphql.schema import CustomAsyncGraphQLView
 from main.graphql.schema import schema as graphql_schema
@@ -27,9 +28,11 @@ urlpatterns = [
     path('health-check/', include('health_check.urls')),
     path(
         'graphql/',
-        CustomAsyncGraphQLView.as_view(
-            schema=graphql_schema,
-            graphiql=False,
+        csrf_exempt(
+            CustomAsyncGraphQLView.as_view(
+                schema=graphql_schema,
+                graphql_ide=False,
+            )
         ),
         name='graphql',
     ),
@@ -38,7 +41,7 @@ urlpatterns = [
 
 
 if settings.DEBUG:
-    urlpatterns.append(path('graphiql/', CustomAsyncGraphQLView.as_view(schema=graphql_schema)))
+    urlpatterns.append(path('graphiql/', csrf_exempt(CustomAsyncGraphQLView.as_view(schema=graphql_schema))))
 
     # Static and media file URLs
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
