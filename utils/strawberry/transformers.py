@@ -185,7 +185,7 @@ def convert_serializer_field(field, convert_choices_to_enum=True, force_optional
         graphql_type = graphql_type[0]
 
     if isinstance(field, serializers.Serializer):
-        pass
+        graphql_type = convert_serializer_to_type(field.__class__, partial=force_optional)
     elif isinstance(field, serializers.ListSerializer):
         field = field.child
         of_type = convert_serializer_to_type(field.__class__, partial=force_optional)

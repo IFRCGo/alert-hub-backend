@@ -120,6 +120,7 @@ INSTALLED_APPS = [
     'apps.common',
     'apps.user',
     'apps.cap_feed',
+    'apps.subscription',
 ]
 
 MIDDLEWARE = [
