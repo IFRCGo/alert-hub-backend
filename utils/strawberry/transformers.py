@@ -293,5 +293,20 @@ class MonkeyPatch:
                 field.django_name = field.name  # type: ignore[reportGeneralTypeIssues] FIXME
         return response
 
+    # XXX: Reverting remote change to fix issue
+    #   `TypeError: DjangoModelFilterInput.__init__() got an unexpected keyword argument '_get_id'`
+    #   Which happens when a `field: {pk: 'id'}` filter is used. Try this for alerts query
+    #     `{country: {pk: "1"}}`
+    # Using this: https://github.com/strawberry-graphql/strawberry-django/blob/v0.38.0/strawberry_django/filters.py
+    # By overwriting this: https://github.com/strawberry-graphql/strawberry-django/blob/v0.49.1/strawberry_django/filters.py#L61
+    @strawberry.input
+    class DjangoModelFilterInput:
+        pk: strawberry.ID
+
+    @classmethod
+    def get_django_model_filter_input_type(cls):
+        return cls.DjangoModelFilterInput
+
 
 import_module("strawberry_django.type")._process_type = MonkeyPatch._process_type  # type: ignore[reportGeneralTypeIssues]
+import_module("strawberry_django.filters").get_django_model_filter_input_type = MonkeyPatch.get_django_model_filter_input_type  # type: ignore[reportGeneralTypeIssues]
