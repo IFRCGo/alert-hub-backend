@@ -20,7 +20,7 @@ UserAlertSubscriptionInput = convert_serializer_to_type(UserAlertSubscriptionSer
 class PrivateMutation:
     @strawberry.mutation
     @sync_to_async
-    def create_user_alert_subcription(
+    def create_user_alert_subscription(
         self,
         data: UserAlertSubscriptionInput,  # type: ignore[reportInvalidTypeForm]
         info: Info,
@@ -43,7 +43,7 @@ class PrivateMutation:
 
     @strawberry.mutation
     @sync_to_async
-    def update_user_alert_subcription(
+    def update_user_alert_subscription(
         self,
         id: strawberry.ID,
         data: UserAlertSubscriptionInput,  # type: ignore[reportInvalidTypeForm]
@@ -69,4 +69,24 @@ class PrivateMutation:
         obj = serializer.save()
         return MutationResponseType(
             result=obj,  # type: ignore[reportReturnType]
+        )
+
+    @strawberry.mutation
+    @sync_to_async
+    def delete_user_alert_subscription(
+        self,
+        id: strawberry.ID,
+        info: Info,
+    ) -> MutationResponseType[UserAlertSubscriptionType]:
+        instance = UserAlertSubscriptionType.get_queryset(None, None, info).filter(id=id).first()
+        if instance is None:
+            return MutationResponseType(
+                ok=False,
+                errors=_CustomErrorType.generate_message(message="Doesn't exists in the database"),
+            )
+        instance_id = instance.id
+        instance.delete()
+        instance.id = instance_id
+        return MutationResponseType(
+            result=instance,  # type: ignore[reportReturnType]
         )

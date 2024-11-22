@@ -253,10 +253,10 @@ type AppEnumCollection {
   AlertInfoSeverity: [AppEnumCollectionAlertInfoSeverity!]!
   AlertInfoCertainty: [AppEnumCollectionAlertInfoCertainty!]!
   UserAlertSubscriptionEmailFrequency: [AppEnumCollectionUserAlertSubscriptionEmailFrequency!]!
-  UserAlertSubscriptionFilterSerializerUrgency: [AppEnumCollectionUserAlertSubscriptionFilterSerializerUrgency!]!
-  UserAlertSubscriptionFilterSerializerSeverity: [AppEnumCollectionUserAlertSubscriptionFilterSerializerSeverity!]!
-  UserAlertSubscriptionFilterSerializerCertainty: [AppEnumCollectionUserAlertSubscriptionFilterSerializerCertainty!]!
-  UserAlertSubscriptionFilterSerializerCategory: [AppEnumCollectionUserAlertSubscriptionFilterSerializerCategory!]!
+  UserAlertSubscriptionFilterAlertUrgencies: [AppEnumCollectionUserAlertSubscriptionFilterAlertUrgencies!]!
+  UserAlertSubscriptionFilterAlertSeverities: [AppEnumCollectionUserAlertSubscriptionFilterAlertSeverities!]!
+  UserAlertSubscriptionFilterAlertCertainties: [AppEnumCollectionUserAlertSubscriptionFilterAlertCertainties!]!
+  UserAlertSubscriptionFilterAlertCategories: [AppEnumCollectionUserAlertSubscriptionFilterAlertCategories!]!
 }
 
 type AppEnumCollectionAlertInfoCategory {
@@ -314,22 +314,22 @@ type AppEnumCollectionUserAlertSubscriptionEmailFrequency {
   label: String!
 }
 
-type AppEnumCollectionUserAlertSubscriptionFilterSerializerCategory {
+type AppEnumCollectionUserAlertSubscriptionFilterAlertCategories {
   key: AlertInfoCategoryEnum!
   label: String!
 }
 
-type AppEnumCollectionUserAlertSubscriptionFilterSerializerCertainty {
+type AppEnumCollectionUserAlertSubscriptionFilterAlertCertainties {
   key: AlertInfoCertaintyEnum!
   label: String!
 }
 
-type AppEnumCollectionUserAlertSubscriptionFilterSerializerSeverity {
+type AppEnumCollectionUserAlertSubscriptionFilterAlertSeverities {
   key: AlertInfoSeverityEnum!
   label: String!
 }
 
-type AppEnumCollectionUserAlertSubscriptionFilterSerializerUrgency {
+type AppEnumCollectionUserAlertSubscriptionFilterAlertUrgencies {
   key: AlertInfoUrgencyEnum!
   label: String!
 }
@@ -517,11 +517,6 @@ type FeedTypeCountList {
   items: [FeedType!]!
 }
 
-"""
-The GenericScalar scalar type represents a generic GraphQL scalar value that could be: List or Object.
-"""
-scalar GenericScalar
-
 input IDBaseFilterLookup {
   """Exact match. Filter will be skipped on `null` value"""
   exact: ID
@@ -611,8 +606,9 @@ type PrivateMutation {
   logout: MutationEmptyResponseType!
   changeUserPassword(data: UserPasswordChangeInput!): MutationEmptyResponseType!
   updateMe(data: UserMeInput!): UserMeTypeMutationResponseType!
-  createUserAlertSubcription(data: UserAlertSubscriptionInput!): UserAlertSubscriptionTypeMutationResponseType!
-  updateUserAlertSubcription(id: ID!, data: UserAlertSubscriptionInput!): UserAlertSubscriptionTypeMutationResponseType!
+  createUserAlertSubscription(data: UserAlertSubscriptionInput!): UserAlertSubscriptionTypeMutationResponseType!
+  updateUserAlertSubscription(id: ID!, data: UserAlertSubscriptionInput!): UserAlertSubscriptionTypeMutationResponseType!
+  deleteUserAlertSubscription(id: ID!): UserAlertSubscriptionTypeMutationResponseType!
   id: ID!
 }
 
@@ -704,21 +700,17 @@ input UserAlertSubscriptionFilter {
   DISTINCT: Boolean
 }
 
-input UserAlertSubscriptionFilterNestInputType {
-  country: ID!
-  admin1s: [ID!]!
-  urgency: [AlertInfoUrgencyEnum!]
-  severity: [AlertInfoSeverityEnum!]
-  certainty: [AlertInfoCertaintyEnum!]
-  category: [AlertInfoCategoryEnum!]
-}
-
 input UserAlertSubscriptionInput {
   name: String!
-  alertFilters: UserAlertSubscriptionFilterNestInputType!
+  filterAlertCountry: ID!
+  filterAlertAdmin1s: [ID!]!
   isActive: Boolean
   notifyByEmail: Boolean
   emailFrequency: UserAlertSubscriptionEmailFrequencyEnum
+  filterAlertUrgencies: [AlertInfoUrgencyEnum!]
+  filterAlertSeverities: [AlertInfoSeverityEnum!]
+  filterAlertCertainties: [AlertInfoCertaintyEnum!]
+  filterAlertCategories: [AlertInfoCategoryEnum!]
 }
 
 input UserAlertSubscriptionOrder {
@@ -734,13 +726,24 @@ type UserAlertSubscriptionType {
   createdAt: DateTime!
   modifiedAt: DateTime!
   isActive: Boolean!
-  alertFilters: GenericScalar!
+  filterAlertCountry: ID!
+  filterAlertAdmin1s: [ID!]!
   notifyByEmail: Boolean!
   emailLastSentAt: DateTime
   name: String!
+  filterAlertUrgencies: [AlertInfoUrgencyEnum!]!
+  filterAlertSeverities: [AlertInfoSeverityEnum!]!
+  filterAlertCertainties: [AlertInfoCertaintyEnum!]!
+  filterAlertCategories: [AlertInfoCategoryEnum!]!
+  filterAlertUrgenciesDisplay: [String!]!
+  filterAlertSeveritiesDisplay: [String!]!
+  filterAlertCertaintiesDisplay: [String!]!
+  filterAlertCategoriesDisplay: [String!]!
   emailFrequency: UserAlertSubscriptionEmailFrequencyEnum!
   emailFrequencyDisplay: String!
   alerts(filters: AlertFilter, order: AlertOrder, pagination: OffsetPaginationInput): AlertTypeCountList!
+  filterAlertCountryDisplay: CountryType!
+  filterAlertAdmin1sDisplay: [Admin1Type!]!
 }
 
 type UserAlertSubscriptionTypeCountList {

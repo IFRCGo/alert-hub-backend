@@ -1,7 +1,8 @@
+from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.utils.translation import gettext
 
-from apps.cap_feed.models import Alert
+from apps.cap_feed.models import Alert, AlertInfo, Country
 from apps.user.models import User
 
 
@@ -20,9 +21,16 @@ class UserAlertSubscription(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     is_active = models.BooleanField(default=True)
 
-    # TODO: Keep some history?
-    alert_filters = models.JSONField(default=dict)
+    # TODO: Keep change history?
+    # Filters
+    filter_alert_country = models.ForeignKey(Country, on_delete=models.PROTECT)
+    filter_alert_admin1s = ArrayField(models.BigIntegerField(), blank=True, default=list)
+    filter_alert_urgencies = ArrayField(models.CharField(choices=AlertInfo.Urgency.choices), blank=True, default=list)
+    filter_alert_severities = ArrayField(models.CharField(choices=AlertInfo.Severity.choices), blank=True, default=list)
+    filter_alert_certainties = ArrayField(models.CharField(choices=AlertInfo.Certainty.choices), blank=True, default=list)
+    filter_alert_categories = ArrayField(models.CharField(choices=AlertInfo.Category.choices), blank=True, default=list)
 
+    # Notification config
     notify_by_email = models.BooleanField(default=False)
     email_frequency = models.PositiveSmallIntegerField(choices=EmailFrequency.choices, default=EmailFrequency.WEEKLY)
     email_last_sent_at = models.DateTimeField(null=True, blank=True)
@@ -33,6 +41,8 @@ class UserAlertSubscription(models.Model):
         through="SubscriptionAlert",
         related_name="subscriptions",
     )
+
+    filter_alert_country_id: int
 
 
 class SubscriptionAlert(models.Model):

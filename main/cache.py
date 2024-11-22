@@ -10,3 +10,4 @@ class CacheKey:
         POLL_FEED = _BASE + 'poll_feed_{}'
         TAG_EXPIRE_ALERT = _BASE + 'tag_expire_alert'
         REMOVE_EXPIRE_PROCESSED_ALERT = _BASE + 'remove_expire_processed_alert'
+        SUBSCRIPTION_TAG_ALERTS = _BASE + 'subscription_tag_alerts'

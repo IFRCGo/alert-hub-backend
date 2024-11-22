@@ -1,37 +1,15 @@
 from django.utils.translation import gettext
 from rest_framework import serializers
 
-from apps.cap_feed.models import AlertInfo
+from apps.cap_feed.models import Admin1
 from utils.strawberry.serializers import IntegerIDField
 
 from .models import UserAlertSubscription
 
 
-# NOTE: Make sure to sync changes here with apps/cap_feed/filters.py:AlertFilter
-class UserAlertSubscriptionFilterSerializer(serializers.Serializer):
-    country = IntegerIDField()
-    admin1s = serializers.ListField(child=IntegerIDField())
-
-    urgency = serializers.ListField(
-        child=serializers.ChoiceField(choices=AlertInfo.Urgency.choices, required=True),
-        required=False,
-    )
-    severity = serializers.ListField(
-        child=serializers.ChoiceField(choices=AlertInfo.Severity.choices, required=True),
-        required=False,
-    )
-    certainty = serializers.ListField(
-        child=serializers.ChoiceField(choices=AlertInfo.Certainty.choices, required=True),
-        required=False,
-    )
-    category = serializers.ListField(
-        child=serializers.ChoiceField(choices=AlertInfo.Category.choices, required=True),
-        required=False,
-    )
-
-
 class UserAlertSubscriptionSerializer(serializers.ModelSerializer):
-    alert_filters = UserAlertSubscriptionFilterSerializer(required=True)
+    # To map Int -> ID
+    filter_alert_admin1s = serializers.ListField(child=IntegerIDField(required=True), required=True)
 
     class Meta:
         model = UserAlertSubscription
@@ -40,7 +18,13 @@ class UserAlertSubscriptionSerializer(serializers.ModelSerializer):
             "is_active",
             "notify_by_email",
             "email_frequency",
-            "alert_filters",
+            # Filters
+            "filter_alert_country",
+            "filter_alert_admin1s",
+            "filter_alert_urgencies",
+            "filter_alert_severities",
+            "filter_alert_certainties",
+            "filter_alert_categories",
         )
 
     def validate_is_active(self, is_active):
@@ -58,6 +42,12 @@ class UserAlertSubscriptionSerializer(serializers.ModelSerializer):
                     )
                 )
         return is_active
+
+    def validate_filter_alert_admin1s(self, filter_alert_admin1s):
+        available_admin1s_ids = set(Admin1.objects.filter(id__in=filter_alert_admin1s).values_list("id", flat=True))
+        if invalid_ids := list(set(filter_alert_admin1s) - available_admin1s_ids):
+            raise serializers.ValidationError(f"This Admin1 ids are missing in database: {list(invalid_ids)}")
+        return filter_alert_admin1s
 
     def create(self, validated_data):
         validated_data["user"] = self.context["request"].user
