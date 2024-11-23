@@ -7,6 +7,7 @@ image:
 ingress:
   enabled: false
   host:
+  ingressClassName:
 
 redis:
   enabled: true
@@ -18,7 +19,7 @@ redis:
     persistence:
       enabled: true
       size: .5Gi
-      storageClass: "longhorn"
+      storageClass:
 
 api:
   enabled: true
@@ -74,6 +75,7 @@ env:
   SENTRY_TRACES_SAMPLE_RATE: 0.2
   SENTRY_PROFILE_SAMPLE_RATE: 0.2
 
+secretsName: ""
 secrets:
   DJANGO_SECRET_KEY:
   # Database
@@ -94,3 +96,22 @@ secrets:
   CELERY_BROKER_URL:
   # - Cache
   CACHE_REDIS_URL:
+
+# Azure configurations
+azure:
+  aksSecretsProviderAvailable: false
+  keyvault:
+    name: ""
+    clientId: ""
+    tenantId: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  # Required when using workload identity to access Azure Key Vault Secrets
+  create: false
+  automount: true
+  annotations:
+    azure.workload.identity/client-id : "<workload_identity_client_id>"
+  labels:
+    azure.workload.identity/use: "true"
+  name: ""

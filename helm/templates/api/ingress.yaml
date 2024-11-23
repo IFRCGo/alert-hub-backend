@@ -10,7 +10,9 @@ metadata:
     environment: {{ .Values.environment }}
     release: {{ .Release.Name }}
 spec:
-  ingressClassName: nginx
+  {{- if .Values.ingress.ingressClassName }}
+  ingressClassName: {{ .Values.ingress.ingressClassName }}
+  {{- end }}
   rules:
     - host: {{ required "ingress.host" .Values.ingress.host | quote }}
       http:

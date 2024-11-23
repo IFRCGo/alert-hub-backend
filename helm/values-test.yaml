@@ -7,6 +7,7 @@ image:
 ingress:
   enabled: true
   host: test.com
+  ingressClassName:
 
 env:
   # DJANGO_APP_ENVIRONMENT: using .environment
@@ -25,6 +26,7 @@ env:
   # Misc
   DEFAULT_FROM_EMAIL: dummy@dummy.com
 
+secretsName: ""
 secrets:
   DJANGO_SECRET_KEY: dummy-secret-key
   # Database

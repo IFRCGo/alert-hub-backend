@@ -30,3 +30,25 @@
 {{- define "ifrcgo-alert-hub.chart" -}}
     {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
+
+{{/*
+Create the name of the service account to use
+*/}}
+{{- define "ifrcgo-alert-hub.serviceAccountName" -}}
+{{- if .Values.serviceAccount.create }}
+{{- default (include "ifrcgo-alert-hub.fullname" .) .Values.serviceAccount.name }}
+{{- else }}
+{{- default "default" .Values.serviceAccount.name }}
+{{- end }}
+{{- end }}
+
+{{/*
+Create the name of the secret to be used by the ifrcgo-alert-hub
+*/}}
+{{- define "ifrcgo-alert-hub.secretname" -}}
+{{- if .Values.secretsName }}
+  {{- .Values.secretsName -}}
+{{- else }}
+  {{- printf "%s-secret" (include "ifrcgo-alert-hub.fullname" .) -}}
+{{- end -}}
+{{- end -}}

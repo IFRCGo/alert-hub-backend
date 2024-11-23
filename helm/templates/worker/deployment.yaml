@@ -9,6 +9,8 @@ metadata:
     environment: {{ .Values.environment }}
     release: {{ .Release.Name }}
     # XXX: Add global lables?
+  annotations:
+    reloader.stakater.com/auto: "true"
 spec:
   replicas: {{ .Values.worker.replicaCount }}
   selector:
@@ -18,9 +20,11 @@ spec:
       run: {{ .Release.Name }}-worker
   template:
     metadata:
+      {{- if not .Values.azure.aksSecretsProviderAvailable }}
       annotations:
         checksum/secret: {{ include (print .Template.BasePath "/config/secret.yaml") . | sha256sum }}
         checksum/configmap: {{ include (print .Template.BasePath "/config/configmap.yaml") . | sha256sum }}
+      {{- end }}
       labels:
         app: {{ template "ifrcgo-alert-hub.name" . }}
         release: {{ .Release.Name }}
@@ -43,8 +47,13 @@ spec:
               value: worker
           envFrom:
             - secretRef:
-                name: {{ template "ifrcgo-alert-hub.fullname" . }}-api-secret
+                name: {{ template "ifrcgo-alert-hub.secretname" . }}
             - configMapRef:
                 name: {{ template "ifrcgo-alert-hub.fullname" . }}-api-configmap
+
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
 
 {{- end }}
