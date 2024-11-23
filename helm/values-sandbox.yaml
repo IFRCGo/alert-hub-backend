@@ -9,6 +9,36 @@ ingress:
   host: alert-hub-sandbox.ifrc.org
   ingressClassName: webapprouting.kubernetes.azure.com
 
+api:
+  enabled: true
+  replicaCount: 1
+  containerPort: 80
+  resources:
+    requests:
+      cpu: "250m"
+      memory: 0.5Gi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+
+worker:
+  enabled: true
+  replicaCount: 1
+  resources:
+    requests:
+      cpu: "250m"
+      memory: 0.5Gi
+    limits:
+      cpu: "1"
+      memory: 2Gi
+  beat:
+    resources:
+      requests:
+        cpu: "250m"
+        memory: 0.5Gi
+      limits:
+        cpu: "1"
+        memory: 1Gi
 env:
   # DJANGO_APP_ENVIRONMENT: using .environment
   # APP_RELEASE: using .image.tag
