@@ -60,4 +60,4 @@ serviceAccount:
     azure.workload.identity/client-id : "f1b1a632-68d6-4e5d-8a1e-d416e98b41a4"
   labels:
     azure.workload.identity/use: "true"
-  name: ""
+  name: "alert-hub-sa"
