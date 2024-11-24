@@ -21,6 +21,21 @@ redis:
       size: .5Gi
       storageClass:
 
+postgresql:
+  enabled: false
+  fullnameOverride: ""
+  architecture: standalone
+  auth:
+    postgresPassword: ""
+    username: ""
+    password: ""
+    database: ""
+  primary:
+    persistence:
+      enabled: true
+      storageClass: ""
+      size: 8Gi
+
 api:
   enabled: true
   replicaCount: 1

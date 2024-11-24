@@ -9,6 +9,9 @@ ingress:
   host: alert-hub-sandbox.ifrc.org
   ingressClassName: webapprouting.kubernetes.azure.com
 
+postgresql:
+  enabled: true
+
 api:
   enabled: true
   replicaCount: 1
