@@ -45,6 +45,7 @@ class UserAlertSubscription(models.Model):
     filter_alert_country_id: int
 
 
+# XXX: Change name?
 class SubscriptionAlert(models.Model):
     subscription = models.ForeignKey(UserAlertSubscription, on_delete=models.CASCADE, related_name="+")
     alert = models.ForeignKey(Alert, on_delete=models.CASCADE, related_name="+")

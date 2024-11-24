@@ -124,12 +124,7 @@ class TestSubscriptionMutation(TestCase):
         self.user = UserFactory.create()
 
         self.r_asia = RegionFactory.create(name="Asia")
-        self.r_europe = RegionFactory.create(name="Europe")
-
         self.c_nepal = CountryFactory.create(region=self.r_asia)
-        self.c_india = CountryFactory.create(region=self.r_asia)
-        self.c_germany = CountryFactory.create(region=self.r_europe)
-
         self.ad_bagmati = Admin1Factory.create(country=self.c_nepal)
 
         self.valid_data = dict(
@@ -147,11 +142,12 @@ class TestSubscriptionMutation(TestCase):
             filterAlertCategories=[],
         )
 
-    def create_dummy_subscription(self, user, is_active=True):
+    def create_subscription(self, **kwargs):
         return UserAlertSubscriptionFactory.create(
-            user=user,
-            is_active=is_active,
-            filter_alert_country=self.c_nepal,
+            **{
+                "filter_alert_country": self.c_nepal,
+                **kwargs,
+            }
         )
 
     def _query_create(self, data, **kwargs):
@@ -331,7 +327,7 @@ class TestSubscriptionMutation(TestCase):
         )
 
     def test_update_subscription(self):
-        subscription = self.create_dummy_subscription(user=self.user)
+        subscription = self.create_subscription(user=self.user)
         data = copy.deepcopy(self.valid_data)
 
         # Without Login session
@@ -349,7 +345,7 @@ class TestSubscriptionMutation(TestCase):
         self.assertNotEqual(sub_data["result"]["id"], None, content)
 
     def test_update_subscription_validation_misc(self):
-        subscription = self.create_dummy_subscription(user=self.user)
+        subscription = self.create_subscription(user=self.user)
         self.force_login(self.user)
         data = copy.deepcopy(self.valid_data)
 
@@ -418,7 +414,7 @@ class TestSubscriptionMutation(TestCase):
         )
 
     def test_update_subscription_validation_admin1s(self):
-        subscription = self.create_dummy_subscription(user=self.user)
+        subscription = self.create_subscription(user=self.user)
         self.force_login(self.user)
         data = copy.deepcopy(self.valid_data)
         data["filterAlertAdmin1s"] = [
@@ -454,8 +450,8 @@ class TestSubscriptionMutation(TestCase):
         user = UserFactory.create()
         user2 = UserFactory.create()
 
-        subscription = self.create_dummy_subscription(user=user)
-        other_subscription = self.create_dummy_subscription(user=user2)
+        subscription = self.create_subscription(user=user)
+        other_subscription = self.create_subscription(user=user2)
 
         self.force_login(user)
         data = copy.deepcopy(self.valid_data)
@@ -513,8 +509,8 @@ class TestSubscriptionMutation(TestCase):
         user = UserFactory.create()
         user2 = UserFactory.create()
 
-        subscription = self.create_dummy_subscription(user=user)
-        other_subscription = self.create_dummy_subscription(user=user2)
+        subscription = self.create_subscription(user=user)
+        other_subscription = self.create_subscription(user=user2)
 
         self.force_login(user)
 
