@@ -1,12 +1,12 @@
-import typing
-import time
 import logging
+import time
+import typing
 
 from celery import shared_task
-from django.db import models, connection, transaction
+from django.db import connection, models, transaction
 
-from apps.cap_feed.models import Alert, AlertInfo, AlertAdmin1
-from apps.subscription.models import UserAlertSubscription, SubscriptionAlert
+from apps.cap_feed.models import Alert, AlertAdmin1, AlertInfo
+from apps.subscription.models import SubscriptionAlert, UserAlertSubscription
 from main.cache import CacheKey
 from utils.common import redis_lock
 

@@ -1,19 +1,17 @@
-from main.tests import TestCase
-
-
 from apps.cap_feed.factories import (
-    FeedFactory,
+    Admin1Factory,
     AlertFactory,
     AlertInfoFactory,
-    RegionFactory,
     CountryFactory,
-    Admin1Factory,
+    FeedFactory,
+    RegionFactory,
 )
-from apps.cap_feed.models import AlertInfo, Alert
+from apps.cap_feed.models import Alert, AlertInfo
 from apps.subscription.factories import UserAlertSubscriptionFactory
 from apps.subscription.models import SubscriptionAlert
 from apps.subscription.tasks import process_pending_subscription_alerts
 from apps.user.factories import UserFactory
+from main.tests import TestCase
 
 
 class TestSubscriptionMutation(TestCase):

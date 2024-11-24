@@ -192,7 +192,8 @@ class Alert(models.Model):
     # This is updated by the system to filter out is_expired
     is_expired = models.BooleanField(default=False)
     # TODO: Keep this true for existing alerts and then default=True for future alerts
-    is_processed_by_subscription = models.BooleanField(default=False)
+    # NOTE: null=True is to avoid full rewrite of the table: https://docs.djangoproject.com/en/5.1/ref/migration-operations/#addfield  # noqa
+    is_processed_by_subscription = models.BooleanField(default=False, null=True)
 
     identifier = models.CharField()
     sender = models.CharField()
