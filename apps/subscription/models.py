@@ -19,7 +19,7 @@ class UserAlertSubscription(models.Model):
 
     name = models.CharField(max_length=255)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    is_active = models.BooleanField(default=True)
+    is_active = models.BooleanField(default=False)
 
     # TODO: Keep change history?
     # Filters
@@ -43,6 +43,9 @@ class UserAlertSubscription(models.Model):
     )
 
     filter_alert_country_id: int
+
+    def __str__(self):
+        return self.name
 
 
 # XXX: Change name?

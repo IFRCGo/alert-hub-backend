@@ -302,29 +302,46 @@ class TestSubscriptionMutation(TestCase):
         UserAlertSubscriptionFactory.create_batch(10, is_active=False, user=user, **common_subs_kwargs)
         UserAlertSubscriptionFactory.create_batch(10, is_active=True, user=user2, **common_subs_kwargs)
 
+        def _assert_success(content):
+            sub_data = content["data"]["private"]["createUserAlertSubscription"]
+            self.assertEqual(sub_data["ok"], True, content)
+            self.assertEqual(sub_data["errors"], None, content)
+
+        def _assert_failure(content):
+            sub_data = content["data"]["private"]["createUserAlertSubscription"]
+            self.assertEqual(sub_data["ok"], False, content)
+            self.assertNotEqual(sub_data["errors"], None, content)
+            self.assertEqual(
+                sub_data["errors"],
+                [
+                    {
+                        "array_errors": None,
+                        "client_id": None,
+                        "field": "isActive",
+                        "messages": "Only 10 active subscriptions are allowed",
+                        "object_errors": None,
+                    }
+                ],
+            )
+
         content = self._query_create(data)
-        sub_data = content["data"]["private"]["createUserAlertSubscription"]
-        self.assertEqual(sub_data["ok"], True, content)
-        self.assertEqual(sub_data["errors"], None, content)
+        _assert_success(content)
 
         # Create dummy subscriptions to main user
         UserAlertSubscriptionFactory.create_batch(9, is_active=True, user=user, **common_subs_kwargs)
+
         content = self._query_create(data)
-        sub_data = content["data"]["private"]["createUserAlertSubscription"]
-        self.assertEqual(sub_data["ok"], False, content)
-        self.assertNotEqual(sub_data["errors"], None, content)
-        self.assertEqual(
-            sub_data["errors"],
-            [
-                {
-                    "array_errors": None,
-                    "client_id": None,
-                    "field": "isActive",
-                    "messages": "Only 10 active subscriptions are allowed",
-                    "object_errors": None,
-                }
-            ],
-        )
+        _assert_failure(content)
+
+        data["isActive"] = False
+        content = self._query_create(data)
+        _assert_success(content)
+
+        data.pop("isActive")  # Should be same as False
+        content = self._query_create(data)
+        _assert_success(content)
+
+        assert UserAlertSubscription.objects.filter(user=user, is_active=True).count() <= 10
 
     def test_update_subscription(self):
         subscription = self.create_subscription(user=self.user)
