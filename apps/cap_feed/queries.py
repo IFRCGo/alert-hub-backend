@@ -1,10 +1,17 @@
+import typing
+
 import strawberry
 import strawberry_django
 from django.db import models
 from strawberry_django.filters import apply as apply_filters
+from strawberry_django.pagination import OffsetPaginationInput
 
 from main.graphql.context import Info
-from utils.strawberry.paginations import CountList, pagination_field
+from utils.strawberry.paginations import (
+    CountList,
+    count_list_resolver,
+    pagination_field,
+)
 
 from .filters import (
     Admin1Filter,
@@ -137,6 +144,22 @@ class PublicQuery:
     @strawberry_django.field
     async def alert_info(self, info: Info, pk: strawberry.ID) -> AlertInfoType | None:
         return await AlertInfoType.get_queryset(None, None, info).filter(pk=pk).afirst()
+
+    @strawberry_django.field
+    async def historical_alerts(
+        self,
+        info: Info,
+        filters: typing.Optional[AlertFilter] = strawberry.UNSET,
+        pagination: typing.Optional[OffsetPaginationInput] = strawberry.UNSET,
+    ) -> CountList[AlertType]:
+        queryset = get_alert_queryset(None, is_active=False)
+        return count_list_resolver(
+            info,
+            queryset,
+            AlertType,
+            filters=filters,  # type: ignore[reportArgumentType]
+            pagination=pagination,  # type: ignore[reportArgumentType]
+        )
 
 
 @strawberry.type
