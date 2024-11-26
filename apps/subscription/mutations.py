@@ -3,6 +3,7 @@ from asgiref.sync import sync_to_async
 
 from main.graphql.context import Info
 from utils.strawberry.mutations import (
+    MutationEmptyResponseType,
     MutationResponseType,
     _CustomErrorType,
     mutation_is_not_valid,
@@ -11,9 +12,39 @@ from utils.strawberry.mutations import (
 from utils.strawberry.transformers import convert_serializer_to_type
 
 from .queries import UserAlertSubscriptionType
-from .serializers import UserAlertSubscriptionSerializer
+from .serializers import (
+    UserAlertSubscriptionSerializer,
+    UserAlertSubscriptionUnsubscribeSerializer,
+)
 
 UserAlertSubscriptionInput = convert_serializer_to_type(UserAlertSubscriptionSerializer, name="UserAlertSubscriptionInput")
+UserAlertSubscriptionUnsubscribeInput = convert_serializer_to_type(
+    UserAlertSubscriptionUnsubscribeSerializer,
+    name='UserAlertSubscriptionUnsubscribeInput',
+)
+
+
+@strawberry.type
+class PublicMutation:
+
+    @strawberry.mutation
+    @sync_to_async
+    def unsubscribe_user_alert_subscription(
+        self,
+        data: UserAlertSubscriptionUnsubscribeInput,  # type: ignore[reportInvalidTypeForm]
+        info: Info,
+    ) -> MutationEmptyResponseType:
+        serializer = UserAlertSubscriptionUnsubscribeSerializer(
+            data=process_input_data(data), context={"request": info.context.request}
+        )
+        if errors := mutation_is_not_valid(serializer):
+            return MutationEmptyResponseType(
+                ok=False,
+                errors=errors,
+            )
+        serializer.save()
+        # Set user activation
+        return MutationEmptyResponseType()
 
 
 @strawberry.type
@@ -26,10 +57,8 @@ class PrivateMutation:
         info: Info,
     ) -> MutationResponseType[UserAlertSubscriptionType]:
         serializer = UserAlertSubscriptionSerializer(
-            # instance=info.context.request.user,
             data=process_input_data(data),
             context={'request': info.context.request},
-            # partial=True,
         )
         if errors := mutation_is_not_valid(serializer):
             return MutationResponseType(

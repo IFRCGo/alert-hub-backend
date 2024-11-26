@@ -726,7 +726,7 @@ type UserAlertSubscriptionType {
   createdAt: DateTime!
   modifiedAt: DateTime!
   isActive: Boolean!
-  filterAlertCountry: ID!
+  filterAlertCountryId: ID!
   filterAlertAdmin1s: [ID!]!
   notifyByEmail: Boolean!
   emailLastSentAt: DateTime
@@ -742,7 +742,7 @@ type UserAlertSubscriptionType {
   emailFrequency: UserAlertSubscriptionEmailFrequencyEnum!
   emailFrequencyDisplay: String!
   alerts(filters: AlertFilter, order: AlertOrder, pagination: OffsetPaginationInput): AlertTypeCountList!
-  filterAlertCountryDisplay: CountryType!
+  filterAlertCountry: CountryType!
   filterAlertAdmin1sDisplay: [Admin1Type!]!
 }
 

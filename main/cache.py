@@ -11,3 +11,4 @@ class CacheKey:
         TAG_EXPIRE_ALERT = _BASE + 'tag_expire_alert'
         REMOVE_EXPIRE_PROCESSED_ALERT = _BASE + 'remove_expire_processed_alert'
         SUBSCRIPTION_TAG_ALERTS = _BASE + 'subscription_tag_alerts'
+        SEND_DAILY_USER_ALERT_SUBSCRIPTION_EMAIL = _BASE + 'send_daily_user_alert_subscription_email'

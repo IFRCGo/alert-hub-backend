@@ -1,7 +1,9 @@
+from django.utils.http import urlsafe_base64_decode
 from django.utils.translation import gettext
 from rest_framework import serializers
 
 from apps.cap_feed.models import Admin1
+from main.tokens import TokenManager
 from utils.strawberry.serializers import IntegerIDField
 
 from .models import UserAlertSubscription
@@ -53,3 +55,42 @@ class UserAlertSubscriptionSerializer(serializers.ModelSerializer):
         validated_data["user"] = self.context["request"].user
         instance = super().create(validated_data)
         return instance
+
+
+class UserAlertSubscriptionUnsubscribeSerializer(serializers.Serializer):
+    uuid = serializers.CharField(required=True)
+    token = serializers.CharField(required=True)
+
+    def _validate_token(self, attrs):
+        token_generator = TokenManager.user_subscription_unsubscribe_generator
+
+        try:
+            uid = urlsafe_base64_decode(attrs['uuid']).decode('utf-8')
+            user_subscription = UserAlertSubscription.objects.get(pk=uid)
+        except (
+            TypeError,
+            ValueError,
+            OverflowError,
+            UserAlertSubscription.DoesNotExist,
+        ):
+            user_subscription = None
+
+        # TODO: Fix check_token typing
+        if user_subscription is not None and token_generator.check_token(
+            user_subscription,  # type: ignore[reportArgumentType]
+            attrs['token'],
+        ):
+            return user_subscription
+        raise serializers.ValidationError(gettext('Invalid or expired token'))
+
+    def validate(self, attrs):
+        return {
+            **attrs,
+            "user_subscription": self._validate_token(attrs),
+        }
+
+    def save(self, **_):
+        assert isinstance(self.validated_data, dict)
+        user_subscription = self.validated_data["user_subscription"]
+        user_subscription.notify_by_email = False
+        user_subscription.save(update_fields=("notify_by_email",))

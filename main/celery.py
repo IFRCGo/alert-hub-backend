@@ -42,6 +42,11 @@ app.conf.beat_schedule = {
         'schedule': timedelta(minutes=30),  # TODO: Lower this?
         'options': {'queue': 'default'},
     },
+    f'{INTERNAL_CELERY_TASK_NAME_PREFIX}send_daily_user_alert_subscriptions_email': {
+        'task': 'apps.subscription.tasks.send_daily_user_alert_subscriptions_email',
+        'schedule': timedelta(days=1),
+        'options': {'queue': 'default'},
+    },
     f'{INTERNAL_CELERY_TASK_NAME_PREFIX}uptime_push': {
         'task': 'main.celery.uptime_push',
         'schedule': timedelta(minutes=30),

@@ -140,6 +140,7 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
 ]
 
+LOGIN_URL = "admin:login"
 
 ROOT_URLCONF = 'main.urls'
 

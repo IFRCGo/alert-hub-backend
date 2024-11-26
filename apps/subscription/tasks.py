@@ -10,6 +10,8 @@ from apps.subscription.models import SubscriptionAlert, UserAlertSubscription
 from main.cache import CacheKey
 from utils.common import redis_lock
 
+from .emails import send_user_alert_subscriptions_email
+
 logger = logging.getLogger(__name__)
 
 
@@ -95,3 +97,17 @@ def process_pending_subscription_alerts():
             with connection.cursor() as cursor:
                 cursor.execute(TAG_MUTATION_RAW_QUERY)
         logger.info(f'Tagged pending alerts to subscriptions. Runtime: {time.time() - start_time} seconds')
+
+
+@shared_task
+def send_daily_user_alert_subscriptions_email():
+    with redis_lock(CacheKey.RedisLockKey.SEND_DAILY_USER_ALERT_SUBSCRIPTION_EMAIL) as acquired:
+        if not acquired:
+            logger.warning(f'{CacheKey.RedisLockKey.SEND_DAILY_USER_ALERT_SUBSCRIPTION_EMAIL} is already running')
+            return
+        start_time = time.time()
+        send_user_alert_subscriptions_email(UserAlertSubscription.EmailFrequency.DAILY)
+        logger.info(f'Send daily user alert subscription email. Runtime: {time.time() - start_time} seconds')
+
+
+# TODO: Add tasks to clean up SubscriptionAlert table data for old entries

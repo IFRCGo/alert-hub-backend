@@ -27,7 +27,7 @@ class UserAlertSubscriptionType:
     is_active: strawberry.auto
 
     # Filters
-    filter_alert_country: strawberry.ID
+    filter_alert_country_id: strawberry.ID
     filter_alert_admin1s: list[strawberry.ID]
     # Enum - Value
     filter_alert_urgencies = enum_field(UserAlertSubscription.filter_alert_urgencies)
@@ -73,7 +73,7 @@ class UserAlertSubscriptionType:
         )
 
     @strawberry.field
-    async def filter_alert_country_display(
+    async def filter_alert_country(
         self,
         info: Info,
         root: strawberry.Parent[UserAlertSubscription],
