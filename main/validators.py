@@ -19,4 +19,4 @@ class MaximumLengthValidator:
     def get_help_text(self):
         return gettext(
             "Your password must contain at most %(max_length)d characters.",
-        ) % {"min_length": self.max_length}
+        ) % {"max_length": self.max_length}

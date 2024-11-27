@@ -3,11 +3,13 @@ import dataclasses
 import strawberry
 
 from apps.cap_feed.enums import enum_map as cap_feed_enum_map
+from apps.subscription.enums import enum_map as subscription_enum_map
 from apps.user.enums import enum_map as user_enum_map
 
 ENUM_TO_STRAWBERRY_ENUM_MAP: dict[str, type] = {
     **user_enum_map,
     **cap_feed_enum_map,
+    **subscription_enum_map,
 }
 
 

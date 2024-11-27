@@ -185,7 +185,7 @@ def convert_serializer_field(field, convert_choices_to_enum=True, force_optional
         graphql_type = graphql_type[0]
 
     if isinstance(field, serializers.Serializer):
-        pass
+        graphql_type = convert_serializer_to_type(field.__class__, partial=force_optional)
     elif isinstance(field, serializers.ListSerializer):
         field = field.child
         of_type = convert_serializer_to_type(field.__class__, partial=force_optional)
@@ -293,5 +293,20 @@ class MonkeyPatch:
                 field.django_name = field.name  # type: ignore[reportGeneralTypeIssues] FIXME
         return response
 
+    # XXX: Reverting remote change to fix issue
+    #   `TypeError: DjangoModelFilterInput.__init__() got an unexpected keyword argument '_get_id'`
+    #   Which happens when a `field: {pk: 'id'}` filter is used. Try this for alerts query
+    #     `{country: {pk: "1"}}`
+    # Using this: https://github.com/strawberry-graphql/strawberry-django/blob/v0.38.0/strawberry_django/filters.py # noqa: E501
+    # By overwriting this: https://github.com/strawberry-graphql/strawberry-django/blob/v0.49.1/strawberry_django/filters.py#L61 # noqa: E501
+    @strawberry.input
+    class DjangoModelFilterInput:
+        pk: strawberry.ID
+
+    @classmethod
+    def get_django_model_filter_input_type(cls):
+        return cls.DjangoModelFilterInput
+
 
 import_module("strawberry_django.type")._process_type = MonkeyPatch._process_type  # type: ignore[reportGeneralTypeIssues]
+import_module("strawberry_django.filters").get_django_model_filter_input_type = MonkeyPatch.get_django_model_filter_input_type  # type: ignore[reportGeneralTypeIssues] # noqa: E501

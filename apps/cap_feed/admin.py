@@ -153,6 +153,7 @@ class FeedAdmin(admin.ModelAdmin):
     list_filter = (
         'format',
         'country__region',
+        'enable_polling',
         AutocompleteFilterFactory('Country', 'country'),
     )
     search_fields = ['url']

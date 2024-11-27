@@ -17,9 +17,10 @@ Including another URLconf
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
-from django.urls import include, path
+from django.urls import include, path, re_path
 from django.views.decorators.csrf import csrf_exempt
 
+from apps.subscription.views import user_alert_subscription_email_preview
 from main.graphql.schema import CustomAsyncGraphQLView
 from main.graphql.schema import schema as graphql_schema
 
@@ -32,7 +33,7 @@ urlpatterns = [
             CustomAsyncGraphQLView.as_view(
                 schema=graphql_schema,
                 graphql_ide=False,
-            )
+            ),
         ),
         name='graphql',
     ),
@@ -41,7 +42,15 @@ urlpatterns = [
 
 
 if settings.DEBUG:
-    urlpatterns.append(path('graphiql/', csrf_exempt(CustomAsyncGraphQLView.as_view(schema=graphql_schema))))
+    urlpatterns.extend(
+        [
+            path(
+                'graphiql/',
+                csrf_exempt(CustomAsyncGraphQLView.as_view(schema=graphql_schema)),
+            ),
+            re_path(r'^dev/user-alert-subscription-email/preview/$', user_alert_subscription_email_preview),
+        ]
+    )
 
     # Static and media file URLs
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

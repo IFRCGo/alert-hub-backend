@@ -22,7 +22,7 @@ psycopg2-binary = "^2.9.9"
 pytz = "*"
 colorlog = "*"
 requests = "*"
-strawberry-graphql-django = {extras = ["strawberry-graphql"], version = "0.47.1"}
+strawberry-graphql-django = {extras = ["strawberry-graphql"], version = "0.49.1"}
 sentry-sdk = "*"
 djangorestframework = "*"
 validators = "*"
