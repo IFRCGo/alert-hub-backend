@@ -33,6 +33,7 @@ django-premailer = "*"
 user-agents = "*"
 factory-boy = "*"
 azure-identity = "*"
+whitenoise = "*"  # Prod level static server for Admin panel
 
 [tool.poetry.dev-dependencies]
 pytest = "*"
