@@ -34,16 +34,13 @@ input AlertFilter {
   id: IDBaseFilterLookup
   country: DjangoModelFilterInput
   sent: DatetimeDatetimeFilterLookup
+  infos: AlertInfoFilter
   AND: AlertFilter
   OR: AlertFilter
   NOT: AlertFilter
   DISTINCT: Boolean
   region: ID
   admin1: ID
-  urgency: [AlertInfoUrgencyEnum!]
-  severity: [AlertInfoSeverityEnum!]
-  certainty: [AlertInfoCertaintyEnum!]
-  category: [AlertInfoCategoryEnum!]
 }
 
 type AlertInfoAreaCircleType {
@@ -106,6 +103,10 @@ input AlertInfoFilter {
   OR: AlertInfoFilter
   NOT: AlertInfoFilter
   DISTINCT: Boolean
+  urgency: [AlertInfoUrgencyEnum!]
+  severity: [AlertInfoSeverityEnum!]
+  certainty: [AlertInfoCertaintyEnum!]
+  category: [AlertInfoCategoryEnum!]
 }
 
 input AlertInfoOrder {
@@ -644,6 +645,7 @@ type PublicQuery {
   feed(pk: ID!): FeedType
   alert(pk: ID!): AlertType
   alertInfo(pk: ID!): AlertInfoType
+  historicalAlerts(filters: AlertFilter, pagination: OffsetPaginationInput): AlertTypeCountList!
   id: ID!
 }
 
