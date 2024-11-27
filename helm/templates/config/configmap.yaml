@@ -3,7 +3,7 @@ apiVersion: v1
 metadata:
   name: {{ template "ifrcgo-alert-hub.fullname" . }}-api-configmap
   labels:
-    component: api-deployment
+    app: {{ include "ifrcgo-alert-hub.fullname" . }}
     environment: {{ .Values.environment }}
     release: {{ .Release.Name }}
 data:

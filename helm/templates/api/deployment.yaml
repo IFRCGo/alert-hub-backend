@@ -5,29 +5,31 @@ kind: Deployment
 metadata:
   name: {{ template "ifrcgo-alert-hub.fullname" . }}-api
   labels:
-    component: api-deployment
+    app: {{ include "ifrcgo-alert-hub.fullname" . }}
+    component: api
     environment: {{ .Values.environment }}
     release: {{ .Release.Name }}
-    # XXX: Add global lables?
+  annotations:
+    reloader.stakater.com/auto: "true"
 spec:
   replicas: {{ .Values.api.replicaCount }}
   selector:
     matchLabels:
-      app: {{ template "ifrcgo-alert-hub.name" . }}
-      release: {{ .Release.Name }}
-      run: {{ .Release.Name }}-api
+      app: {{ include "ifrcgo-alert-hub.fullname" . }}
+      component: api
   template:
     metadata:
+      {{- if not .Values.azure.aksSecretsProviderAvailable }}
       annotations:
         checksum/secret: {{ include (print .Template.BasePath "/config/secret.yaml") . | sha256sum }}
         checksum/configmap: {{ include (print .Template.BasePath "/config/configmap.yaml") . | sha256sum }}
+      {{- end }}
       labels:
-        app: {{ template "ifrcgo-alert-hub.name" . }}
-        release: {{ .Release.Name }}
-        run: {{ .Release.Name }}-api
+        app: {{ include "ifrcgo-alert-hub.fullname" . }}
+        component: api
     spec:
       containers:
-        - name: {{ .Chart.Name }}-api
+        - name: api
           image: "{{ .Values.image.name }}:{{ .Values.image.tag }}"
           command: ["/code/deploy/run_web.sh"]
           ports:
@@ -36,19 +38,39 @@ spec:
               protocol: TCP
           # TODO: livenessProbe
           resources:
-            requests:
-              cpu: {{ .Values.api.resources.requests.cpu }}
-              memory: {{ .Values.api.resources.requests.memory }}
-            limits:
-              cpu: {{ .Values.api.resources.limits.cpu }}
-              memory: {{ .Values.api.resources.limits.memory }}
+            {{- toYaml .Values.api.resources | nindent 12 }}
           env:
             - name: DJANGO_APP_TYPE
               value: web
           envFrom:
             - secretRef:
-                name: {{ template "ifrcgo-alert-hub.fullname" . }}-api-secret
+                name: {{ template "ifrcgo-alert-hub.secretname" . }}
             - configMapRef:
                 name: {{ template "ifrcgo-alert-hub.fullname" . }}-api-configmap
+          {{- if .Values.azure.aksSecretsProviderAvailable }}
+          volumeMounts:
+            - name: {{ include "ifrcgo-alert-hub.secretname" . }}
+              mountPath: /mnt/secrets-store
+              readOnly: true
+          {{- end }}
+
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
+      {{- if .Values.serviceAccount.create }}
+      serviceAccountName: {{ include "ifrcgo-alert-hub.serviceAccountName" . }}
+      {{- end }}
+
+      {{- if .Values.azure.aksSecretsProviderAvailable }}
+      volumes:
+        - name: {{ include "ifrcgo-alert-hub.secretname" . }}
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: {{ include "ifrcgo-alert-hub.fullname" . }}-secret-provider
+      {{- end }}
 
 {{- end }}
