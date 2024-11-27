@@ -90,6 +90,10 @@ env:
   # Sentry
   SENTRY_TRACES_SAMPLE_RATE: 0.2
   SENTRY_PROFILE_SAMPLE_RATE: 0.2
+# NOTE: Used to pass additional configs to api/worker containers
+# NOTE: Not used by azure vault
+envAdditional:
+  # USE_S3_BUCKET: "true"
 
 secretsName: ""
 secrets:
@@ -115,6 +119,10 @@ secrets:
   # Hcaptcha
   HCAPTCHA_SITEKEY:
   HCAPTCHA_SECRET:
+# NOTE: Used to pass additional secrets to api/worker containers
+# NOTE: Not used by azure vault
+secretsAdditional:
+  # AWS_S3_ACCESS_KEY_ID: "VERY-SENSITIVE-KEY-ID"
 
 # Azure configurations
 azure:

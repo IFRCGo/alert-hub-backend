@@ -25,6 +25,9 @@ env:
   CORS_ALLOWED_ORIGINS: dummy.com
   # Misc
   DEFAULT_FROM_EMAIL: dummy@dummy.com
+envAdditional:
+  ENABLE_MAGIC: "true"
+  MAGIC_TYPE: fun
 
 secretsName: ""
 secrets:
@@ -45,3 +48,6 @@ secrets:
   # Hcaptcha
   HCAPTCHA_SITEKEY: "10000000-ffff-ffff-ffff-000000000001"
   HCAPTCHA_SECRET: "0x0000000000000000000000000000000000000000"
+secretsAdditional:
+  ENABLE_MAGIC_SECRET: "true"
+  MAGIC_KEY: to-much-fun
