@@ -69,7 +69,7 @@ worker:
 
 argoHooks:
   # NOTE: Make sure keys are lowercase
-  database-migration:
+  db-migrate:
     enabled: true
     hook: PostSync
     preservehistory: true

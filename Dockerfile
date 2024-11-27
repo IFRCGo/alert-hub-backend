@@ -22,12 +22,13 @@ RUN apt-get update -y \
     && poetry --version \
     # Configure to use system instead of virtualenvs
     && poetry config virtualenvs.create false \
-    && poetry install --no-root \
+    && poetry install --no-root --no-cache --no-interaction \
     # Clean-up
     && pip uninstall -y poetry virtualenv-clone virtualenv \
     && apt-get remove -y gcc libc-dev libproj-dev \
     && apt-get autoremove -y \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && rm -rf /root/.cache/
 
 
 COPY . /code/

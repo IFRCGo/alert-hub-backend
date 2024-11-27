@@ -31,6 +31,9 @@ spec:
             limits:
               cpu: {{ default $.Values.api.resources.limits.cpu $hook.limitsCpu }}
               memory: {{ default $.Values.api.resources.limits.memory $hook.limitsMemory }}
+          env:
+            - name: DJANGO_APP_TYPE
+              value: hook
           envFrom:
             - secretRef:
                 name: {{ template "ifrcgo-alert-hub.secretname" $ }}
