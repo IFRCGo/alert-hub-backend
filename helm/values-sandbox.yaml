@@ -7,7 +7,7 @@ image:
 ingress:
   enabled: true
   host: alert-hub-sandbox.ifrc.org
-  ingressClassName: webapprouting.kubernetes.azure.com
+  className: webapprouting.kubernetes.azure.com
 
 postgresql:
   enabled: true

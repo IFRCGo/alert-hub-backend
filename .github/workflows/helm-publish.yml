@@ -1,6 +1,7 @@
 name: Builds and pushes Docker Images and Helm charts to Github Registry
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - develop
@@ -38,6 +39,7 @@ jobs:
 
     - name: 🐳 Helm dependency
       run: |
+        yq --indent 0 '.dependencies | map(["helm", "repo", "add", .name, .repository] | join(" ")) | .[]' ./helm/Chart.lock  | sh --
         helm dependency build ./helm
 
     - name: Tag docker image in Helm Chart values.yaml
