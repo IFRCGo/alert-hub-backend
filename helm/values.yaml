@@ -70,6 +70,17 @@ worker:
         cpu: "1"
         memory: 1Gi
 
+argoHooks:
+  # NOTE: Make sure keys are lowercase
+  db-migrate:
+    enabled: true
+    hook: PostSync
+    preservehistory: true
+    command: ["./manage.py", "migrate"]
+  collect-static:
+    enabled: true
+    hook: PostSync
+    command: ["./manage.py", "collectstatic", "--noinput"]
 
 env:
   # DJANGO_APP_ENVIRONMENT: using .environment

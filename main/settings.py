@@ -26,7 +26,7 @@ env = environ.Env(
     DJANGO_DEBUG=(bool, False),
     DJANGO_SECRET_KEY=str,
     DJANGO_TIME_ZONE=(str, 'UTC'),
-    DJANGO_APP_TYPE=str,  # web/worker
+    DJANGO_APP_TYPE=str,  # web/worker/hook
     DJANGO_APP_ENVIRONMENT=str,  # dev/prod
     # App Domain
     APP_RELEASE=(str, 'develop'),
@@ -143,16 +143,16 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
-    'django.middleware.locale.LocaleMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'main.middlewares.SentryTransactionMiddleware',
+    "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
+    "django.middleware.locale.LocaleMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "main.middlewares.SentryTransactionMiddleware",
 ]
 
 AUTHENTICATION_BACKENDS = [
@@ -257,11 +257,9 @@ USE_TZ = True
 # TODO: Use custom config for static files
 STATICFILES_DIRS = (str(BASE_DIR.joinpath('static')),)
 
-
 STATIC_URL = env("DJANGO_STATIC_URL")
 MEDIA_URL = env("DJANGO_MEDIA_URL")
 
-# Django storage
 
 if env("USE_AZURE_STORAGE"):
 
