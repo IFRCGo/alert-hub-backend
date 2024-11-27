@@ -6,7 +6,7 @@ from strawberry_django.pagination import OffsetPaginationInput
 
 from apps.cap_feed.filters import AlertFilter
 from apps.cap_feed.orders import AlertOrder
-from apps.cap_feed.types import AlertType
+from apps.cap_feed.types import AlertType, get_alert_queryset
 from main.graphql.context import Info
 from utils.strawberry.paginations import (
     CountList,
@@ -40,10 +40,15 @@ class PrivateQuery:
         order: typing.Optional[AlertOrder] = strawberry.UNSET,
         pagination: typing.Optional[OffsetPaginationInput] = strawberry.UNSET,
     ) -> CountList[AlertType]:
-        queryset = AlertType.get_queryset(None, None, info).filter(
+        # XXX: Add DISTINCT as default to avoid duplicate alerts
+        if filters is strawberry.UNSET:
+            filters = AlertFilter(DISTINCT=True)  # type: ignore[reportCallIssue]
+        else:
+            filters.DISTINCT = True  # type: ignore[reportCallIssue]
+
+        queryset = get_alert_queryset(None, is_active=False).filter(
             subscriptions__in=UserAlertSubscription.objects.filter(user=info.context.request.user).all(),
         )
-        # TODO: Handle duplicates from filters(frontend side) or manually
         return count_list_resolver(
             info,
             queryset,

@@ -31,8 +31,8 @@ class TestSubscriptionMutation(TestCase):
 
                     # Filters
                     # -- ForeignKey
-                    filterAlertCountry
-                    filterAlertCountryDisplay {
+                    filterAlertCountryId
+                    filterAlertCountry {
                       id
                       name
                     }
@@ -78,8 +78,8 @@ class TestSubscriptionMutation(TestCase):
 
                     # Filters
                     # -- ForeignKey
-                    filterAlertCountry
-                    filterAlertCountryDisplay {
+                    filterAlertCountryId
+                    filterAlertCountry {
                       id
                       name
                     }
