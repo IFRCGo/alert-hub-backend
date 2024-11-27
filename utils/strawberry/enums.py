@@ -40,7 +40,15 @@ def get_enum_name_from_django_field(
                 model_name=model_name,
                 serializer_name=serializer_name,
             )
-        if isinstance(field, serializers.ChoiceField):
+        if isinstance(field, serializers.ListField):
+            if isinstance(field.child, serializers.ChoiceField):
+                if _have_model(field.parent):
+                    if model_name is None:
+                        assert field.parent is not None
+                        model_name = field.parent.Meta.model.__name__  # type: ignore[reportAttributeAccessIssue]
+                serializer_name = _get_serializer_name(field)
+                field_name = field_name or field.field_name
+        elif isinstance(field, serializers.ChoiceField):
             if isinstance(field.parent, serializers.ListField):
                 if _have_model(field.parent.parent):
                     if model_name is None:

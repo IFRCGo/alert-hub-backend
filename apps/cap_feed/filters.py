@@ -12,6 +12,7 @@ from .enums import (
 from .models import Admin1, Alert, AlertInfo, Country, Feed, Region
 
 
+# NOTE: Make sure to sync changes here with apps/subscription/serializers.py:UserAlertSubscriptionFilterSerializer
 @strawberry_django.filters.filter(Alert, lookups=True)
 class AlertFilter:
     id: strawberry.auto

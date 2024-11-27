@@ -118,7 +118,7 @@ def serializer_error_to_error_types(errors: dict, initial_data: dict | None = No
                 _CustomErrorType(
                     client_id=node_client_id,
                     field=to_camel_case(field),
-                    object_errors=value,  # type: ignore[reportGeneralTypeIssues]
+                    object_errors=serializer_error_to_error_types(value),
                     array_errors=None,
                     messages=None,
                 )
@@ -146,7 +146,8 @@ def serializer_error_to_error_types(errors: dict, initial_data: dict | None = No
                     error_types.append(
                         _CustomErrorType(
                             client_id=node_client_id,
-                            field=to_camel_case(field),
+                            # TODO: Properly transform field(as number) into array_errors
+                            field=to_camel_case(field) if isinstance(field, str) else field,
                             messages=", ".join(str(msg) for msg in value),
                             object_errors=None,
                             array_errors=None,

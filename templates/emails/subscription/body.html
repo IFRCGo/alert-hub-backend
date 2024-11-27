@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<p>
+{% for subscription in subscriptions %}
+Subscription: {{ subscription.name }}
+</br>
+Latest alerts:
+    {% for alert in subscription.latest_alerts %}
+    - {{ alert.url }} -- {{ alert.sent }}
+</br>
+
+    {% endfor %}
+
+</br>
+
+Unsubscribe: <a href="{{ subscription.unsubscribe_url }}">{{ subscription.unsubscribe_url }}</a>
+{% endfor %}
+</p>
+
+<p>
+</p>
+
+</body>
+</html>

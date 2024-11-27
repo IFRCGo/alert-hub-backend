@@ -46,6 +46,7 @@ class EmailNotificationType(models.IntegerChoices):
     PASSWORD_RESET = 2, _('Password Reset')
     PASSWORD_CHANGED = 3, _('Password Changed')
     NEWS_AND_OFFERS = 4, _('News And Offers')
+    ALERT_SUBSCRIPTIONS = 5, _('Alert Subscriptions')
     # Other emails are configured using subscriptions
 
 

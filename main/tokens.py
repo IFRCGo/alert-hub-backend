@@ -24,10 +24,20 @@ def account_activation_token_generator_make_hash_value(_, user, timestamp):
     return str(user.pk) + str(user.is_active) + str(timestamp)
 
 
+def user_subscription_unsubscribe_generator_make_hash_value(_, user_subscription, timestamp):
+    return str(user_subscription.pk) + str(user_subscription.notify_by_email) + str(timestamp)
+
+
 class TokenManager:
     password_reset_token_generator = PasswordResetTokenGenerator()
     account_activation_token_generator = _generate_generator(
         'AccountActivationTokenGenerator',
         timeout=7 * 86400,
         _make_hash_value=account_activation_token_generator_make_hash_value,
+    )
+
+    user_subscription_unsubscribe_generator = _generate_generator(
+        'UserSubscriptionUnsubscribeGenerator',
+        timeout=7 * 86400,
+        _make_hash_value=user_subscription_unsubscribe_generator_make_hash_value,
     )

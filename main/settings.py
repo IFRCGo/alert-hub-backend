@@ -120,6 +120,7 @@ INSTALLED_APPS = [
     'apps.common',
     'apps.user',
     'apps.cap_feed',
+    'apps.subscription',
 ]
 
 MIDDLEWARE = [
@@ -139,6 +140,7 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
 ]
 
+LOGIN_URL = "admin:login"
 
 ROOT_URLCONF = 'main.urls'
 
