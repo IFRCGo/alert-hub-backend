@@ -1,6 +1,7 @@
 name: Builds and pushes Docker Images and Helm charts to Github Registry
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - develop
