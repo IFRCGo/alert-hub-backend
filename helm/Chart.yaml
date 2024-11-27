@@ -9,9 +9,8 @@ sources:
 dependencies:
   - name: redis
     version: "20.2.1"
-    repository: "oci://registry-1.docker.io/bitnamicharts"
+    repository: https://charts.bitnami.com/bitnami
     condition: redis.enabled
-    alias: redis
   - name: postgresql
     version: 15.5.32
     condition: postgresql.enabled
