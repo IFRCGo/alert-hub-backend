@@ -117,6 +117,7 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
+    "whitenoise.runserver_nostatic",
     'django.contrib.staticfiles',
     'django.contrib.gis',
     # External
@@ -144,6 +145,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.locale.LocaleMiddleware",
@@ -260,6 +262,16 @@ STATICFILES_DIRS = (str(BASE_DIR.joinpath('static')),)
 STATIC_URL = env("DJANGO_STATIC_URL")
 MEDIA_URL = env("DJANGO_MEDIA_URL")
 
+# Django storage
+STORAGES = {
+    "default": {
+        # XXX: This is not recommended for Production, but we don't need persistant storage until now
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
 
 if env("USE_AZURE_STORAGE"):
 

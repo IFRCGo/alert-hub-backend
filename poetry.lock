@@ -2052,7 +2052,21 @@ files = [
     {file = "wcwidth-0.2.13.tar.gz", hash = "sha256:72ea0c06399eb286d978fdedb6923a9eb47e1c486ce63e9b4e64fc18303972b5"},
 ]
 
+[[package]]
+name = "whitenoise"
+version = "6.8.2"
+description = "Radically simplified static file serving for WSGI applications"
+optional = false
+python-versions = ">=3.9"
+files = [
+    {file = "whitenoise-6.8.2-py3-none-any.whl", hash = "sha256:df12dce147a043d1956d81d288c6f0044147c6d2ab9726e5772ac50fb45d2280"},
+    {file = "whitenoise-6.8.2.tar.gz", hash = "sha256:486bd7267a375fa9650b136daaec156ac572971acc8bf99add90817a530dd1d4"},
+]
+
+[package.extras]
+brotli = ["brotli"]
+
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "94787bb3857fe5d7f54b3ce35be71f0718cd1e8c6934c8cfcde29af57331071d"
+content-hash = "4e6b1edb2f6be1ec6d35cac48b0ce7b835ecb5c2e5fd1beccef3702e3b3e3aa6"
