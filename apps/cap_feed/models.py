@@ -70,6 +70,47 @@ class Admin1(models.Model):
     bbox = gid_models.PolygonField(srid=4326, blank=True, null=True)
     geometry = gid_models.GeometryField(null=True, blank=True, default=None)
 
+    # Go-api: https://github.com/IFRCGo/go-api/blob/db2991bd588376f58a1db8422625e19aa5777dd3/api/models.py#L301-L323
+    emma_id = models.CharField(
+        verbose_name=_("emma_id"),
+        max_length=10,
+        blank=True,
+        null=True,
+        help_text=_("Meteoalarm EMMA_ID"),
+        db_index=True,
+    )
+    nuts1 = models.CharField(
+        verbose_name=_("nuts1"),
+        max_length=3,
+        blank=True,
+        null=True,
+        help_text=_("Nomenclature of Territorial Units for Statistics 1"),
+        db_index=True,
+    )
+    nuts2 = models.CharField(
+        verbose_name=_("nuts2"),
+        max_length=4,
+        blank=True,
+        null=True,
+        help_text=_("Nomenclature of Territorial Units for Statistics 2"),
+        db_index=True,
+    )
+    nuts3 = models.CharField(
+        verbose_name=_("nuts3"),
+        max_length=5,
+        blank=True,
+        null=True,
+        help_text=_("Nomenclature of Territorial Units for Statistics 3"),
+        db_index=True,
+    )
+    fips_code = models.PositiveIntegerField(
+        verbose_name=_("fips_code"),
+        blank=True,
+        null=True,
+        help_text=_("USA FIPS Code"),
+        db_index=True,
+    )
+
     country_id: int
 
     if TYPE_CHECKING:
