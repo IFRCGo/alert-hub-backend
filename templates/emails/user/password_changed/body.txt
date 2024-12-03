@@ -6,7 +6,6 @@
 {% block body %}
         Hi there {{ user.first_name }},
         Your password has been changed successfully.
-            Time: {{time}}
             Location: {{location}}
             Device: {{device}}
         If you are aware of this change, you can disregard this email.

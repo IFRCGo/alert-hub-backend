@@ -1,45 +1,36 @@
 {% extends "emails/base.html" %}
 
-{% block head %}
-    <style>
-        .reset-link {
-            margin: 12px 0;
-        }
-    </style>
-{% endblock %}
 {% block title %}
-    Reset Password
+IFRC Alert Hub password reset
 {% endblock %}
+
+{% block title_description %}
+<p style="margin: 0;">It seems you've forgotten your password.</p>
+{% endblock %}
+
+
 {% block body %}
-    <p>
-        It seems you've forgotten your password.
-    </p>
-    <div class="actions-container">
-        <p>
-            If you didn't request to reset your password, you may simply ignore this email.
-        </p>
-        <a
-            class="button-like-link reset-link"
-            href="{{ password_reset_url }}"
-        >
+    <div style="font-family: Poppins, Arial, sans-serif; color: #000;">
+        <p>If you didn't request to reset your password, you may simply ignore this email.</p>
+        <a href="{{ password_reset_url }}"
+            style="color: #4284FF; text-decoration: none; font-size: 16px; font-weight: 400; margin-left: 20px;">
             Reset your password
         </a>
+
+        {% if location or device %}
+        <p>More detail on password reset trigger</p>
+        <table border="0" cellpadding="0" cellspacing="0" role="presentation"
+            style="width: 100%; border-collapse: collapse; margin: 20px; font-family: Arial, sans-serif; color: #000;">
+            <tr>
+                <th class="cell label">Location</th>
+                <th class="cell">{{location}}</th>
+            </tr>
+            <tr>
+                <th class="cell label">Device</th>
+                <th class="cell">{{device}}</th>
+            </tr>
+        </table>
+        {% endif %}
     </div>
-    {% if location or device %}
-    <p>More detail on password reset trigger</p>
-    <table class="table">
-        <tr>
-            <th class="cell label">Time</th>
-            <th class="cell">{{time}}</th>
-        </tr>
-        <tr>
-            <th class="cell label">Location</th>
-            <th class="cell">{{location}}</th>
-        </tr>
-        <tr>
-            <th class="cell label">Device</th>
-            <th class="cell">{{device}}</th>
-        </tr>
-    </table>
-    {% endif %}
+
 {% endblock %}

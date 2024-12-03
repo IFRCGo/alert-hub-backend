@@ -1,26 +1,107 @@
-<!DOCTYPE html>
-<html>
-<body>
+{% extends "emails/base.html" %}
+{% load custom_tags %}
 
-<p>
-{% for subscription in subscriptions %}
-Subscription: {{ subscription.name }}
-</br>
-Latest alerts:
-    {% for alert in subscription.latest_alerts %}
-    - {{ alert.url }} -- {{ alert.sent }}
-</br>
+{% block title %}
+You got new <br /> Alerts!
+{% endblock %}
 
+{% block title_description %}
+<p style="margin: 0;">We have some new alerts that you are subscribed to.</p>
+{% endblock %}
+
+{% block body %}
+
+{% for subscription_data in subscriptions_data %}
+
+    <div style="font-family: Poppins, Arial, sans-serif; color: #000;">
+
+        <!-- Subscription detail -->
+        <h2 style="font-size: 16px; font-weight: 600; color: #000; margin-top: 30px; margin-left: 25px; margin-bottom: 10px; display: inline-block;">
+            {{ subscription_data.subscription.name }} |  {{ subscription_data.subscription.filter_alert_country.name }}
+        </h2>
+
+        <a href="{{ subscription_data.url }}">
+        <img
+            alt="Open Subscription"
+            height="auto"
+            src="{{ 'images/open-in-new-tab.png' | static_full_path }}"
+            style="border: 0; display: inline-block; outline: none; text-decoration: none; height: auto; width: 16px; margin-left: 10px; vertical-align: middle; margin-bottom: 10px;"
+            width="16"
+        />
+        </a>
+
+        <a href="{{ subscription_data.unsubscribe_url }}"
+            style="color: #4284FF; text-decoration: none; font-size: 16px; font-weight: 400; margin-left: 20px;">
+            Unsubscribe
+        </a>
+    </div>
+
+    <!-- Alerts detail -->
+    <table border="0" cellpadding="0" cellspacing="0" role="presentation"
+        style="width: 100%; border-collapse: collapse; margin: 20px; font-family: Arial, sans-serif; color: #000;">
+
+        <!-- Column -->
+        <tr>
+            <td style="padding: 10px; font-weight: bold; text-align: left; border-bottom: 1px solid #f5333f;">
+                <div style="font-size: 16px; font-weight: 600; color: #000; display: inline-block;">
+                    Alert Name
+                </div>
+            </td>
+            <td style="padding: 10px; font-weight: bold; text-align: left; border-bottom: 1px solid #f5333f;">
+                <div style="font-size: 16px; font-weight: 600; color: #000; display: inline-block;">
+                    Urgency
+                </div>
+            </td>
+            <td style="padding: 10px; font-weight: bold; text-align: left; border-bottom: 1px solid #f5333f;">
+                <div style="font-size: 16px; font-weight: 600; color: #000; display: inline-block;">
+                    Severity
+                </div>
+            </td>
+            <td style="padding: 10px; font-weight: bold; text-align: left; border-bottom: 1px solid #f5333f;">
+                <div style="font-size: 16px; font-weight: 600; color: #000; display: inline-block;">
+                    Certainty
+                </div>
+            </td>
+            <td style="padding: 10px; font-weight: bold; text-align: left; border-bottom: 1px solid #f5333f;">
+                <div style="font-size: 16px; font-weight: 600; color: #000; display: inline-block;">
+                    Admin1
+                </div>
+            </td>
+        </tr>
+
+        {% for alert_data in subscription_data.latest_alerts %}
+        <!-- Row -->
+        <tr>
+            <td style="padding: 10px; border-bottom: 1px solid #ddd;">
+                <a href="{{ alert_data.url }}" style="font-size: 16px; font-weight: 400; color: #4284FF; display: inline-block;">
+                    {{ alert_data.name }}
+                </a>
+            </td>
+            <td style="padding: 10px; border-bottom: 1px solid #ddd;">
+                <div style="font-size: 16px; font-weight: 400; color: #000; display: inline-block;">
+                    {{ alert_data.urgency }}
+                </div>
+            </td>
+            <td style="padding: 10px; border-bottom: 1px solid #ddd;">
+                <div style="font-size: 16px; font-weight: 400; color: #000; display: inline-block;">
+                    {{ alert_data.severity }}
+                </div>
+            </td>
+            <td style="padding: 10px; border-bottom: 1px solid #ddd;">
+                <div style="font-size: 16px; font-weight: 400; color: #000; display: inline-block;">
+                    {{ alert_data.certainty }}
+                </div>
+            </td>
+            <td style="padding: 10px; border-bottom: 1px solid #ddd;">
+                <div style="font-size: 16px; font-weight: 400; color: #000; display: inline-block;">
+                    {{ alert_data.admins }}
+                </div>
+            </td>
+        </tr>
     {% endfor %}
 
-</br>
+    </table>
 
-Unsubscribe: <a href="{{ subscription.unsubscribe_url }}">{{ subscription.unsubscribe_url }}</a>
 {% endfor %}
-</p>
 
-<p>
-</p>
-
-</body>
-</html>
+{% endblock %}

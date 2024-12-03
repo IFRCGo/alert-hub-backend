@@ -15,7 +15,6 @@ Reset Password
         {{  password_reset_url  }}
     {% if location or device %}
     More detail on password reset trigger
-        Time: {{time}}
         Location: {{location}}
         Device: {{device}}
     {% endif %}

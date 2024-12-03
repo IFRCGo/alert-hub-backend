@@ -15,5 +15,13 @@ class Permalink:
         return f'{cls.BASE_URL}/user-activation/{uid}/{token}'
 
     @classmethod
+    def subscription_detail(cls, id: int):
+        return f'{cls.BASE_URL}/subscription-detail/{id}'
+
+    @classmethod
+    def alert_detail(cls, id: int):
+        return f'{cls.BASE_URL}/alert-detail/{id}'
+
+    @classmethod
     def unsubscribe_user_alert_subscription(cls, uid: str, token: str):
         return f'{cls.BASE_URL}/unsubscribe-user-alert-subscription/{uid}/{token}'

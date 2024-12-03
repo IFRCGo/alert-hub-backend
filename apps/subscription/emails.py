@@ -1,5 +1,6 @@
 from datetime import timedelta
 
+from django.conf import settings
 from django.db import models
 from django.utils import timezone
 from django.utils.encoding import force_bytes
@@ -22,7 +23,7 @@ def generate_unsubscribe_user_alert_subscription_url(subscription: UserAlertSubs
 def generate_user_alert_subscription_email_context(
     user: User,
     email_frequency: UserAlertSubscription.EmailFrequency,
-) -> tuple[dict, models.QuerySet[UserAlertSubscription]]:
+) -> tuple[bool, dict, models.QuerySet[UserAlertSubscription]]:
     # NOTE: Number of subscription is static and less than UserAlertSubscription.LIMIT_PER_USER
     subscription_qs = UserAlertSubscription.objects.filter(user=user, email_frequency=email_frequency)
 
@@ -34,46 +35,63 @@ def generate_user_alert_subscription_email_context(
         # TODO: Calculate days instead of using 30 days
         from_datetime_threshold = timezone.now() - timedelta(days=30)
 
-    subscription_data = [
-        {
-            'subscription': subscription,
-            'unsubscribe_url': generate_unsubscribe_user_alert_subscription_url(subscription),
-            'latest_alerts': [
-                subscription_alert.alert
-                # NOTE: N+1 query, but N < 10 for now
-                # TODO: Index/partition alert__sent column?
-                for subscription_alert in (
-                    SubscriptionAlert.objects.select_related('alert')
-                    .filter(
-                        subscription=subscription,
-                        alert__sent__gte=from_datetime_threshold,
-                    )
-                    .order_by('-alert__sent')[:5]
-                )
-            ],
+    def _alert_data(alert):
+        # TODO: Fix N+1
+        info = alert.infos.first()
+        return {
+            "url": Permalink.alert_detail(alert.pk),
+            "name": info and info.event or f"Alert #{alert.pk}",
+            "urgency": info and info.urgency or '-',
+            "severity": info and info.severity or '-',
+            "certainty": info and info.certainty or '-',
+            "admins": ",".join(list(alert.admin1s.values_list("name", flat=True))) or '-',
         }
-        for subscription in subscription_qs
-    ]
+
+    subscription_data = []
+    for subscription in subscription_qs:
+        latest_alerts = [
+            _alert_data(subscription_alert.alert)
+            # NOTE: N+1 query, but N < 10 for now
+            # TODO: Index/partition alert__sent column?
+            for subscription_alert in (
+                SubscriptionAlert.objects.select_related('alert')
+                .filter(
+                    subscription=subscription,
+                    alert__sent__gte=from_datetime_threshold,
+                )
+                .order_by('-alert__sent')[:5]
+            )
+        ]
+        if latest_alerts:
+            subscription_data.append(
+                {
+                    'subscription': subscription,
+                    'url': Permalink.subscription_detail(subscription.pk),
+                    'unsubscribe_url': generate_unsubscribe_user_alert_subscription_url(subscription),
+                    'latest_alerts': latest_alerts,
+                }
+            )
 
     context = {
-        'subscriptions': subscription_data,
+        'subscriptions_data': subscription_data,
     }
 
-    return context, subscription_qs
+    return len(context["subscriptions_data"]) > 0, context, subscription_qs
 
 
 def send_user_alert_subscription_email(user: User, email_frequency: UserAlertSubscription.EmailFrequency):
-    context, subscription_qs = generate_user_alert_subscription_email_context(user, email_frequency)
+    have_data, context, subscription_qs = generate_user_alert_subscription_email_context(user, email_frequency)
     sent_at = timezone.now()
 
-    send_email(
-        user=user,
-        email_type=EmailNotificationType.ALERT_SUBSCRIPTIONS,
-        subject="Daily Alerts",  # TODO: Is this fine?
-        email_html_template='emails/subscription/body.html',
-        email_text_template='emails/subscription/body.txt',
-        context=context,
-    )
+    if have_data:
+        send_email(
+            user=user,
+            email_type=EmailNotificationType.ALERT_SUBSCRIPTIONS,
+            subject=f"{settings.EMAIL_SUBJECT_PREFIX} {email_frequency.label}",
+            email_html_template='emails/subscription/body.html',
+            email_text_template='emails/subscription/body.txt',
+            context=context,
+        )
 
     # Post action
     subscription_qs.update(email_last_sent_at=sent_at)

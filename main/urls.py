@@ -20,9 +20,14 @@ from django.contrib import admin
 from django.urls import include, path, re_path
 from django.views.decorators.csrf import csrf_exempt
 
-from apps.subscription.views import user_alert_subscription_email_preview
 from main.graphql.schema import CustomAsyncGraphQLView
 from main.graphql.schema import schema as graphql_schema
+from main.views import (
+    password_changed_email_preview,
+    password_reset_email_preview,
+    user_activation_email_preview,
+    user_alert_subscription_email_preview,
+)
 
 urlpatterns = [
     path('admin/', admin.site.urls, name='admin'),
@@ -48,7 +53,10 @@ if settings.DEBUG:
                 'graphiql/',
                 csrf_exempt(CustomAsyncGraphQLView.as_view(schema=graphql_schema)),
             ),
-            re_path(r'^dev/user-alert-subscription-email/preview/$', user_alert_subscription_email_preview),
+            re_path(r'^dev/email-preview/user-alert-subscription/$', user_alert_subscription_email_preview),
+            re_path(r'^dev/email-preview/password-reset/$', password_reset_email_preview),
+            re_path(r'^dev/email-preview/password-changed/$', password_changed_email_preview),
+            re_path(r'^dev/email-preview/user-activation/$', user_activation_email_preview),
         ]
     )
 
