@@ -191,8 +191,9 @@ def process_geo_codes(
 
     qs = AlertInfoAreaGeocode.objects.filter(alert_info_area__alert_info__alert=alert)
     for value_name, value in qs.values_list("value_name", "value"):
-        if value_name in Admin1.GeoCode:
-            geocode_map[value_name].add(value)
+        # TODO: Remove _value2member_map_ after upgrading python version
+        if value_name.upper() in Admin1.GeoCode._value2member_map_:
+            geocode_map[value_name.upper()].add(value)
 
     possible_admin1_ids: list[int] = []
     for geocode_name, values in geocode_map.items():
