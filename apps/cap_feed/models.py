@@ -1,3 +1,4 @@
+import enum
 from datetime import timedelta
 from typing import TYPE_CHECKING
 
@@ -64,13 +65,20 @@ def create_unknown_admin1(sender, instance, created, **kwargs):
 
 
 class Admin1(models.Model):
+    class GeoCode(enum.Enum):
+        EMMA_ID = "EMMA_ID"
+        NUTS1 = "NUTS1"
+        NUTS2 = "NUTS2"
+        NUTS3 = "NUTS3"
+        FIPS_CODE = "FIPS_CODE"
+
     ifrc_go_id = models.IntegerField(unique=True, null=True, editable=False)
     name = models.CharField()
     country = models.ForeignKey(Country, on_delete=models.CASCADE)
     bbox = gid_models.PolygonField(srid=4326, blank=True, null=True)
     geometry = gid_models.GeometryField(null=True, blank=True, default=None)
 
-    # Go-api: https://github.com/IFRCGo/go-api/blob/db2991bd588376f58a1db8422625e19aa5777dd3/api/models.py#L301-L323
+    # go-api: https://github.com/IFRCGo/go-api/blob/db2991bd588376f58a1db8422625e19aa5777dd3/api/models.py#L301-L323
     emma_id = models.CharField(
         verbose_name=_("emma_id"),
         max_length=10,
@@ -435,6 +443,18 @@ class AlertInfoAreaCircle(models.Model):
     alert_info_area_id: int
 
     # NOTE: Circle can't be drawn using Geojson. A polygon needs to be created which holds large data then raw value
+
+    def get_geos(self) -> tuple[Point, int] | None:
+        try:
+            # value: 22.448,71.060 199
+            point_raw, radius = self.value.split(" ")
+            point = point_raw.split(",")
+            return (
+                Point(float(point[1]), float(point[0])),
+                int(radius),
+            )
+        except Exception:
+            return
 
     def to_dict(self):
         alert_info_area_circle_dict = dict()
