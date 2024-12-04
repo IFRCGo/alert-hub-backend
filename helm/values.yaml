@@ -75,7 +75,7 @@ argoHooks:
   db-migrate:
     enabled: true
     hook: PostSync
-    preservehistory: true
+    preserveHistory: true
     command: ["./manage.py", "migrate"]
   collect-static:
     enabled: true

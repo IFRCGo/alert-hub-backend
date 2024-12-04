@@ -6,7 +6,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  {{- if $hook.preservehistory }}
+  {{- if $hook.preserveHistory }}
   generateName: {{ template "ifrcgo-alert-hub.fullname" $ }}-{{ $hookName }}-
   {{- else }}
   name: {{ template "ifrcgo-alert-hub.fullname" $ }}-{{ $hookName }}
