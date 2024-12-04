@@ -55,6 +55,7 @@ env = environ.Env(
     TEST_CACHE_REDIS_URL=(str, None),  # redis://redis:6379/11
     # Email
     EMAIL_HOST=str,
+    EMAIL_SUBJECT_PREFIX=(str, 'Alert Hub:'),
     EMAIL_USE_TLS=(bool, True),
     EMAIL_PORT=(int, 587),
     EMAIL_HOST_USER=str,
@@ -89,6 +90,7 @@ env = environ.Env(
     UPTIME_WORKER_HEARTBEAT=(str, None),
     HCAPTCHA_SITEKEY=str,
     HCAPTCHA_SECRET=str,
+    ALLOW_FAKE_DATA=(bool, False),
 )
 
 # SECURITY WARNING: keep the secret key used in production secret!
@@ -105,7 +107,7 @@ APP_DOMAIN = env('APP_DOMAIN')
 APP_FRONTEND_HOST = env('APP_FRONTEND_HOST')
 DJANGO_APP_TYPE = env('DJANGO_APP_TYPE')
 
-DJANGO_APP_ENVIRONMENT = env('DJANGO_APP_ENVIRONMENT')
+DJANGO_APP_ENVIRONMENT = env('DJANGO_APP_ENVIRONMENT').upper()
 
 
 # Application definition
@@ -407,6 +409,7 @@ CELERY_TASK_EXPIRE = (60 * 60) * 2  # Remove task data after 2hr (in seconds)
 
 # Email - SMTP Settings
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_SUBJECT_PREFIX = env('EMAIL_SUBJECT_PREFIX')
 EMAIL_USE_TLS = env('EMAIL_USE_TLS')
 EMAIL_HOST = env('EMAIL_HOST')
 EMAIL_PORT = env('EMAIL_PORT')
@@ -517,3 +520,6 @@ HCAPTCHA_SECRET = env('HCAPTCHA_SECRET')
 PREMAILER_OPTIONS = dict(
     disable_validation=not DEBUG,  # Disable validation in production
 )
+
+# Misc
+ALLOW_FAKE_DATA = env("ALLOW_FAKE_DATA")
