@@ -78,8 +78,7 @@ class IfrcGoGeoInjector:
     NOTE: New geo entities are not created. We just update existing ones
     """
 
-    # TODO: Remove `-stage`
-    GO_DOMAIN = 'https://goadmin-stage.ifrc.org'
+    GO_DOMAIN = 'https://goadmin.ifrc.org'
 
     dj_cmd: BaseCommand | None
     region_map: dict[int, Region]  # Where int will be ifrc_go_id
