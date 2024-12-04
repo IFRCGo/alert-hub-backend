@@ -245,19 +245,20 @@ def process_alert(
 
     if alert_has_valid_info:
         # Fallback: Try circles
-        for circle in alert_info_circles_collections:
-            possible_admin1s = admin1_base_qs.filter(
-                # TODO: Check for performance issues
-                geometry___dwithin=(circle[0], Distance(m=circle[1])),
-            ).exclude(id__in=tagged_admin1s_id)
-            for admin1_id in possible_admin1s.values_list('id', flat=True):
-                tagged_admin1s_id.add(admin1_id)
-                mgr.add(
-                    AlertAdmin1(
-                        alert=alert,
-                        admin1_id=admin1_id,
+        if not tagged_admin1s_id:
+            for circle in alert_info_circles_collections:
+                possible_admin1s = admin1_base_qs.filter(
+                    # TODO: Check for performance issues
+                    geometry___dwithin=(circle[0], Distance(m=circle[1])),
+                ).exclude(id__in=tagged_admin1s_id)
+                for admin1_id in possible_admin1s.values_list('id', flat=True):
+                    tagged_admin1s_id.add(admin1_id)
+                    mgr.add(
+                        AlertAdmin1(
+                            alert=alert,
+                            admin1_id=admin1_id,
+                        )
                     )
-                )
 
         # Fallback: Try geocodes
         if not tagged_admin1s_id:
