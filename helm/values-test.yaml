@@ -51,3 +51,30 @@ secrets:
 secretsAdditional:
   ENABLE_MAGIC_SECRET: "true"
   MAGIC_KEY: to-much-fun
+
+argoHooks:
+  custom-python-script-01:
+    enabled: true
+    hook: PostSync
+    command:
+      - ./manage.py
+      - shell
+      - -c
+      - |
+        from apps.user.models import User;
+        from django.db import transaction;
+
+        @transaction.atomic
+        def create_initial_users(user_data):
+            user, _ = User.objects.update_or_create(
+                email=email,
+                defaults={
+                  "first_name": "Hi"
+                  "last_name": "there"
+                  "is_superuser": False,
+                  "is_staff": False,
+                  "password": "not-working-password-hash",
+                },
+            )
+            print(f"Successfully created/update user {email=}");
+        create_initial_users(user_data);
