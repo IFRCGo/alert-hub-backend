@@ -1,3 +1,4 @@
+import logging
 from datetime import timedelta
 
 from django.conf import settings
@@ -10,7 +11,10 @@ from apps.subscription.models import SubscriptionAlert, UserAlertSubscription
 from apps.user.models import EmailNotificationType, User
 from main.permalinks import Permalink
 from main.tokens import TokenManager
+from utils.common import logger_log_extra
 from utils.emails import send_email
+
+logger = logging.getLogger(__name__)
 
 
 def generate_unsubscribe_user_alert_subscription_url(subscription: UserAlertSubscription) -> str:
@@ -32,11 +36,11 @@ def generate_user_alert_subscription_email_context(
     elif email_frequency == UserAlertSubscription.EmailFrequency.WEEKLY:
         from_datetime_threshold = timezone.now() - timedelta(days=7)
     elif email_frequency == UserAlertSubscription.EmailFrequency.MONTHLY:
-        # TODO: Calculate days instead of using 30 days
+        # TODO: Calculate month days instead of using 30 days
         from_datetime_threshold = timezone.now() - timedelta(days=30)
 
     def _alert_data(alert):
-        # TODO: Fix N+1
+        # TODO: Fix N+1 for alert.infos.first() and alert.admin1s
         info = alert.infos.first()
         return {
             "url": Permalink.alert_detail(alert.pk),
@@ -48,7 +52,7 @@ def generate_user_alert_subscription_email_context(
         }
 
     subscription_data = []
-    for subscription in subscription_qs:
+    for subscription in subscription_qs.iterator():
         latest_alerts = [
             _alert_data(subscription_alert.alert)
             # NOTE: N+1 query, but N < 10 for now
@@ -98,13 +102,24 @@ def send_user_alert_subscription_email(user: User, email_frequency: UserAlertSub
 
 
 def send_user_alert_subscriptions_email(email_frequency: UserAlertSubscription.EmailFrequency):
-    # TODO: Send in parallel if email service supports it
+    # TODO: Send in parallel if email service supports it?
     users_qs = User.objects.filter(
         id__in=UserAlertSubscription.objects.filter(email_frequency=email_frequency).values('user'),
     )
 
-    # TODO: Handle failure
     for user in users_qs.iterator():
-        # TODO: Trigger this as cronjob
-        # TODO: Pass timezone.now for ref time
-        send_user_alert_subscription_email(user, email_frequency)
+        # TODO: Trigger this as cronjob?
+        # TODO: Pass timezone.now for ref time?
+        try:
+            send_user_alert_subscription_email(user, email_frequency)
+        except Exception:
+            logger.error(
+                "Subscription: Failed to send email to user",
+                exc_info=True,
+                extra=logger_log_extra(
+                    {
+                        'user_id': user.pk,
+                        'email_frequency': email_frequency,
+                    }
+                ),
+            )
