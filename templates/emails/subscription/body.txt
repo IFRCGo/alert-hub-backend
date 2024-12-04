@@ -1,0 +1,15 @@
+{% extends "emails/base.txt" %}
+{% block title %}You got new Alerts!{% endblock %}
+{% block title_description %}We have some new alerts that you are subscribed to. {% endblock %}
+{% block body %}{% for subscription_data in subscriptions_data %}
+Subscription: {{ subscription_data.subscription.name }} | {{ subscription_data.subscription.filter_alert_country.name }}
+URL: {{ subscription_data.url }}
+Unsubscribe: {{ subscription_data.unsubscribe_url }}
+Alerts: {% for alert_data in subscription_data.latest_alerts %}
+    Alert Name: {{ alert_data.name }}
+    Alert Url: {{ alert_data.url }}
+    Alert Urgency: {{ alert_data.urgency }}
+    Alert Severity: {{ alert_data.severity }}
+    Alert certainty: {{ alert_data.certainty }}
+    Alert Admins: {{ alert_data.admins|truncatechars:40}}
+{% endfor %}{% endfor %}{% endblock %}

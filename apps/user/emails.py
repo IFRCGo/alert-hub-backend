@@ -1,4 +1,4 @@
-from django.utils import timezone
+from django.conf import settings
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 
@@ -17,14 +17,14 @@ def send_account_activation(user: User):
     uid = urlsafe_base64_encode(force_bytes(user.pk))
     token = TokenManager.account_activation_token_generator.make_token(user)
     context = {
-        'activation_url': Permalink.user_activation(uid, token),
+        "activation_url": Permalink.user_activation(uid, token),
     }
     send_email(
         user=user,
         email_type=EmailNotificationType.ACCOUNT_ACTIVATION,
-        subject="Account Activation",
-        email_html_template='emails/user/activation/body.html',
-        email_text_template='emails/user/activation/body.txt',
+        subject=f"{settings.EMAIL_SUBJECT_PREFIX} Account Activation",
+        email_html_template="emails/user/activation/body.html",
+        email_text_template="emails/user/activation/body.txt",
         context=context,
     )
 
@@ -41,17 +41,16 @@ def send_password_reset(
     uid = urlsafe_base64_encode(force_bytes(user.pk))
     token = TokenManager.password_reset_token_generator.make_token(user)
     context = {
-        'time': timezone.now(),
-        'location': client_ip,
-        'device': device_type,
-        'password_reset_url': Permalink.user_password_reset(uid, token),
+        "location": client_ip,
+        "device": device_type,
+        "password_reset_url": Permalink.user_password_reset(uid, token),
     }
     send_email(
         user=user,
         email_type=EmailNotificationType.PASSWORD_RESET,
-        subject="Alert Hub: Password Reset",
-        email_html_template='emails/user/password_reset/body.html',
-        email_text_template='emails/user/password_reset/body.txt',
+        subject=f"{settings.EMAIL_SUBJECT_PREFIX} Password Reset",
+        email_html_template="emails/user/password_reset/body.html",
+        email_text_template="emails/user/password_reset/body.txt",
         context=context,
     )
     return uid, token
@@ -59,16 +58,15 @@ def send_password_reset(
 
 def send_password_changed_notification(user, client_ip, device_type):
     context = {
-        'time': timezone.now(),
-        'location': client_ip,
-        'device': device_type,
-        'frontend_forgot_password': Permalink.FORGOT_PASSWORD,
+        "location": client_ip,
+        "device": device_type,
+        "frontend_forgot_password": Permalink.FORGOT_PASSWORD,
     }
     send_email(
         user=user,
         email_type=EmailNotificationType.PASSWORD_CHANGED,
-        subject='Alert Hub: Password Changed',
-        email_html_template='emails/user/password_changed/body.html',
-        email_text_template='emails/user/password_changed/body.txt',
+        subject=f"{settings.EMAIL_SUBJECT_PREFIX} Password Changed",
+        email_html_template="emails/user/password_changed/body.html",
+        email_text_template="emails/user/password_changed/body.txt",
         context=context,
     )

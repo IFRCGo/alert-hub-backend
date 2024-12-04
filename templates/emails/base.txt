@@ -1,13 +1,16 @@
 {% block head %}{% endblock %}
-
 {% block title %}{% endblock %}
-
+{% block title_description %}{% endblock %}
 {% block body %}{% endblock %}
 
-Thank you for using Alert Hub
-The Alert Hub team
+Disclaimer!
+The IFRC Alert Hub publishes only official alerts issued by recognised government alerting
+agencies. Alerts are not issued or published by the IFRC or its member Red Cross and Red
+Crescent National Societies. The IFRC takes no responsibility for the information contained
+in the alerts, which is solely the responsibility of the issuing agency. The IFRC makes
+every effort to identify broken government alert feeds and to highlight this information for
+users of the Alert Hub. However, the IFRC does not maintain 24/7 monitoring of the status of
+the government feeds and it is the responsibility of Alert Hub users to identify redundant
+sources of hazard alert information.
 
-{% if email_type in unsubscribe_email_types %}
-Would you prefer to not receive these kinds of emails anymore?
-Use this link to unsubscribe "{{ protocol }}://{{ domain }}{% url 'unsubscribe_email' uidb64=unsubscribe_email_id token=unsubscribe_email_token email_type=email_type %}"
-{% endif %}
+If you need any help, don’t hesitate to reach out to us at im@ifrc.org
