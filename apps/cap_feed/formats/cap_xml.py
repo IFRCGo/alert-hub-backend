@@ -193,7 +193,7 @@ def process_geo_codes(
     for value_name, value in qs.values_list("value_name", "value"):
         # TODO: Remove _value2member_map_ after upgrading python version
         if value_name.upper() in Admin1.GeoCode._value2member_map_:
-            geocode_map[value_name.upper()].add(value)
+            geocode_map[Admin1.GeoCode[value_name.upper()]].add(value)
 
     possible_admin1_ids: list[int] = []
     for geocode_name, values in geocode_map.items():
