@@ -1,14 +1,5 @@
 {% extends "emails/base.txt" %}
 
-{% block title %}
-IFRC Alert Hub account activation
-{% endblock %}
-
-{% block title_description %}
-Please open the link below to activate your account:
-{% endblock %}
-
-{% block body %}
- Activate your account: {{ activation_url }}
-{% endblock%}
-
+{% block title %}IFRC Alert Hub account activation{% endblock %}
+{% block body %}Please open the link below to activate your account:
+Activate your account: {{ activation_url }}{% endblock%}

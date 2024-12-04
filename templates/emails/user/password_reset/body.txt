@@ -1,21 +1,11 @@
-{% block title %}
-Reset Password
-{% endblock %}
-
+{% block title %}Reset Password{% endblock %}
 {% block body %}
-    {% if welcome %}
-        Before you can start using your account, you'll first need to create a password.
-        You can do this by clicking on the link below:
-        Set your password
-    {% else %}
-        It seems you've forgotten your password.
-        If you didn't request to reset your password, you may simply ignore this email.
-        Reset your password
-    {% endif %}
-        {{  password_reset_url  }}
-    {% if location or device %}
-    More detail on password reset trigger
-        Location: {{location}}
-        Device: {{device}}
-    {% endif %}
+It seems you've forgotten your password.
+If you didn't request to reset your password, you may simply ignore this email.
+Reset your password: {{  password_reset_url  }}
+{% if location or device %}
+More detail on password reset trigger
+    Location: {{location}}
+    Device: {{device}}
+{% endif %}
 {% endblock %}

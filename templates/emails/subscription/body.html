@@ -94,7 +94,7 @@ You got new <br /> Alerts!
             </td>
             <td style="padding: 10px; border-bottom: 1px solid #ddd;">
                 <div style="font-size: 16px; font-weight: 400; color: #000; display: inline-block;">
-                    {{ alert_data.admins }}
+                    {{ alert_data.admins|truncatechars:40 }}
                 </div>
             </td>
         </tr>

@@ -1,15 +1,11 @@
 {% extends "emails/base.txt" %}
 
-{% block title %}
-    Hi there {{ user.first_name }},
-    Your password has been changed successfully.
-{% endblock %}
-{% block body %}
-    {% if location or device %}
-            Location: {{location}}
-            Device: {{device}}
-    {% endif %}
-        If you are aware of this change, you can disregard this email.
-        If this was not triggered by you, please reset your password.
-        Reset Password: {{ frontend_forgot_password }}
+{% block title %}Hi there {{ user.first_name|default:"User" }},
+Your password has been changed successfully.{% endblock %}
+{% block body %}{% if location or device %}
+Location: {{location}}
+Device: {{device}}{% endif %}
+If you are aware of this change, you can disregard this email.
+If this was not triggered by you, please reset your password.
+Reset Password: {{ frontend_forgot_password }}
 {% endblock%}

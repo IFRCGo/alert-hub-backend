@@ -11,5 +11,5 @@ Alerts: {% for alert_data in subscription_data.latest_alerts %}
     Alert Urgency: {{ alert_data.urgency }}
     Alert Severity: {{ alert_data.severity }}
     Alert certainty: {{ alert_data.certainty }}
-    Alert Admins: {{ alert_data.admins }}
+    Alert Admins: {{ alert_data.admins|truncatechars:40}}
 {% endfor %}{% endfor %}{% endblock %}
