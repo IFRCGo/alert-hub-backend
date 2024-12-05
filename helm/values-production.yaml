@@ -4,6 +4,8 @@ fullnameOverride: ifrcgo-alert-hub
 ingress:
   enabled: true
   className: nginx
+  tls:
+    secretName:
   # Needs to be defined at go-deploy
   # host: alerthub-stage-api.ifrc.org
 

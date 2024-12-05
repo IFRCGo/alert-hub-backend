@@ -23,4 +23,10 @@ spec:
                 port:
                   number: 80
 
+  {{- if .Values.ingress.tls }}
+  tls:
+    - hosts:
+        - {{ .Values.ingress.host | quote }}
+      secretName: {{ .Values.ingress.tls.secretName }}
+  {{- end }}
 {{- end }}

@@ -8,6 +8,8 @@ ingress:
   enabled: false
   host:
   className:
+  tls:
+    secretName:
 
 redis:
   enabled: true
