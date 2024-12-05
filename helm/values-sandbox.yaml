@@ -9,6 +9,7 @@ ingress:
   host: alert-hub-sandbox.ifrc.org
   className: webapprouting.kubernetes.azure.com
   tls:
+    enabled: true
     secretName:
 
 postgresql:

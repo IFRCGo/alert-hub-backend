@@ -9,6 +9,7 @@ ingress:
   host:
   className:
   tls:
+    enabled: false
     secretName:
 
 redis:
