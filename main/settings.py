@@ -320,6 +320,7 @@ elif env("USE_S3_BUCKET"):
             "BACKEND": "storages.backends.s3.S3Storage",
             "OPTIONS": {
                 "bucket_name": env("S3_STATIC_BUCKET_NAME"),
+                "querystring_auth": False,
                 "location": "static/",
                 "file_overwrite": True,
             },
