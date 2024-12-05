@@ -1,0 +1,55 @@
+environment: STAGE
+fullnameOverride: ifrcgo-alert-hub
+
+ingress:
+  enabled: true
+  className: nginx
+  host: alerthub-stage-api.ifrc.org
+
+redis:
+  master:
+    resourcesPreset: micro  # https://github.com/bitnami/charts/blob/main/bitnami/common/templates/_resources.tpl#L16
+
+worker:
+  enabled: true
+  resources:
+    requests:
+      cpu: "2"
+      memory: 2Gi
+    limits:
+      cpu: "4"
+      memory: 4Gi
+  beat:
+    resources:
+      requests:
+        cpu: "0.1"
+        memory: 0.1Gi
+      limits:
+        cpu: "4"
+        memory: 1Gi
+
+api:
+  resources:
+    requests:
+      cpu: "2"
+      memory: 1Gi
+    limits:
+      cpu: "4"
+      memory: 2Gi
+
+env:
+  DJANGO_DEBUG: false
+  # App Domain
+  APP_FRONTEND_HOST: https://alerthub-stage.ifrc.org
+  APP_DOMAIN: alerthub-stage-api.ifrc.org
+  DJANGO_ALLOWED_HOSTS: alerthub-stage-api.ifrc.org
+  SESSION_COOKIE_DOMAIN: .ifrc.org
+  CSRF_COOKIE_DOMAIN: .ifrc.org
+  # CORS
+  CORS_ALLOWED_ORIGINS: https://alerthub-stage.ifrc.org
+  # Misc
+  UPTIME_WORKER_HEARTBEAT: https://heartbeat.uptimerobot.com/m798146031-523d3d6be0eb9cf9944d17298734203fa506b839
+  DEFAULT_FROM_EMAIL: Alerthub Staging <hazard.alerts@ifrc.org>
+  # Sentry
+  SENTRY_TRACES_SAMPLE_RATE: 0.2
+  SENTRY_PROFILE_SAMPLE_RATE: 0.2
