@@ -7,7 +7,7 @@ from strawberry_django.pagination import OffsetPaginationInput
 
 from apps.cap_feed.filters import AlertFilter
 from apps.cap_feed.orders import AlertOrder
-from apps.cap_feed.types import Admin1Type, AlertType, CountryType
+from apps.cap_feed.types import Admin1Type, AlertType, CountryType, get_alert_queryset
 from main.graphql.context import Info
 from utils.common import get_queryset_for_model
 from utils.strawberry.enums import enum_display_field, enum_field
@@ -52,6 +52,14 @@ class UserAlertSubscriptionType:
         )
 
     @strawberry_django.field
+    async def total_alerts_count(
+        self,
+        info: Info,
+        root: strawberry.Parent[UserAlertSubscription],
+    ) -> int:
+        return await info.context.dl.subscription.load_alert_count_by_subscription.load(root.pk)
+
+    @strawberry_django.field
     async def alerts(
         self,
         info: Info,
@@ -60,7 +68,7 @@ class UserAlertSubscriptionType:
         order: typing.Optional[AlertOrder] = strawberry.UNSET,
         pagination: typing.Optional[OffsetPaginationInput] = strawberry.UNSET,
     ) -> CountList[AlertType]:
-        queryset = AlertType.get_queryset(None, None, info).filter(
+        queryset = get_alert_queryset(None, is_active=False).filter(
             subscriptions=root.pk,
         )
         return count_list_resolver(
