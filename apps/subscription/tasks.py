@@ -110,4 +110,26 @@ def send_daily_user_alert_subscriptions_email():
         logger.info(f'Send daily user alert subscription email. Runtime: {time.time() - start_time} seconds')
 
 
+@shared_task
+def send_weekly_user_alert_subscriptions_email():
+    with redis_lock(CacheKey.RedisLockKey.SEND_WEEKLY_USER_ALERT_SUBSCRIPTION_EMAIL) as acquired:
+        if not acquired:
+            logger.warning(f'{CacheKey.RedisLockKey.SEND_WEEKLY_USER_ALERT_SUBSCRIPTION_EMAIL} is already running')
+            return
+        start_time = time.time()
+        send_user_alert_subscriptions_email(UserAlertSubscription.EmailFrequency.WEEKLY)
+        logger.info(f'Send daily user alert subscription email. Runtime: {time.time() - start_time} seconds')
+
+
+@shared_task
+def send_monthly_user_alert_subscriptions_email():
+    with redis_lock(CacheKey.RedisLockKey.SEND_MONTHLY_USER_ALERT_SUBSCRIPTION_EMAIL) as acquired:
+        if not acquired:
+            logger.warning(f'{CacheKey.RedisLockKey.SEND_MONTHLY_USER_ALERT_SUBSCRIPTION_EMAIL} is already running')
+            return
+        start_time = time.time()
+        send_user_alert_subscriptions_email(UserAlertSubscription.EmailFrequency.MONTHLY)
+        logger.info(f'Send daily user alert subscription email. Runtime: {time.time() - start_time} seconds')
+
+
 # TODO: Add tasks to clean up SubscriptionAlert table data for old entries
