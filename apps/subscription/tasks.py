@@ -49,10 +49,10 @@ TAG_MUTATION_RAW_QUERY = f'''
             alert_data
             CROSS JOIN {_tb_name(UserAlertSubscription)} AS subscriptions
         WHERE
-            subscriptions.{_cl_name(UserAlertSubscription.filter_alert_country)} = alert_data.country_id AND
             (
+                subscriptions.{_cl_name(UserAlertSubscription.filter_alert_country)} = alert_data.country_id
+            ) AND (
                 COALESCE(array_length(subscriptions.{_cl_name(UserAlertSubscription.filter_alert_admin1s)}, 1), 0) = 0 OR
-                -- subscriptions.{_cl_name(UserAlertSubscription.filter_alert_admin1s)} && alert_data.admin1s::integer[]
                 subscriptions.{_cl_name(UserAlertSubscription.filter_alert_admin1s)} && alert_data.admin1s
             ) AND (
                 COALESCE(array_length(subscriptions.{_cl_name(UserAlertSubscription.filter_alert_urgencies)}, 1), 0) = 0 OR
@@ -76,6 +76,7 @@ TAG_MUTATION_RAW_QUERY = f'''
         ) (
             SELECT * FROM tagged_alerts
         )
+        ON CONFLICT DO NOTHING
     )
     -- Flag processed alerts
     UPDATE {_tb_name(Alert)}
