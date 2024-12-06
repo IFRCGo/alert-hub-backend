@@ -1,0 +1,24 @@
+{{- if .Values.worker.enabled }}
+{{- if .Values.worker.flower.enabled }}
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "ifrcgo-alert-hub.fullname" . }}-celery-flower
+  labels:
+    app: {{ include "ifrcgo-alert-hub.fullname" . }}
+    component: celery-flower
+    environment: {{ .Values.environment }}
+    release: {{ .Release.Name }}
+spec:
+  type: ClusterIP
+  selector:
+    app: {{ include "ifrcgo-alert-hub.fullname" . }}
+    component: worker-flower
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8000
+
+{{- end }}
+{{- end }}

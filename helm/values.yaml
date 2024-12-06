@@ -61,6 +61,15 @@ worker:
       limits:
         cpu: "1"
         memory: 1Gi
+  flower:
+    enabled: true
+    resources:
+      requests:
+        cpu: "0.1"
+        memory: 0.5Gi
+      limits:
+        cpu: "1"
+        memory: 1Gi
   queues:
     # NOTE: Make sure keys are lowercase
     default:
