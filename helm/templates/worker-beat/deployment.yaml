@@ -34,12 +34,7 @@ spec:
           command: ["/code/deploy/run_worker_beat.sh"]
           # TODO: livenessProbe
           resources:
-            requests:
-              cpu: {{ .Values.worker.beat.resources.requests.cpu }}
-              memory: {{ .Values.worker.beat.resources.requests.memory }}
-            limits:
-              cpu: {{ .Values.worker.beat.resources.limits.cpu }}
-              memory: {{ .Values.worker.beat.resources.limits.memory }}
+            {{- toYaml .Values.worker.beat.resources | nindent 12 }}
           env:
             - name: DJANGO_APP_TYPE
               value: worker

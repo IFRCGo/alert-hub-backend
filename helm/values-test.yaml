@@ -53,6 +53,8 @@ secretsAdditional:
   MAGIC_KEY: to-much-fun
 
 argoHooks:
+  db-migrate:
+    preserveHistory: false
   custom-python-script-01:
     enabled: true
     hook: PostSync

@@ -40,7 +40,7 @@ app.conf.beat_schedule = {
     },
     f'{INTERNAL_CELERY_TASK_NAME_PREFIX}process_pending_subscription_alerts': {
         'task': 'apps.subscription.tasks.process_pending_subscription_alerts',
-        'schedule': timedelta(minutes=30),  # TODO: Lower this?
+        'schedule': timedelta(minutes=10),
         'options': {'queue': 'default'},
     },
     f'{INTERNAL_CELERY_TASK_NAME_PREFIX}send_daily_user_alert_subscriptions_email': {
@@ -65,6 +65,18 @@ app.conf.beat_schedule = {
     },
 }
 
+
+class CeleryQueue:
+    # NOTE: Make sure all queue names are lowercase (They are in k8s)
+    default = Queue('default')
+    feeds = Queue('feeds')
+
+    ALL_QUEUE = (
+        default,
+        feeds,
+    )
+
+
 # Using a string here means the worker doesn't have to serialize
 # the configuration object to child processes.
 # - namespace='CELERY' means all celery-related configuration keys
@@ -74,24 +86,13 @@ app.config_from_object('django.conf:settings', namespace='CELERY')
 # Load task modules from all registered Django apps.
 app.autodiscover_tasks()
 
-app.conf.task_default_queue = 'default'
-app.conf.task_queues = (Queue('default', routing_key='poll.#', exchange='poll'),)
-app.conf.task_default_exchange = 'poll'
-app.conf.task_default_exchange_type = 'topic'
-app.conf.task_default_routing_key = 'poll.default'
 app.conf.result_expires = settings.CELERY_TASK_EXPIRE
+app.conf.task_default_queue = CeleryQueue.default.name
 
-task_routes = {
-    'apps.cap_feed.tasks.poll_feed': {
-        'queue': 'default',
-        'routing_key': 'poll.#',
-        'exchange': 'poll',
-    },
-    'apps.cap_feed.tasks.tag_expired_alerts': {
-        'queue': 'default',
-        'routing_key': 'poll.#',
-        'exchange': 'poll',
-    },
+app.conf.task_queues = CeleryQueue.ALL_QUEUE
+
+app.conf.task_routes = {
+    'apps.cap_feed.tasks.poll_feed': {'queue': CeleryQueue.feeds},
 }
 
 
