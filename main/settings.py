@@ -14,6 +14,7 @@ import os
 from pathlib import Path
 
 import environ
+from azure.identity import DefaultAzureCredential
 from django.utils.translation import gettext_lazy as _
 
 from main import sentry
@@ -25,7 +26,7 @@ env = environ.Env(
     DJANGO_DEBUG=(bool, False),
     DJANGO_SECRET_KEY=str,
     DJANGO_TIME_ZONE=(str, 'UTC'),
-    DJANGO_APP_TYPE=str,  # web/worker
+    DJANGO_APP_TYPE=str,  # web/worker/hook
     DJANGO_APP_ENVIRONMENT=str,  # dev/prod
     # App Domain
     APP_RELEASE=(str, 'develop'),
@@ -51,12 +52,33 @@ env = environ.Env(
     CELERY_BROKER_URL=str,  # redis://redis:6379/0
     # Cache
     CACHE_REDIS_URL=str,  # redis://redis:6379/1
+    TEST_CACHE_REDIS_URL=(str, None),  # redis://redis:6379/11
     # Email
     EMAIL_HOST=str,
+    EMAIL_SUBJECT_PREFIX=(str, 'Alert Hub:'),
+    EMAIL_USE_TLS=(bool, True),
     EMAIL_PORT=(int, 587),
     EMAIL_HOST_USER=str,
     EMAIL_HOST_PASSWORD=str,
     DEFAULT_FROM_EMAIL=str,
+    # Storage
+    # -- S3
+    USE_S3_BUCKET=(bool, False),
+    AWS_S3_AWS_ENDPOINT_URL=str,
+    AWS_S3_ACCESS_KEY_ID=str,
+    AWS_S3_SECRET_ACCESS_KEY=str,
+    AWS_S3_REGION=str,
+    S3_STATIC_BUCKET_NAME=str,
+    S3_MEDIA_BUCKET_NAME=str,
+    # -- Azure blob storage
+    USE_AZURE_STORAGE=(bool, False),
+    AZURE_STORAGE_MEDIA_CONTAINER=str,  # media
+    AZURE_STORAGE_STATIC_CONTAINER=str,  # static
+    AZURE_STORAGE_CONNECTION_STRING=(str, None),
+    AZURE_STORAGE_ACCOUNT_NAME=str,
+    AZURE_STORAGE_ACCOUNT_KEY=(str, None),
+    AZURE_STORAGE_TOKEN_CREDENTIAL=(str, None),
+    AZURE_STORAGE_MANAGED_IDENTITY=(bool, False),
     # Sentry
     SENTRY_DSN=(str, None),
     SENTRY_TRACES_SAMPLE_RATE=(float, 0.2),
@@ -66,6 +88,9 @@ env = environ.Env(
     CORS_ALLOWED_ORIGIN_REGEXES=(list, []),
     # Misc
     UPTIME_WORKER_HEARTBEAT=(str, None),
+    HCAPTCHA_SITEKEY=str,
+    HCAPTCHA_SECRET=str,
+    ALLOW_FAKE_DATA=(bool, False),
 )
 
 # SECURITY WARNING: keep the secret key used in production secret!
@@ -82,7 +107,7 @@ APP_DOMAIN = env('APP_DOMAIN')
 APP_FRONTEND_HOST = env('APP_FRONTEND_HOST')
 DJANGO_APP_TYPE = env('DJANGO_APP_TYPE')
 
-DJANGO_APP_ENVIRONMENT = env('DJANGO_APP_ENVIRONMENT')
+DJANGO_APP_ENVIRONMENT = env('DJANGO_APP_ENVIRONMENT').upper()
 
 
 # Application definition
@@ -100,9 +125,9 @@ INSTALLED_APPS = [
     'strawberry_django',
     'admin_auto_filters',
     'django_celery_beat',
-    'django_extensions',
     'corsheaders',
     'storages',
+    'django_premailer',
     # External - Health-check
     'health_check',  # required
     'health_check.db',  # stock Django health checkers
@@ -117,26 +142,26 @@ INSTALLED_APPS = [
     'apps.user',
     'apps.cap_feed',
     'apps.subscription',
-    'apps.subscription_manager',
 ]
 
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
-    'django.middleware.locale.LocaleMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'main.middlewares.SentryTransactionMiddleware',
+    "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
+    "django.middleware.locale.LocaleMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "main.middlewares.SentryTransactionMiddleware",
 ]
 
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
 ]
 
+LOGIN_URL = "admin:login"
 
 ROOT_URLCONF = 'main.urls'
 
@@ -209,6 +234,9 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
     },
     {
+        'NAME': 'main.validators.MaximumLengthValidator',
+    },
+    {
         'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
     },
     {
@@ -231,11 +259,78 @@ USE_TZ = True
 # TODO: Use custom config for static files
 STATICFILES_DIRS = (str(BASE_DIR.joinpath('static')),)
 
-STATIC_URL = env('DJANGO_STATIC_URL')
-MEDIA_URL = env('DJANGO_MEDIA_URL')
+STATIC_URL = env("DJANGO_STATIC_URL")
+MEDIA_URL = env("DJANGO_MEDIA_URL")
 
-STATIC_ROOT = env('DJANGO_STATIC_ROOT')
-MEDIA_ROOT = env('DJANGO_MEDIA_ROOT')
+
+if env("USE_AZURE_STORAGE"):
+
+    AZURE_STORAGE_CONFIG_OPTIONS = {
+        "connection_string": env("AZURE_STORAGE_CONNECTION_STRING"),
+        "overwrite_files": False,
+    }
+
+    if not env("AZURE_STORAGE_CONNECTION_STRING"):
+        AZURE_STORAGE_CONFIG_OPTIONS.update(
+            {
+                "account_name": env("AZURE_STORAGE_ACCOUNT_NAME"),
+                "account_key": env("AZURE_STORAGE_ACCOUNT_KEY"),
+                "token_credential": env("AZURE_STORAGE_TOKEN_CREDENTIAL"),
+            }
+        )
+
+        if env("AZURE_STORAGE_MANAGED_IDENTITY"):
+            AZURE_STORAGE_CONFIG_OPTIONS["token_credential"] = DefaultAzureCredential()
+
+    STORAGES = {
+        "default": {
+            "BACKEND": "storages.backends.azure_storage.AzureStorage",
+            "OPTIONS": {
+                **AZURE_STORAGE_CONFIG_OPTIONS,
+                "azure_container": env("AZURE_STORAGE_MEDIA_CONTAINER"),
+            },
+        },
+        "staticfiles": {
+            "BACKEND": "storages.backends.azure_storage.AzureStorage",
+            "OPTIONS": {
+                **AZURE_STORAGE_CONFIG_OPTIONS,
+                "azure_container": env("AZURE_STORAGE_STATIC_CONTAINER"),
+                "overwrite_files": True,
+            },
+        },
+    }
+
+elif env("USE_S3_BUCKET"):
+    AWS_S3_ENDPOINT_URL = env("AWS_S3_AWS_ENDPOINT_URL")
+
+    AWS_S3_ACCESS_KEY_ID = env("AWS_S3_ACCESS_KEY_ID")
+    AWS_S3_SECRET_ACCESS_KEY = env("AWS_S3_SECRET_ACCESS_KEY")
+    AWS_S3_REGION_NAME = env("AWS_S3_REGION")
+
+    STORAGES = {
+        "default": {
+            "BACKEND": "storages.backends.s3.S3Storage",
+            "OPTIONS": {
+                "bucket_name": env("S3_MEDIA_BUCKET_NAME"),
+                "location": "media/",
+                "file_overwrite": False,
+            },
+        },
+        "staticfiles": {
+            "BACKEND": "storages.backends.s3.S3Storage",
+            "OPTIONS": {
+                "bucket_name": env("S3_STATIC_BUCKET_NAME"),
+                "querystring_auth": False,
+                "location": "static/",
+                "file_overwrite": True,
+            },
+        },
+    }
+
+else:
+    STATIC_ROOT = env("DJANGO_STATIC_ROOT")
+    MEDIA_ROOT = env("DJANGO_MEDIA_ROOT")
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
@@ -244,6 +339,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # CELERY
 CELERY_RESULT_BACKEND = CELERY_BROKER_URL = env('CELERY_BROKER_URL')
 CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
+CELERY_TASK_SOFT_TIME_LIMIT = 30 * 60  # 30 mins max (To tackle worst cases)
+CELERY_TASK_TIME_LIMIT = 35 * 60
 
 
 # CORS
@@ -284,10 +381,13 @@ STRAWBERRY_DEFAULT_PAGINATION_LIMIT = 50
 STRAWBERRY_MAX_PAGINATION_LIMIT = 100
 
 # Cache
+CACHE_REDIS_URL = env('CACHE_REDIS_URL')
+TEST_CACHE_REDIS_URL = env('TEST_CACHE_REDIS_URL')
+
 CACHES = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': env('CACHE_REDIS_URL'),
+        'LOCATION': CACHE_REDIS_URL,
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
         },
@@ -295,7 +395,8 @@ CACHES = {
 }
 
 # HEALTH-CHECK
-REDIS_URL = env('CACHE_REDIS_URL')
+REDIS_URL = CACHE_REDIS_URL
+TEST_CACHE_REDIS_URL = env('TEST_CACHE_REDIS_URL')
 HEALTHCHECK_CACHE_KEY = "alert_hub_healthcheck_key"
 HEALTH_CHECK = {
     'DISK_USAGE_MAX': 80,  # percent
@@ -309,7 +410,8 @@ CELERY_TASK_EXPIRE = (60 * 60) * 2  # Remove task data after 2hr (in seconds)
 
 # Email - SMTP Settings
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_USE_TLS = True
+EMAIL_SUBJECT_PREFIX = env('EMAIL_SUBJECT_PREFIX')
+EMAIL_USE_TLS = env('EMAIL_USE_TLS')
 EMAIL_HOST = env('EMAIL_HOST')
 EMAIL_PORT = env('EMAIL_PORT')
 EMAIL_HOST_USER = env('EMAIL_HOST_USER')
@@ -411,3 +513,14 @@ LANGUAGES = (
 # modeltranslation configs
 # -- NOTE: "en" is used as default languages in the codebase, changing this will break logics
 MODELTRANSLATION_DEFAULT_LANGUAGE = "en"  # Also the fallback
+
+# CAPTCHA
+HCAPTCHA_SITEKEY = env('HCAPTCHA_SITEKEY')
+HCAPTCHA_SECRET = env('HCAPTCHA_SECRET')
+
+PREMAILER_OPTIONS = dict(
+    disable_validation=not DEBUG,  # Disable validation in production
+)
+
+# Misc
+ALLOW_FAKE_DATA = env("ALLOW_FAKE_DATA")

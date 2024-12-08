@@ -1,52 +1,54 @@
-from typing import TYPE_CHECKING
-
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
+from django.utils.translation import gettext
 
-if TYPE_CHECKING:
-    from django.db.models.fields.related_descriptors import ManyRelatedManager
-
-    from apps.subscription_manager.models import Alert
+from apps.cap_feed.models import Alert, AlertInfo, Country
+from apps.user.models import User
 
 
-class Subscription(models.Model):
-    id = models.AutoField(primary_key=True)
-    subscription_name = models.CharField(default="", verbose_name="subscription_name", max_length=512)
-    user_id = models.IntegerField(default=0, verbose_name="user_id")
-    country_ids = ArrayField(models.IntegerField(verbose_name='country_ids'), default=list)
-    admin1_ids = ArrayField(models.IntegerField(verbose_name='admin1_ids'), default=list)
-    urgency_array = ArrayField(models.CharField(verbose_name='urgency_array'), default=list)
-    severity_array = ArrayField(models.CharField(verbose_name='severity_array'), default=list)
-    certainty_array = ArrayField(models.CharField(verbose_name='certainty_array'), default=list)
-    subscribe_by = ArrayField(models.CharField(verbose_name="subscribe_by"), default=list)
-    sent_flag = models.IntegerField(default=0, verbose_name="sent_flag")
+class UserAlertSubscription(models.Model):
+    LIMIT_PER_USER = 10
 
-    if TYPE_CHECKING:
-        alert_set: ManyRelatedManager[Alert]
+    class EmailFrequency(models.IntegerChoices):
+        DAILY = 1, gettext("Daily")
+        WEEKLY = 2, gettext("Weekly")
+        MONTHLY = 3, gettext("Monthly")
 
-    def get_alert_id_list(self):
-        alerts_list = []
-        alerts = self.alert_set.all()
+    created_at = models.DateTimeField(auto_now_add=True)
+    modified_at = models.DateTimeField(auto_now=True)
 
-        for alert in alerts:
-            alerts_list.append(alert.id)
-        return alerts_list
+    name = models.CharField(max_length=255)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    is_active = models.BooleanField(default=False)
 
-    def save(self, *args, force_insert=False, force_update=False, **kwargs):
-        from django.core.cache import cache
+    # TODO: Keep change history?
+    # Filters
+    filter_alert_country = models.ForeignKey(Country, on_delete=models.PROTECT)
+    filter_alert_admin1s = ArrayField(models.BigIntegerField(), blank=True, default=list)
+    filter_alert_urgencies = ArrayField(models.CharField(choices=AlertInfo.Urgency.choices), blank=True, default=list)
+    filter_alert_severities = ArrayField(models.CharField(choices=AlertInfo.Severity.choices), blank=True, default=list)
+    filter_alert_certainties = ArrayField(models.CharField(choices=AlertInfo.Certainty.choices), blank=True, default=list)
+    filter_alert_categories = ArrayField(models.CharField(choices=AlertInfo.Category.choices), blank=True, default=list)
 
-        from apps.subscription_manager.tasks import subscription_mapper
+    # Notification config
+    notify_by_email = models.BooleanField(default=False)
+    email_frequency = models.PositiveSmallIntegerField(choices=EmailFrequency.choices, default=EmailFrequency.WEEKLY)
+    email_last_sent_at = models.DateTimeField(null=True, blank=True)
 
-        super().save(force_insert, force_update, *args, **kwargs)
-        # Add the subscription id as a view lock, so user will not view the subscription during
-        # mappings.
-        cache.add("v" + str(self.id), True, timeout=None)
-        subscription_mapper.apply_async(args=(self.pk,), queue='subscription_manager')
+    alerts = models.ManyToManyField(
+        Alert,
+        blank=True,
+        through="SubscriptionAlert",
+        related_name="subscriptions",
+    )
 
-    def delete(  # type: ignore[reportIncompatibleMethodOverride]
-        self,
-        *args,
-        force_insert=False,
-        force_update=False,
-    ) -> tuple[int, dict[str, int]]:
-        return super().delete(force_insert, force_update)
+    filter_alert_country_id: int
+
+    def __str__(self):
+        return self.name
+
+
+# XXX: Change name?
+class SubscriptionAlert(models.Model):
+    subscription = models.ForeignKey(UserAlertSubscription, on_delete=models.CASCADE, related_name="+")
+    alert = models.ForeignKey(Alert, on_delete=models.CASCADE, related_name="+")

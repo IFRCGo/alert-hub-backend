@@ -34,16 +34,13 @@ input AlertFilter {
   id: IDBaseFilterLookup
   country: DjangoModelFilterInput
   sent: DatetimeDatetimeFilterLookup
+  infos: AlertInfoFilter
   AND: AlertFilter
   OR: AlertFilter
   NOT: AlertFilter
   DISTINCT: Boolean
   region: ID
   admin1: ID
-  urgency: [AlertInfoUrgencyEnum!]
-  severity: [AlertInfoSeverityEnum!]
-  certainty: [AlertInfoCertaintyEnum!]
-  category: [AlertInfoCategoryEnum!]
 }
 
 type AlertInfoAreaCircleType {
@@ -106,6 +103,10 @@ input AlertInfoFilter {
   OR: AlertInfoFilter
   NOT: AlertInfoFilter
   DISTINCT: Boolean
+  urgency: [AlertInfoUrgencyEnum!]
+  severity: [AlertInfoSeverityEnum!]
+  certainty: [AlertInfoCertaintyEnum!]
+  category: [AlertInfoCategoryEnum!]
 }
 
 input AlertInfoOrder {
@@ -252,6 +253,11 @@ type AppEnumCollection {
   AlertInfoUrgency: [AppEnumCollectionAlertInfoUrgency!]!
   AlertInfoSeverity: [AppEnumCollectionAlertInfoSeverity!]!
   AlertInfoCertainty: [AppEnumCollectionAlertInfoCertainty!]!
+  UserAlertSubscriptionEmailFrequency: [AppEnumCollectionUserAlertSubscriptionEmailFrequency!]!
+  UserAlertSubscriptionFilterAlertUrgencies: [AppEnumCollectionUserAlertSubscriptionFilterAlertUrgencies!]!
+  UserAlertSubscriptionFilterAlertSeverities: [AppEnumCollectionUserAlertSubscriptionFilterAlertSeverities!]!
+  UserAlertSubscriptionFilterAlertCertainties: [AppEnumCollectionUserAlertSubscriptionFilterAlertCertainties!]!
+  UserAlertSubscriptionFilterAlertCategories: [AppEnumCollectionUserAlertSubscriptionFilterAlertCategories!]!
 }
 
 type AppEnumCollectionAlertInfoCategory {
@@ -304,9 +310,47 @@ type AppEnumCollectionFeedStatus {
   label: String!
 }
 
+type AppEnumCollectionUserAlertSubscriptionEmailFrequency {
+  key: UserAlertSubscriptionEmailFrequencyEnum!
+  label: String!
+}
+
+type AppEnumCollectionUserAlertSubscriptionFilterAlertCategories {
+  key: AlertInfoCategoryEnum!
+  label: String!
+}
+
+type AppEnumCollectionUserAlertSubscriptionFilterAlertCertainties {
+  key: AlertInfoCertaintyEnum!
+  label: String!
+}
+
+type AppEnumCollectionUserAlertSubscriptionFilterAlertSeverities {
+  key: AlertInfoSeverityEnum!
+  label: String!
+}
+
+type AppEnumCollectionUserAlertSubscriptionFilterAlertUrgencies {
+  key: AlertInfoUrgencyEnum!
+  label: String!
+}
+
 type AppEnumCollectionUserEmailOptOuts {
   key: OptEmailNotificationTypeEnum!
   label: String!
+}
+
+input BoolBaseFilterLookup {
+  """Exact match. Filter will be skipped on `null` value"""
+  exact: Boolean
+
+  """Assignment test. Filter will be skipped on `null` value"""
+  isNull: Boolean
+
+  """
+  Exact match of items in a given list. Filter will be skipped on `null` value
+  """
+  inList: [Boolean!]
 }
 
 type ContinentType {
@@ -347,6 +391,9 @@ type CountryTypeCountList {
   count: Int!
   items: [CountryType!]!
 }
+
+"""A generic type to return error messages"""
+scalar CustomErrorType
 
 """Date with time (isoformat)"""
 scalar DateTime
@@ -530,6 +577,11 @@ type Mutation {
   private: PrivateMutation!
 }
 
+type MutationEmptyResponseType {
+  ok: Boolean!
+  errors: CustomErrorType
+}
+
 input OffsetPaginationInput {
   offset: Int! = 0
   limit: Int! = -1
@@ -552,15 +604,29 @@ enum Ordering {
 scalar PolygonScalar
 
 type PrivateMutation {
+  logout: MutationEmptyResponseType!
+  changeUserPassword(data: UserPasswordChangeInput!): MutationEmptyResponseType!
+  updateMe(data: UserMeInput!): UserMeTypeMutationResponseType!
+  createUserAlertSubscription(data: UserAlertSubscriptionInput!): UserAlertSubscriptionTypeMutationResponseType!
+  updateUserAlertSubscription(id: ID!, data: UserAlertSubscriptionInput!): UserAlertSubscriptionTypeMutationResponseType!
+  deleteUserAlertSubscription(id: ID!): UserAlertSubscriptionTypeMutationResponseType!
   id: ID!
 }
 
 type PrivateQuery {
   noop: ID!
+  userAlertSubscriptions(filters: UserAlertSubscriptionFilter, order: UserAlertSubscriptionOrder, pagination: OffsetPaginationInput): UserAlertSubscriptionTypeCountList!
+  userAlertSubscription(pk: ID!): UserAlertSubscriptionType
+  subscriptedAlerts(filters: AlertFilter, order: AlertOrder, pagination: OffsetPaginationInput): AlertTypeCountList!
   id: ID!
 }
 
 type PublicMutation {
+  login(data: UserLoginInput!): UserMeTypeMutationResponseType!
+  register(data: UserRegisterInput!): MutationEmptyResponseType!
+  accountActivation(data: UserActivationInput!): MutationEmptyResponseType!
+  passwordResetTrigger(data: UserPasswordResetTriggerInput!): MutationEmptyResponseType!
+  passwordResetConfirm(data: UserPasswordResetConfirmInput!): MutationEmptyResponseType!
   id: ID!
 }
 
@@ -579,6 +645,7 @@ type PublicQuery {
   feed(pk: ID!): FeedType
   alert(pk: ID!): AlertType
   alertInfo(pk: ID!): AlertInfoType
+  historicalAlerts(filters: AlertFilter, pagination: OffsetPaginationInput): AlertTypeCountList!
   id: ID!
 }
 
@@ -614,6 +681,98 @@ type RegionTypeCountList {
   items: [RegionType!]!
 }
 
+input UserActivationInput {
+  uuid: String!
+  token: String!
+}
+
+enum UserAlertSubscriptionEmailFrequencyEnum {
+  DAILY
+  WEEKLY
+  MONTHLY
+}
+
+input UserAlertSubscriptionFilter {
+  id: IDBaseFilterLookup
+  isActive: BoolBaseFilterLookup
+  notifyByEmail: BoolBaseFilterLookup
+  AND: UserAlertSubscriptionFilter
+  OR: UserAlertSubscriptionFilter
+  NOT: UserAlertSubscriptionFilter
+  DISTINCT: Boolean
+}
+
+input UserAlertSubscriptionInput {
+  name: String!
+  filterAlertCountry: ID!
+  filterAlertAdmin1s: [ID!]!
+  isActive: Boolean
+  notifyByEmail: Boolean
+  emailFrequency: UserAlertSubscriptionEmailFrequencyEnum
+  filterAlertUrgencies: [AlertInfoUrgencyEnum!]
+  filterAlertSeverities: [AlertInfoSeverityEnum!]
+  filterAlertCertainties: [AlertInfoCertaintyEnum!]
+  filterAlertCategories: [AlertInfoCategoryEnum!]
+}
+
+input UserAlertSubscriptionOrder {
+  id: Ordering
+  createdAt: Ordering
+  modifiedAt: Ordering
+  name: Ordering
+  isActive: Ordering
+}
+
+type UserAlertSubscriptionType {
+  id: ID!
+  createdAt: DateTime!
+  modifiedAt: DateTime!
+  isActive: Boolean!
+  filterAlertCountryId: ID!
+  filterAlertAdmin1s: [ID!]!
+  notifyByEmail: Boolean!
+  emailLastSentAt: DateTime
+  name: String!
+  filterAlertUrgencies: [AlertInfoUrgencyEnum!]!
+  filterAlertSeverities: [AlertInfoSeverityEnum!]!
+  filterAlertCertainties: [AlertInfoCertaintyEnum!]!
+  filterAlertCategories: [AlertInfoCategoryEnum!]!
+  filterAlertUrgenciesDisplay: [String!]!
+  filterAlertSeveritiesDisplay: [String!]!
+  filterAlertCertaintiesDisplay: [String!]!
+  filterAlertCategoriesDisplay: [String!]!
+  emailFrequency: UserAlertSubscriptionEmailFrequencyEnum!
+  emailFrequencyDisplay: String!
+  totalAlertsCount: Int!
+  alerts(filters: AlertFilter, order: AlertOrder, pagination: OffsetPaginationInput): AlertTypeCountList!
+  filterAlertCountry: CountryType!
+  filterAlertAdmin1sDisplay: [Admin1Type!]!
+}
+
+type UserAlertSubscriptionTypeCountList {
+  limit: Int!
+  offset: Int!
+  count: Int!
+  items: [UserAlertSubscriptionType!]!
+}
+
+type UserAlertSubscriptionTypeMutationResponseType {
+  ok: Boolean!
+  errors: CustomErrorType
+  result: UserAlertSubscriptionType
+}
+
+input UserLoginInput {
+  email: String!
+  password: String!
+}
+
+input UserMeInput {
+  firstName: String
+  lastName: String
+  emailOptOuts: [OptEmailNotificationTypeEnum!]
+}
+
 type UserMeType {
   id: ID!
   firstName: String
@@ -623,4 +782,35 @@ type UserMeType {
   phoneNumber: String
   country: String
   city: String
+}
+
+type UserMeTypeMutationResponseType {
+  ok: Boolean!
+  errors: CustomErrorType
+  result: UserMeType
+}
+
+input UserPasswordChangeInput {
+  oldPassword: String!
+  newPassword: String!
+}
+
+input UserPasswordResetConfirmInput {
+  captcha: String!
+  uuid: String!
+  token: String!
+  newPassword: String!
+}
+
+input UserPasswordResetTriggerInput {
+  captcha: String!
+  email: String!
+}
+
+input UserRegisterInput {
+  captcha: String!
+  firstName: String!
+  lastName: String!
+  email: String!
+  password: String!
 }

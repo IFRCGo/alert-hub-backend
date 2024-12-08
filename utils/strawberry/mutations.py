@@ -3,17 +3,21 @@ import typing
 from dataclasses import is_dataclass
 
 import strawberry
-from strawberry.types import Info
+from asgiref.sync import sync_to_async
+from django.db import models, transaction
+from rest_framework import serializers
 from strawberry.utils.str_converters import to_camel_case
 
+from main.graphql.context import Info
 from utils.common import to_snake_case
+from utils.strawberry.transformers import convert_serializer_to_type
 
 logger = logging.getLogger(__name__)
 
 ResultTypeVar = typing.TypeVar("ResultTypeVar")
 
 
-ARRAY_NON_MEMBER_ERRORS = 'nonMemberErrors'
+ARRAY_NON_MEMBER_ERRORS = "nonMemberErrors"
 
 # generalize all the CustomErrorType
 CustomErrorType = strawberry.scalar(
@@ -24,13 +28,13 @@ CustomErrorType = strawberry.scalar(
 )
 
 
-# TODO: Add tests
 def process_input_data(data) -> dict | list:
     """
     Return dict from Strawberry Input Object
     NOTE: strawberry.asdict doesn't handle nested and strawberry.UNSET
     Related issue: https://github.com/strawberry-graphql/strawberry/issues/3265
     https://github.com/strawberry-graphql/strawberry/blob/d2c0fb4d2d363929c9ac10161884d004ab9cf555/strawberry/object_type.py#L395
+
     """
     # TODO: Write test
     if type(data) in [tuple, list]:
@@ -62,11 +66,11 @@ class ArrayNestedErrorType:
     object_errors: typing.Optional[list[typing.Optional[CustomErrorType]]]
 
     def keys(self):
-        return ['client_id', 'messages', 'object_errors']
+        return ["client_id", "messages", "object_errors"]
 
     def __getitem__(self, key):
         key = to_snake_case(key)
-        if key in ('object_errors',) and getattr(self, key):
+        if key in ("object_errors",) and getattr(self, key):
             return [dict(each) for each in getattr(self, key)]
         return getattr(self, key)
 
@@ -79,14 +83,14 @@ class _CustomErrorType:
     object_errors: typing.Optional[list[typing.Optional[CustomErrorType]]]
     array_errors: typing.Optional[list[typing.Optional[ArrayNestedErrorType]]]
 
-    DEFAULT_ERROR_MESSAGE = 'Something unexpected has occurred. Please contact an admin to fix this issue.'
+    DEFAULT_ERROR_MESSAGE = "Something unexpected has occurred. Please contact an admin to fix this issue."
 
     @staticmethod
     def generate_message(message: str = DEFAULT_ERROR_MESSAGE) -> CustomErrorType:
         return CustomErrorType(
             [
                 dict(
-                    field='nonFieldErrors',
+                    field="nonFieldErrors",
                     messages=message,
                     object_errors=None,
                     array_errors=None,
@@ -95,18 +99,18 @@ class _CustomErrorType:
         )
 
     def keys(self):
-        return ['field', 'client_id', 'messages', 'object_errors', 'array_errors']
+        return ["field", "client_id", "messages", "object_errors", "array_errors"]
 
     def __getitem__(self, key):
         key = to_snake_case(key)
-        if key in ('object_errors', 'array_errors') and getattr(self, key):
+        if key in ("object_errors", "array_errors") and getattr(self, key):
             return [dict(each) for each in getattr(self, key)]
         return getattr(self, key)
 
 
 def serializer_error_to_error_types(errors: dict, initial_data: dict | None = None) -> list:
     initial_data = initial_data or dict()
-    node_client_id = initial_data.get('client_id')
+    node_client_id = initial_data.get("client_id")
     error_types = list()
     for field, value in errors.items():
         if isinstance(value, dict):
@@ -114,7 +118,7 @@ def serializer_error_to_error_types(errors: dict, initial_data: dict | None = No
                 _CustomErrorType(
                     client_id=node_client_id,
                     field=to_camel_case(field),
-                    object_errors=value,  # type: ignore[reportGeneralTypeIssues]
+                    object_errors=serializer_error_to_error_types(value),
                     array_errors=None,
                     messages=None,
                 )
@@ -130,7 +134,7 @@ def serializer_error_to_error_types(errors: dict, initial_data: dict | None = No
                             array_errors=[
                                 ArrayNestedErrorType(
                                     client_id=ARRAY_NON_MEMBER_ERRORS,
-                                    messages=''.join(str(msg) for msg in value),
+                                    messages="".join(str(msg) for msg in value),
                                     object_errors=None,
                                 )
                             ],
@@ -142,8 +146,9 @@ def serializer_error_to_error_types(errors: dict, initial_data: dict | None = No
                     error_types.append(
                         _CustomErrorType(
                             client_id=node_client_id,
-                            field=to_camel_case(field),
-                            messages=', '.join(str(msg) for msg in value),
+                            # TODO: Properly transform field(as number) into array_errors
+                            field=to_camel_case(field) if isinstance(field, str) else field,
+                            messages=", ".join(str(msg) for msg in value),
                             object_errors=None,
                             array_errors=None,
                         )
@@ -155,7 +160,7 @@ def serializer_error_to_error_types(errors: dict, initial_data: dict | None = No
                         # array item might not have error
                         continue
                     # fetch array.item.client_id from the initial data
-                    array_client_id = initial_data[field][pos].get('client_id', f'NOT_FOUND_{pos}')
+                    array_client_id = initial_data[field][pos].get("client_id", f"NOT_FOUND_{pos}")
                     array_errors.append(
                         ArrayNestedErrorType(
                             client_id=array_client_id,
@@ -177,7 +182,7 @@ def serializer_error_to_error_types(errors: dict, initial_data: dict | None = No
             error_types.append(
                 _CustomErrorType(
                     field=to_camel_case(field),
-                    messages=' '.join(str(msg) for msg in value),
+                    messages=" ".join(str(msg) for msg in value),
                     array_errors=None,
                     object_errors=None,
                 )
@@ -221,13 +226,196 @@ class MutationEmptyResponseType:
     errors: typing.Optional[CustomErrorType] = None
 
 
-def get_serializer_context(info: Info):
+def get_serializer_context(info: Info, extra_context: typing.Optional[dict]):
     return {
-        'graphql_info': info,
-        'request': info.context.request,
-        'active_project': info.context.active_project,
+        "graphql_info": info,
+        "request": info.context.request,
+        "extra_context": extra_context,
     }
 
 
 def generate_error_message(message: str = _CustomErrorType.DEFAULT_ERROR_MESSAGE) -> CustomErrorType:
     return _CustomErrorType.generate_message(message)
+
+
+class ModelMutation:
+    InputType: type
+    PartialInputType: type
+
+    def __init__(
+        self,
+        name: str,
+        serializer_class: typing.Type[serializers.Serializer],
+    ):
+        self.serializer_class = serializer_class
+        # Generated types
+        self.InputType = convert_serializer_to_type(
+            self.serializer_class,
+            name=name + "CreateInput",
+        )
+        self.PartialInputType = convert_serializer_to_type(
+            self.serializer_class,
+            name=name + "UpdateInput",
+            partial=True,
+        )
+
+    @staticmethod
+    def check_permissions(info, permission) -> CustomErrorType | None:
+        return None
+        # if permission and not info.context.has_perm(permission):
+        #     errors = CustomErrorType([
+        #         dict(
+        #             field="nonFieldErrors",
+        #             messages="You don't have enough permission",
+        #             object_errors=None,
+        #             array_errors=None,
+        #         )
+        #     ])
+        #     return errors
+
+    @staticmethod
+    @sync_to_async
+    def handle_mutation(
+        serializer_class,
+        data,
+        info,
+        extra_context: typing.Optional[dict],
+        **kwargs,
+    ) -> tuple[CustomErrorType | None, models.Model | None]:
+        serializer = serializer_class(
+            data=data,
+            context=get_serializer_context(info, extra_context=extra_context),
+            **kwargs,
+        )
+        if errors := mutation_is_not_valid(serializer):
+            return errors, None
+        try:
+            with transaction.atomic():
+                instance = serializer.save()
+        except Exception:
+            logger.error("Failed to handle mutation", exc_info=True)
+            return _CustomErrorType.generate_message(), None
+        return None, instance
+
+    @staticmethod
+    @sync_to_async
+    def handle_delete(instance: models.Model) -> tuple[CustomErrorType | None, models.Model | None]:
+        try:
+            with transaction.atomic():
+                old_id = instance.pk
+                instance.delete()
+                instance.pk = old_id
+                return None, instance
+        except Exception:
+            logger.error("Failed to handle delete mutation", exc_info=True)
+            return _CustomErrorType.generate_message(), None
+
+    async def handle_create_mutation(
+        self,
+        data,
+        info: Info,
+        permission,
+        extra_context: typing.Optional[dict] = None,
+    ) -> MutationResponseType:
+        if errors := self.check_permissions(info, permission):
+            return MutationResponseType(ok=False, errors=errors)
+        errors, saved_instance = await self.handle_mutation(
+            self.serializer_class,
+            process_input_data(data),
+            info,
+            extra_context,
+        )
+        if errors:
+            return MutationResponseType(ok=False, errors=errors)
+        return MutationResponseType(result=saved_instance)
+
+    async def handle_update_mutation(
+        self,
+        data,
+        info: Info,
+        permission,
+        instance: models.Model,
+        extra_context: typing.Optional[dict] = None,
+    ) -> MutationResponseType:
+        if errors := self.check_permissions(info, permission):
+            return MutationResponseType(ok=False, errors=errors)
+        errors, saved_instance = await self.handle_mutation(
+            self.serializer_class,
+            process_input_data(data),
+            info,
+            extra_context,
+            instance=instance,
+            partial=True,
+        )
+        if errors:
+            return MutationResponseType(ok=False, errors=errors)
+        return MutationResponseType(result=saved_instance)
+
+    async def handle_delete_mutation(self, instance: models.Model | None, info: Info, permission) -> MutationResponseType:
+        if errors := self.check_permissions(info, permission):
+            return MutationResponseType(ok=False, errors=errors)
+        if instance is None:
+            return MutationResponseType(
+                ok=False,
+                errors=_CustomErrorType.generate_message("Doesn't exists"),
+            )
+        errors, deleted_instance = await self.handle_delete(instance)
+        if errors:
+            return MutationResponseType(ok=False, errors=errors)
+        return MutationResponseType(result=deleted_instance)
+
+    async def handle_bulk_mutation(
+        self,
+        base_queryset: models.QuerySet,
+        items: list | None,
+        delete_ids: list[strawberry.ID] | None,
+        info: Info,
+        permission,
+        extra_context: typing.Optional[dict] = None,
+    ) -> BulkMutationResponseType:
+        if errors := self.check_permissions(info, permission):
+            return BulkMutationResponseType(errors=[errors])
+
+        errors = []
+
+        # Delete - First
+        deleted_instances = []
+        delete_qs = base_queryset.filter(id__in=delete_ids).order_by("id")
+        async for item in delete_qs.all():
+            _errors, _saved_instance = await self.handle_delete(item)
+            if _errors:
+                errors.append(_errors)
+            else:
+                deleted_instances.append(_saved_instance)
+
+        # Create/Update - Then
+        results = []
+        for data in items or []:
+            _data = process_input_data(data)
+            assert isinstance(_data, dict)
+            _id = _data.pop("id", None)
+            instance = None
+            if _id:
+                instance = await base_queryset.filter(id=_id).afirst()
+            partial = False
+            if instance:
+                partial = True
+            _errors, _saved_instance = await self.handle_mutation(
+                self.serializer_class,
+                _data,
+                info,
+                extra_context,
+                instance=instance,
+                partial=partial,
+            )
+            if _errors:
+                errors.append(_errors)
+            else:
+                results.append(_saved_instance)
+
+        return BulkMutationResponseType(
+            errors=errors,
+            # Data
+            results=results,
+            deleted=deleted_instances,
+        )

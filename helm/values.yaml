@@ -53,14 +53,6 @@ api:
 
 worker:
   enabled: true
-  replicaCount: 1
-  resources:
-    requests:
-      cpu: "1"
-      memory: 1Gi
-    limits:
-      cpu: "1"
-      memory: 2Gi
   beat:
     resources:
       requests:
@@ -69,7 +61,51 @@ worker:
       limits:
         cpu: "1"
         memory: 1Gi
+  flower:
+    enabled: true
+    resources:
+      requests:
+        cpu: "0.1"
+        memory: 0.5Gi
+      limits:
+        cpu: "1"
+        memory: 1Gi
+  queues:
+    # NOTE: Make sure keys are lowercase
+    default:
+      enabled: true
+      replicaCount: 1
+      celeryArgs: "-Q default --concurrency 4 --max-tasks-per-child 10"
+      resources:
+        requests:
+          cpu: "1"
+          memory: 1Gi
+        limits:
+          cpu: "1"
+          memory: 2Gi
+    feeds:
+      enabled: true
+      replicaCount: 2
+      celeryArgs: "-Q feeds --concurrency 4 --max-tasks-per-child 10 --soft-time-limit 300 --time-limit 500"
+      resources:
+        requests:
+          cpu: "2"
+          memory: 1Gi
+        limits:
+          cpu: "1"
+          memory: 2Gi
 
+argoHooks:
+  # NOTE: Make sure keys are lowercase
+  db-migrate:
+    enabled: true
+    hook: PostSync
+    preserveHistory: true
+    command: ["./manage.py", "migrate"]
+  collect-static:
+    enabled: true
+    hook: PostSync
+    command: ["./manage.py", "collectstatic", "--noinput"]
 
 env:
   # DJANGO_APP_ENVIRONMENT: using .environment
@@ -88,10 +124,15 @@ env:
   CORS_ALLOWED_ORIGIN_REGEXES:
   # Misc
   UPTIME_WORKER_HEARTBEAT:
+  EMAIL_USE_TLS: true
   DEFAULT_FROM_EMAIL:
   # Sentry
   SENTRY_TRACES_SAMPLE_RATE: 0.2
   SENTRY_PROFILE_SAMPLE_RATE: 0.2
+# NOTE: Used to pass additional configs to api/worker containers
+# NOTE: Not used by azure vault
+envAdditional:
+  # USE_S3_BUCKET: "true"
 
 secretsName: ""
 secrets:
@@ -114,6 +155,13 @@ secrets:
   CELERY_BROKER_URL:
   # - Cache
   CACHE_REDIS_URL:
+  # Hcaptcha
+  HCAPTCHA_SITEKEY:
+  HCAPTCHA_SECRET:
+# NOTE: Used to pass additional secrets to api/worker containers
+# NOTE: Not used by azure vault
+secretsAdditional:
+  # AWS_S3_ACCESS_KEY_ID: "VERY-SENSITIVE-KEY-ID"
 
 # Azure configurations
 azure:

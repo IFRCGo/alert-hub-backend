@@ -140,7 +140,7 @@ class Admin1Type:
     id: strawberry.ID
     ifrc_go_id: strawberry.ID | None
     name = string_field(Admin1.name)
-    bbox: PolygonScalar | None
+    bbox: PolygonScalar | None  # XXX: Use dataloader instead?
 
     if typing.TYPE_CHECKING:
         country_id = Admin1.country_id

@@ -1,6 +1,6 @@
 # IFRC/UCL Alert Hub - CAP Aggregator
 
-The CAP Aggregator is an alert aggregation service built for IFRC's Alert Hub. Public alerts use the Common Alerting Protocol (CAP) Version 1.2 standard.
+This repository houses the CAP Aggregator and Alert Manager for IFRC's Alert Hub. These services aggregate and distribute public alerts using the Common Alerting Protocol (CAP) Version 1.2 standard.
 
 This is a Python web app using the Django framework and the Azure Database for PostgreSQL relational database service. The Django app is hosted in a fully managed Azure App Service. Requests to hundreds of publicly available alert feeds are managed by Celery and Redis, which interprets alerts and saves them to the database. The Alert Manager then makes them available to the Alert Hub Website.
 

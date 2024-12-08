@@ -63,7 +63,23 @@ def load_feed(keys: list[int]) -> list['FeedType']:
     return _load_model(Feed, keys)  # type: ignore[reportGeneralTypeIssues]
 
 
-def load_admin1_by_alert(keys: list[int]) -> list[list['Admin1Type']]:
+def load_admin1_by_admin1s(keys_array: list[tuple[int]]) -> list[list['Admin1Type']]:
+    keys = [key for keys in keys_array for key in keys]
+    qs = Admin1.objects.filter(id__in=keys)
+
+    _map = defaultdict(list)
+    admin1_map = {admin1.pk: admin1 for admin1 in qs.all()}
+
+    for keys in keys_array:
+        for key in keys:
+            if key not in admin1_map:
+                continue
+            _map[keys].append(admin1_map[key])
+
+    return [_map[keys] for keys in keys_array]
+
+
+def load_admin1s_by_alert(keys: list[int]) -> list[list['Admin1Type']]:
     qs = (
         AlertAdmin1.objects.filter(alert__in=keys)
         .order_by()
@@ -229,8 +245,12 @@ class CapFeedDataloader:
         return DataLoader(load_fn=sync_to_async(load_feed))
 
     @cached_property
+    def load_admin1_by_admin1s(self):
+        return DataLoader(load_fn=sync_to_async(load_admin1_by_admin1s))
+
+    @cached_property
     def load_admin1s_by_alert(self):
-        return DataLoader(load_fn=sync_to_async(load_admin1_by_alert))
+        return DataLoader(load_fn=sync_to_async(load_admin1s_by_alert))
 
     @cached_property
     def load_admin1s_by_country(self):

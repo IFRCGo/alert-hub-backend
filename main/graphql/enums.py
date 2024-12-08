@@ -3,11 +3,13 @@ import dataclasses
 import strawberry
 
 from apps.cap_feed.enums import enum_map as cap_feed_enum_map
+from apps.subscription.enums import enum_map as subscription_enum_map
 from apps.user.enums import enum_map as user_enum_map
 
 ENUM_TO_STRAWBERRY_ENUM_MAP: dict[str, type] = {
     **user_enum_map,
     **cap_feed_enum_map,
+    **subscription_enum_map,
 }
 
 
@@ -28,20 +30,23 @@ def generate_app_enum_collection_data(name):
     return type(
         name,
         (),
-        {field_name: [AppEnumData(e) for e in enum] for field_name, enum in ENUM_TO_STRAWBERRY_ENUM_MAP.items()},
+        {
+            field_name: [AppEnumData(e) for e in enum]  # type: ignore[reportGeneralTypeIssues]
+            for field_name, enum in ENUM_TO_STRAWBERRY_ENUM_MAP.items()
+        },
     )
 
 
-AppEnumCollectionData = generate_app_enum_collection_data('AppEnumCollectionData')
+AppEnumCollectionData = generate_app_enum_collection_data("AppEnumCollectionData")
 
 
 def generate_type_for_enum(name, Enum):
     return strawberry.type(
         dataclasses.make_dataclass(
-            f'AppEnumCollection{name}',
+            f"AppEnumCollection{name}",
             [
-                ('key', Enum),
-                ('label', str),
+                ("key", Enum),
+                ("label", str),
             ],
         )
     )
@@ -73,7 +78,7 @@ def generate_type_for_enums():
     ]
     return strawberry.type(
         dataclasses.make_dataclass(
-            'AppEnumCollection',
+            "AppEnumCollection",
             enum_fields,
         )
     )

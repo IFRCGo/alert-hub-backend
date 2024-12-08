@@ -1,0 +1,66 @@
+{% extends "emails/base.html" %}
+
+{% block head %}
+<style>
+    .table {
+        margin: 36px auto;
+    }
+
+    .cell {
+        text-align: left;
+        padding: 0 4px;
+        font-family: inherit;
+        font-weight: normal;
+        color: #000;
+    }
+
+    .label {
+        font-weight: bold;
+        font-family: inherit;
+        width: 96px;
+    }
+</style>
+{% endblock %}
+
+{% block title %}
+IFRC Alert Hub password reset
+{% endblock %}
+
+{% block title_description %}
+<p style="margin: 0;">It seems you've forgotten your password.</p>
+{% endblock %}
+
+
+{% block body %}
+<div style="font-family: Poppins, Arial, sans-serif; color: #000;">
+    <a href="{{ password_reset_url }}" style="background-color: #4284FF; text-decoration: none; font-size: 16px; font-weight: 400; margin: 20px; color:white;  border-radius: 12px;  border: none; cursor: pointer; 
+  padding: 10px 20px;">
+        Reset your password
+    </a>
+    <p
+        style="margin-top: 40px; margin-left: 20px; padding: 0; font-family: Arial, sans-serif; font-size: 16px; line-height: 1.5; color: #000;">
+        If you didn't request to reset your password, you may simply ignore this email.
+    </p>
+
+    {% if location or device %}
+    <p
+        style="margin: 20px; padding: 0; font-family: Arial, sans-serif; font-size: 16px; line-height: 1.5; color: #000;">
+        More detail on password reset trigger
+    </p>
+    <table border="0" cellpadding="0" cellspacing="0" role="presentation"
+        style="width: 100%; border-collapse: collapse; margin: 20px; font-family: Arial, sans-serif; color: #000;">
+        <tr
+            style="font-family:Poppins, Arial, sans-serif;font-size:16px;font-weight:400;line-height:24px;text-align:left;color:#000;">
+            <td class="cell label">Location</td>
+            <td class="cell">{{location}}</td>
+        </tr>
+        <tr
+            style="font-family:Poppins, Arial, sans-serif;font-size:16px;font-weight:400;line-height:24px;text-align:left;color:#000;">
+            <td class="cell label">Device</td>
+            <td class="cell">{{device}}</td>
+        </tr>
+    </table>
+    {% endif %}
+</div>
+
+{% endblock %}

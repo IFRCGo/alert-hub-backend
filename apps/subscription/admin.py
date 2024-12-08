@@ -1,22 +1,22 @@
+from admin_auto_filters.filters import AutocompleteFilterFactory
 from django.contrib import admin
 
-from apps.subscription_manager.models import SubscriptionAlerts
-
-from .models import Subscription
+from .models import SubscriptionAlert, UserAlertSubscription
 
 
-class SubscriptionAlertsInline(admin.StackedInline):
-    model = SubscriptionAlerts
-    extra = 0
+@admin.register(UserAlertSubscription)
+class UserAlertSubscriptionAdmin(admin.ModelAdmin):
+    list_display = ["name", "is_active"]
+    search_fields = ("name",)
+    autocomplete_fields = ("user",)
+    list_filter = (
+        AutocompleteFilterFactory("User", "user"),
+        "is_active",
+    )
 
 
-class SubscriptionAdmin(admin.ModelAdmin):
-    # using = 'AlertDB'
-    list_display = ["id", "subscription_name"]
-    search_fields = ["id", "subscription_name"]
-
-    inlines = [SubscriptionAlertsInline]
-
-
-# Register your models here.
-admin.site.register(Subscription)  # , SubscriptionAdmin)
+@admin.register(SubscriptionAlert)
+class SubscriptionAlertAdmin(admin.ModelAdmin):
+    list_display = ["subscription", "alert"]
+    autocomplete_fields = ["subscription", "alert"]
+    list_filter = (AutocompleteFilterFactory("Subscription", "subscription"),)

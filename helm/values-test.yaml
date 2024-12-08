@@ -25,6 +25,9 @@ env:
   CORS_ALLOWED_ORIGINS: dummy.com
   # Misc
   DEFAULT_FROM_EMAIL: dummy@dummy.com
+envAdditional:
+  ENABLE_MAGIC: "true"
+  MAGIC_TYPE: fun
 
 secretsName: ""
 secrets:
@@ -42,3 +45,38 @@ secrets:
   EMAIL_HOST_PASSWORD: dummy
   # Sentry
   SENTRY_DSN: dummy.com/dummy-id
+  # Hcaptcha
+  HCAPTCHA_SITEKEY: "10000000-ffff-ffff-ffff-000000000001"
+  HCAPTCHA_SECRET: "0x0000000000000000000000000000000000000000"
+secretsAdditional:
+  ENABLE_MAGIC_SECRET: "true"
+  MAGIC_KEY: to-much-fun
+
+argoHooks:
+  db-migrate:
+    preserveHistory: false
+  custom-python-script-01:
+    enabled: true
+    hook: PostSync
+    command:
+      - ./manage.py
+      - shell
+      - -c
+      - |
+        from apps.user.models import User;
+        from django.db import transaction;
+
+        @transaction.atomic
+        def create_initial_users(user_data):
+            user, _ = User.objects.update_or_create(
+                email=email,
+                defaults={
+                  "first_name": "Hi"
+                  "last_name": "there"
+                  "is_superuser": False,
+                  "is_staff": False,
+                  "password": "not-working-password-hash",
+                },
+            )
+            print(f"Successfully created/update user {email=}");
+        create_initial_users(user_data);

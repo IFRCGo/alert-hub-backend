@@ -1,0 +1,40 @@
+{% extends "emails/base.html" %}
+
+{% block head %}
+<style>
+    .table {
+        margin: 36px auto;
+    }
+
+    .cell {
+        text-align: left;
+        padding: 0 4px;
+        font-family: inherit;
+        font-weight: normal;
+        color: #000;
+    }
+
+    .label {
+        font-weight: bold;
+        font-family: inherit;
+        width: 96px;
+    }
+</style>
+{% endblock %}
+
+{% block title %}
+IFRC Alert Hub account activation
+{% endblock %}
+
+{% block title_description %}
+<p style="margin: 0;">Please open the link below to activate your account:</p>
+{% endblock %}
+
+{% block body %}
+<div style="font-family: Poppins, Arial, sans-serif; color: #000;  margin: 23px;">
+    <a href="{{ activation_url }}"
+        style="color: #4284FF; font-family: Arial, sans-serif; text-decoration: underline; font-size: 16px;">
+        Activate your account
+    </a>
+</div>
+{% endblock %}

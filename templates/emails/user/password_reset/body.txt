@@ -1,0 +1,11 @@
+{% block title %}Reset Password{% endblock %}
+{% block body %}
+It seems you've forgotten your password.
+If you didn't request to reset your password, you may simply ignore this email.
+Reset your password: {{  password_reset_url  }}
+{% if location or device %}
+More detail on password reset trigger
+    Location: {{location}}
+    Device: {{device}}
+{% endif %}
+{% endblock %}

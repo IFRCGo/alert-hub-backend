@@ -31,8 +31,8 @@ class GIS:
 
 
 PolygonScalar = strawberry.scalar(
-    typing.NewType('PolygonScalar', typing.Any),  # type: ignore[reportGeneralTypeIssues]
-    description='',  # TODO: Add description
+    typing.NewType("PolygonScalar", typing.Any),  # type: ignore[reportGeneralTypeIssues]
+    description="",  # TODO: Add description
     serialize=GIS.serialize,
     parse_value=GIS.parse_value,
 )
@@ -42,7 +42,7 @@ def string_field(
     field: typing.Union[
         DjangoBaseField,
         models.query_utils.DeferredAttribute,
-        '_FieldDescriptor',
+        "_FieldDescriptor",
     ]
 ):
     """
@@ -71,7 +71,7 @@ def string_field(
     @strawberry.field
     def nullable_string_(root) -> typing.Optional[str]:
         _value = _get_value(root)
-        if _value == '':
+        if _value == "":
             return
         return _value
 

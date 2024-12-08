@@ -1,0 +1,58 @@
+{% extends "emails/base.html" %}
+
+{% block head %}
+<style>
+    .table {
+        margin: 36px auto;
+    }
+
+    .cell {
+        text-align: left;
+        padding: 0 4px;
+        font-family: inherit;
+        font-weight: normal;
+        color: #000;
+    }
+
+    .label {
+        font-weight: bold;
+        font-family: inherit;
+        width: 96px;
+    }
+
+    .actions-container {
+        margin: 23px;
+    }
+</style>
+{% endblock %}
+{% block title %}
+Hi there {{ user.first_name|default:"User" }},
+Your password has been changed successfully.
+{% endblock %}
+{% block body %}
+{% if location or device %}
+<table border="0" cellpadding="0" cellspacing="0" role="presentation"
+    style="width: 100%; border-collapse: collapse; margin: 20px; font-family: Arial, sans-serif; color: #000;">
+    <tr
+        style="font-family:Poppins, Arial, sans-serif;font-size:16px;font-weight:400;line-height:24px;text-align:left;color:#000;">
+        <td class="cell label">Location</td>
+        <td class="cell">{{location}}</td>
+    </tr>
+    <tr
+        style="font-family:Poppins, Arial, sans-serif;font-size:16px;font-weight:400;line-height:24px;text-align:left;color:#000;">
+        <td class="cell label">Device</td>
+        <td class="cell">{{device}}</td>
+    </tr>
+</table>
+{% endif %}
+<div class="actions-container">
+    <p style="padding: 0; font-family: Arial, sans-serif; font-size: 16px; line-height: 1.5; color: #000;">
+        If you are aware of this change, you can disregard this email.
+        If this was not triggered by you, please reset your password.
+    </p>
+    <a href="{{ frontend_forgot_password }}"
+        style="color: #4284FF; font-family: Arial, sans-serif; text-decoration: underline; font-size: 16px;">
+        Reset your password
+    </a>
+</div>
+{% endblock%}

@@ -1,3 +1,4 @@
+import enum
 from datetime import timedelta
 from typing import TYPE_CHECKING
 
@@ -64,11 +65,59 @@ def create_unknown_admin1(sender, instance, created, **kwargs):
 
 
 class Admin1(models.Model):
+    class GeoCode(enum.Enum):
+        EMMA_ID = "EMMA_ID"
+        NUTS1 = "NUTS1"
+        NUTS2 = "NUTS2"
+        NUTS3 = "NUTS3"
+        FIPS_CODE = "FIPS_CODE"
+
     ifrc_go_id = models.IntegerField(unique=True, null=True, editable=False)
     name = models.CharField()
     country = models.ForeignKey(Country, on_delete=models.CASCADE)
     bbox = gid_models.PolygonField(srid=4326, blank=True, null=True)
     geometry = gid_models.GeometryField(null=True, blank=True, default=None)
+
+    # go-api: https://github.com/IFRCGo/go-api/blob/db2991bd588376f58a1db8422625e19aa5777dd3/api/models.py#L301-L323
+    emma_id = models.CharField(
+        verbose_name=_("emma_id"),
+        max_length=10,
+        blank=True,
+        null=True,
+        help_text=_("Meteoalarm EMMA_ID"),
+        db_index=True,
+    )
+    nuts1 = models.CharField(
+        verbose_name=_("nuts1"),
+        max_length=3,
+        blank=True,
+        null=True,
+        help_text=_("Nomenclature of Territorial Units for Statistics 1"),
+        db_index=True,
+    )
+    nuts2 = models.CharField(
+        verbose_name=_("nuts2"),
+        max_length=4,
+        blank=True,
+        null=True,
+        help_text=_("Nomenclature of Territorial Units for Statistics 2"),
+        db_index=True,
+    )
+    nuts3 = models.CharField(
+        verbose_name=_("nuts3"),
+        max_length=5,
+        blank=True,
+        null=True,
+        help_text=_("Nomenclature of Territorial Units for Statistics 3"),
+        db_index=True,
+    )
+    fips_code = models.PositiveIntegerField(
+        verbose_name=_("fips_code"),
+        blank=True,
+        null=True,
+        help_text=_("USA FIPS Code"),
+        db_index=True,
+    )
 
     country_id: int
 
@@ -191,6 +240,9 @@ class Alert(models.Model):
 
     # This is updated by the system to filter out is_expired
     is_expired = models.BooleanField(default=False)
+    # TODO: Keep this true for existing alerts and then default=True for future alerts
+    # NOTE: null=True is to avoid full rewrite of the table: https://docs.djangoproject.com/en/5.1/ref/migration-operations/#addfield  # noqa
+    is_processed_by_subscription = models.BooleanField(default=False, null=True)
 
     identifier = models.CharField()
     sender = models.CharField()
@@ -219,7 +271,12 @@ class Alert(models.Model):
                 fields=['is_expired'],
                 name='%(app_label)s_%(class)s_not_expired_idx',
                 condition=models.Q(is_expired=False),
-            )
+            ),
+            models.Index(
+                fields=['is_processed_by_subscription'],
+                name='%(app_label)s_%(class)s_subscription_ix',
+                condition=models.Q(is_processed_by_subscription=False),
+            ),
         ]
 
     def __init__(self, *args, **kwargs):
@@ -300,12 +357,12 @@ class AlertInfo(models.Model):
     alert = models.ForeignKey(Alert, on_delete=models.CASCADE, related_name='infos')
 
     language = models.CharField(blank=True, default='en-US')
-    category = models.CharField(choices=Category.choices)
+    category = models.CharField(choices=Category.choices, db_index=True)
     event = models.CharField()
     response_type = models.CharField(choices=ResponseType.choices, blank=True, null=True, default=None)
-    urgency = models.CharField(choices=Urgency.choices)
-    severity = models.CharField(choices=Severity.choices)
-    certainty = models.CharField(choices=Certainty.choices)
+    urgency = models.CharField(choices=Urgency.choices, db_index=True)
+    severity = models.CharField(choices=Severity.choices, db_index=True)
+    certainty = models.CharField(choices=Certainty.choices, db_index=True)
     audience = models.CharField(blank=True, null=True, default=None)
     event_code = models.CharField(blank=True, null=True, default=None)
     # effective = models.DateTimeField(default=Alert.objects.get(pk=alert).sent)
@@ -386,6 +443,18 @@ class AlertInfoAreaCircle(models.Model):
     alert_info_area_id: int
 
     # NOTE: Circle can't be drawn using Geojson. A polygon needs to be created which holds large data then raw value
+
+    def get_geos(self) -> tuple[Point, int] | None:
+        try:
+            # value: 22.448,71.060 199
+            point_raw, radius = self.value.split(" ")
+            point = point_raw.split(",")
+            return (
+                Point(float(point[1]), float(point[0])),
+                int(radius),
+            )
+        except Exception:
+            return
 
     def to_dict(self):
         alert_info_area_circle_dict = dict()

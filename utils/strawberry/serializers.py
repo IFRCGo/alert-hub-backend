@@ -1,3 +1,4 @@
+from django.db import models
 from rest_framework import serializers
 
 
@@ -17,3 +18,22 @@ class StringIDField(serializers.CharField):
     """
 
     pass
+
+
+class CustomCharField(serializers.CharField):
+    """
+    This is match utils/strawberry/types.py::string_field logic
+    """
+
+    def run_validation(self, data=serializers.empty):
+        if data is None and self.allow_blank and not self.allow_null:
+            data = ""
+        return super().run_validation(data)  # type: ignore[reportArgumentType]
+
+
+serializers.ModelSerializer.serializer_field_mapping.update(
+    {
+        models.CharField: CustomCharField,
+        models.TextField: CustomCharField,
+    }
+)

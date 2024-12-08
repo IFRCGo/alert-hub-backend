@@ -123,14 +123,14 @@ class StrawberryDjangoCountList(StrawberryDjangoField):
         args: list[Any],
         kwargs: dict[str, Any],
     ) -> Any:
-        pk: int = kwargs.get('pk', strawberry.UNSET)
-        filters: Type = kwargs.get('filters', strawberry.UNSET)
-        order: Type = kwargs.get('order', strawberry.UNSET)
-        pagination: OffsetPaginationInput = kwargs.get('pagination', strawberry.UNSET)
+        pk: int = kwargs.get("pk", strawberry.UNSET)
+        filters: Type = kwargs.get("filters", strawberry.UNSET)
+        order: Type = kwargs.get("order", strawberry.UNSET)
+        pagination: OffsetPaginationInput = kwargs.get("pagination", strawberry.UNSET)
 
         if self.django_model is None or self._base_type is None:
             # This needs to be fixed by developers
-            raise Exception('django_model should be defined!!')
+            raise Exception("django_model should be defined!!")
 
         queryset = self.django_model.objects.all()
 
@@ -145,13 +145,13 @@ class StrawberryDjangoCountList(StrawberryDjangoField):
         queryset = apply_orders(order, queryset, info=info)
         # Add a default order_by id if there is none defined/used
         if not queryset.query.order_by:
-            queryset = queryset.order_by('-pk')
+            queryset = queryset.order_by("-pk")
 
         _current_queryset = queryset._chain()  # type: ignore[reportGeneralTypeIssues]
 
         @sync_to_async
         def get_count():
-            return _current_queryset.values('pk').count()
+            return _current_queryset.values("pk").count()
 
         pagination = process_pagination(pagination)
 
@@ -162,6 +162,40 @@ class StrawberryDjangoCountList(StrawberryDjangoField):
             limit=pagination.limit,
             offset=pagination.offset,
         )
+
+
+# TODO: Migrate to strawberry_django.offset_paginated
+def count_list_resolver(
+    info: Info | None,
+    queryset,
+    base_type,
+    pk: int = strawberry.UNSET,
+    filters: Type = strawberry.UNSET,
+    order: Type = strawberry.UNSET,
+    pagination: OffsetPaginationInput = strawberry.UNSET,
+) -> Any:
+    queryset = apply_filters(filters, queryset, info, pk)
+    queryset = apply_orders(order, queryset, info=info)
+
+    # Add a default order_by id if there is none defined/used
+    if not queryset.query.order_by:
+        queryset = queryset.order_by("-pk")
+
+    _current_queryset = queryset._chain()  # type: ignore[reportGeneralTypeIssues]
+
+    @sync_to_async
+    def get_count():
+        return _current_queryset.values("pk").count()
+
+    pagination = process_pagination(pagination)
+
+    queryset = StrawberryDjangoCountList().apply_pagination(queryset, pagination)
+    return CountList[base_type](  # type: ignore[reportGeneralTypeIssues]
+        get_count=get_count,
+        queryset=queryset,
+        limit=pagination.limit,
+        offset=pagination.offset,
+    )
 
 
 def pagination_field(

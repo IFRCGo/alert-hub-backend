@@ -14,7 +14,7 @@ from .models import Alert, AlertInfo, Country, Feed
 
 
 class AlertModelTests(TestCase):
-    fixtures = ['cap_feed/fixtures/test_data.json']
+    fixtures = ['apps/cap_feed/fixtures/test_data.json']
 
     def create_alert(self, url='', days=1):
         alert = Alert()
@@ -75,7 +75,7 @@ class AlertModelTests(TestCase):
         assert timezone.get_default_timezone_name() == 'UTC'
         assert timezone.get_current_timezone_name() == 'UTC'
 
-    def test_expired_alert_is_removed(self):
+    def test_expired_alert_is_kept(self):
         """
         Is an expired alert identified and removed from the database?
         """
@@ -83,8 +83,8 @@ class AlertModelTests(TestCase):
         previous_alert_count = Alert.objects.count()
         previous_alert_info_count = AlertInfo.objects.count()
         tasks.tag_expired_alerts()
-        assert Alert.objects.count() == previous_alert_count - 1
-        assert AlertInfo.objects.count() == previous_alert_info_count - 1
+        assert Alert.objects.count() == previous_alert_count
+        assert AlertInfo.objects.count() == previous_alert_info_count
 
     def test_active_alert_is_kept(self):
         """
@@ -92,26 +92,26 @@ class AlertModelTests(TestCase):
         """
         self.create_alert(days=1)
         previous_alert_count = Alert.objects.filter(is_expired=False).count()
-        previous_alert_info_count = AlertInfo.objects.filter(is_expired=False).count()
+        previous_alert_info_count = AlertInfo.objects.filter(alert__is_expired=False).count()
         total_previous_alert_count = Alert.objects.count()
         total_previous_alert_info_count = AlertInfo.objects.count()
         tasks.tag_expired_alerts()
         assert Alert.objects.filter(is_expired=False).count() == previous_alert_count
-        assert AlertInfo.objects.filter(is_expired=False).count() == previous_alert_info_count
+        assert AlertInfo.objects.filter(alert__is_expired=False).count() == previous_alert_info_count
         assert Alert.objects.count() == total_previous_alert_count
         assert AlertInfo.objects.count() == total_previous_alert_info_count
 
-    def test_deleted_alert_is_removed(self):
+    def test_deleted_alert_is_expired(self):
         """
         Is an existing active alert removed from the database when it is deleted from the feed?
         """
         self.create_alert(url='test_url', days=1)
-        previous_alert_count = Alert.objects.count()
-        previous_alert_info_count = AlertInfo.objects.count()
+        previous_alert_count = Alert.objects.filter(is_expired=False).count()
+        previous_alert_info_count = AlertInfo.objects.filter(alert__is_expired=False).count()
         with mock.patch('sys.stdout', new=StringIO()):
             get_alerts(Feed.objects.get(url="test_feed"), set())
-        assert Alert.objects.count() == previous_alert_count - 1
-        assert AlertInfo.objects.count() == previous_alert_info_count - 1
+        assert Alert.objects.filter(is_expired=False).count() == previous_alert_count - 1
+        assert AlertInfo.objects.filter(alert__is_expired=False).count() == previous_alert_info_count - 1
 
     def test_persisting_alert_is_kept(self):
         """

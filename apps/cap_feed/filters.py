@@ -12,40 +12,15 @@ from .enums import (
 from .models import Admin1, Alert, AlertInfo, Country, Feed, Region
 
 
-@strawberry_django.filters.filter(Alert, lookups=True)
-class AlertFilter:
+@strawberry_django.filters.filter(AlertInfo, lookups=True)
+class AlertInfoFilter:
     id: strawberry.auto
-    country: strawberry.auto
-    sent: strawberry.auto
-
-    @strawberry_django.filter_field
-    def region(
-        self,
-        queryset: models.QuerySet,
-        value: strawberry.ID,
-        prefix: str,
-    ) -> tuple[models.QuerySet, models.Q]:
-        return queryset, models.Q(**{f"{prefix}country__region": value})
-
-    @strawberry_django.filter_field
-    def admin1(
-        self,
-        queryset: models.QuerySet,
-        value: strawberry.ID,
-        prefix: str,
-    ) -> tuple[models.QuerySet, models.Q]:
-        return queryset, models.Q(**{f"{prefix}admin1s": value})
 
     def _info_enum_fields(self, field, queryset, value, prefix) -> tuple[models.QuerySet, models.Q]:
         if value:
-            alias_field = f"_infos_{field}_list"
-            queryset = queryset.alias(
-                **{
-                    # NOTE: To avoid duplicate alerts when joining infos
-                    alias_field: ArrayAgg(f"{prefix}infos__{field}"),
-                }
-            )
-            return queryset, models.Q(**{f"{prefix}{alias_field}__overlap": value})
+            # NOTE: With this field, disctinct should be used by the client
+            print(f"{prefix}{field}__in")
+            return queryset, models.Q(**{f"{prefix}{field}__in": value})
         return queryset, models.Q()
 
     @strawberry_django.filter_field
@@ -85,9 +60,30 @@ class AlertFilter:
         return self._info_enum_fields("category", queryset, value, prefix)
 
 
-@strawberry_django.filters.filter(AlertInfo, lookups=True)
-class AlertInfoFilter:
+@strawberry_django.filters.filter(Alert, lookups=True)
+class AlertFilter:
     id: strawberry.auto
+    country: strawberry.auto
+    sent: strawberry.auto
+    infos: AlertInfoFilter | None
+
+    @strawberry_django.filter_field
+    def region(
+        self,
+        queryset: models.QuerySet,
+        value: strawberry.ID,
+        prefix: str,
+    ) -> tuple[models.QuerySet, models.Q]:
+        return queryset, models.Q(**{f"{prefix}country__region": value})
+
+    @strawberry_django.filter_field
+    def admin1(
+        self,
+        queryset: models.QuerySet,
+        value: strawberry.ID,
+        prefix: str,
+    ) -> tuple[models.QuerySet, models.Q]:
+        return queryset, models.Q(**{f"{prefix}admin1s": value})
 
 
 @strawberry_django.filters.filter(Feed, lookups=True)

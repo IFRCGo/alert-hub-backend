@@ -350,6 +350,46 @@ class IfrcGoGeoInjector:
         mgr.done()
         self.log_success(str(mgr.summary()))
 
+    def inject_admin1s_geo_codes(self):
+        # TODO: Confirm this
+        fetch_params = {
+            "is_independent": True,
+            "is_deprecated": False,
+            "limit": 1000,
+        }
+
+        go_data = self.handle_pagination(
+            "/api/v2/district/",
+            params=fetch_params,
+            headers={"Accept-Language": "EN"},
+        )
+
+        mgr = BulkUpdateManager(
+            update_fields=[
+                "emma_id",
+                "nuts1",
+                "nuts2",
+                "nuts3",
+                "fips_code",
+            ]
+        )
+
+        for admin1_data in go_data:
+            ifrc_go_id = int(admin1_data.get("id"))
+            admin1 = Admin1.objects.filter(ifrc_go_id=ifrc_go_id).first()
+            if admin1 is None:
+                continue
+
+            admin1.emma_id = admin1_data["emma_id"]
+            admin1.nuts1 = admin1_data["nuts1"]
+            admin1.nuts2 = admin1_data["nuts2"]
+            admin1.nuts3 = admin1_data["nuts3"]
+            admin1.fips_code = admin1_data["fips_code"]
+            mgr.add(admin1)
+
+        mgr.done()
+        self.log_success(str(mgr.summary()))
+
     @transaction.atomic
     def sync(
         self,
@@ -362,4 +402,5 @@ class IfrcGoGeoInjector:
         self.inject_countries()
         if not skip_admin1s_sync:
             self.inject_admin1s()
+            self.inject_admin1s_geo_codes()
         # TODO: Show change summary
