@@ -58,7 +58,7 @@ class UserLoginSerializer(serializers.Serializer):
         return {"user": authenticate_user}
 
 
-# TODO: User ModelSerializer
+# TODO: Use ModelSerializer
 class UserRegisterSerializer(CaptchaSerializerMixin, serializers.Serializer):
     first_name = serializers.CharField(required=True)
     last_name = serializers.CharField(required=True)

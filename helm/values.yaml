@@ -53,14 +53,6 @@ api:
 
 worker:
   enabled: true
-  replicaCount: 1
-  resources:
-    requests:
-      cpu: "1"
-      memory: 1Gi
-    limits:
-      cpu: "1"
-      memory: 2Gi
   beat:
     resources:
       requests:
@@ -69,13 +61,46 @@ worker:
       limits:
         cpu: "1"
         memory: 1Gi
+  flower:
+    enabled: true
+    resources:
+      requests:
+        cpu: "0.1"
+        memory: 0.5Gi
+      limits:
+        cpu: "1"
+        memory: 1Gi
+  queues:
+    # NOTE: Make sure keys are lowercase
+    default:
+      enabled: true
+      replicaCount: 1
+      celeryArgs: "-Q default --concurrency 4 --max-tasks-per-child 10"
+      resources:
+        requests:
+          cpu: "1"
+          memory: 1Gi
+        limits:
+          cpu: "1"
+          memory: 2Gi
+    feeds:
+      enabled: true
+      replicaCount: 2
+      celeryArgs: "-Q feeds --concurrency 4 --max-tasks-per-child 10 --soft-time-limit 300 --time-limit 500"
+      resources:
+        requests:
+          cpu: "2"
+          memory: 1Gi
+        limits:
+          cpu: "1"
+          memory: 2Gi
 
 argoHooks:
   # NOTE: Make sure keys are lowercase
   db-migrate:
     enabled: true
     hook: PostSync
-    preservehistory: true
+    preserveHistory: true
     command: ["./manage.py", "migrate"]
   collect-static:
     enabled: true

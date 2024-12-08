@@ -23,7 +23,5 @@ class CaptchaSerializerMixin(serializers.Serializer):
     captcha = serializers.CharField(write_only=True, required=True)
 
     def validate_captcha(self, captcha):
-        # TODO: Remove this return
-        return
         if not validate_hcaptcha(captcha):
             raise serializers.ValidationError(gettext('Invalid captcha! Please, Try Again'))

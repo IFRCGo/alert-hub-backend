@@ -1,52 +1,62 @@
 {{- if .Values.worker.enabled }}
 
+{{- range $queue_name, $config := .Values.worker.queues }}
+
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ template "ifrcgo-alert-hub.fullname" . }}-worker
+  name: {{ template "ifrcgo-alert-hub.fullname" $ }}-worker-{{ $queue_name }}
   labels:
-    app: {{ include "ifrcgo-alert-hub.fullname" . }}
+    app: {{ include "ifrcgo-alert-hub.fullname" $ }}
     component: worker
-    environment: {{ .Values.environment }}
-    release: {{ .Release.Name }}
+    queue: {{ $queue_name }}
+    environment: {{ $.Values.environment }}
+    release: {{ $.Release.Name }}
   annotations:
     reloader.stakater.com/auto: "true"
 spec:
-  replicas: {{ .Values.worker.replicaCount }}
+  replicas: {{ $config.replicaCount }}
   selector:
     matchLabels:
-      app: {{ include "ifrcgo-alert-hub.fullname" . }}
+      app: {{ include "ifrcgo-alert-hub.fullname" $ }}
       component: worker
+      queue: {{ $queue_name }}
   template:
     metadata:
-      {{- if not .Values.azure.aksSecretsProviderAvailable }}
+      {{- if not $.Values.azure.aksSecretsProviderAvailable }}
       annotations:
-        checksum/secret: {{ include (print .Template.BasePath "/config/secret.yaml") . | sha256sum }}
-        checksum/configmap: {{ include (print .Template.BasePath "/config/configmap.yaml") . | sha256sum }}
+        checksum/secret: {{ include (print $.Template.BasePath "/config/secret.yaml") $ | sha256sum }}
+        checksum/configmap: {{ include (print $.Template.BasePath "/config/configmap.yaml") $ | sha256sum }}
       {{- end }}
       labels:
-        app: {{ include "ifrcgo-alert-hub.fullname" . }}
+        app: {{ include "ifrcgo-alert-hub.fullname" $ }}
         component: worker
+        queue: {{ $queue_name }}
     spec:
       containers:
         - name: worker
-          image: "{{ .Values.image.name }}:{{ .Values.image.tag }}"
+          image: "{{ $.Values.image.name }}:{{ $.Values.image.tag }}"
           command: ["/code/deploy/run_worker.sh"]
           # TODO: livenessProbe
           resources:
-            {{- toYaml .Values.worker.resources | nindent 12 }}
+            {{- toYaml $config.resources | nindent 12 }}
           env:
             - name: DJANGO_APP_TYPE
               value: worker
+            - name: CELERY_ARGS
+              value: {{ required "worker.queues.*.celeryArgs" $config.celeryArgs | quote }}
           envFrom:
             - secretRef:
-                name: {{ template "ifrcgo-alert-hub.secretname" . }}
+                name: {{ template "ifrcgo-alert-hub.secretname" $ }}
             - configMapRef:
-                name: {{ template "ifrcgo-alert-hub.fullname" . }}-api-configmap
+                name: {{ template "ifrcgo-alert-hub.fullname" $ }}-api-configmap
 
-      {{- with .Values.imagePullSecrets }}
+      {{- with $.Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+
+{{- end }}
 
 {{- end }}

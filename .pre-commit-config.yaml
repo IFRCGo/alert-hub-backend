@@ -34,3 +34,8 @@ repos:
     rev: v1.1.390
     hooks:
       - id: pyright
+
+  # - repo: https://github.com/gruntwork-io/pre-commit
+  #   rev: v0.1.15
+  #   hooks:
+  #     - id: helmlint

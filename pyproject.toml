@@ -10,6 +10,7 @@ package-mode = false
 python = "^3.11"
 Django = ">=4.2,<4.3"
 celery = "^5.3"
+flower="*"  # celery-dashboard
 django-celery-beat = "*"
 django-cors-headers = "*"
 django-environ = "*"

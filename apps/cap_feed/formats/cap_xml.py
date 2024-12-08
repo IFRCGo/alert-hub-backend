@@ -1,9 +1,11 @@
 import datetime
 import logging
+from collections import defaultdict
 from xml.etree.ElementTree import Element as XmlElement
 
-from django.contrib.gis.geos import GEOSGeometry
-from django.db import IntegrityError
+from django.contrib.gis.geos import GEOSGeometry, Point
+from django.contrib.gis.measure import Distance
+from django.db import IntegrityError, models
 from django.utils import timezone
 
 from apps.cap_feed.formats.utils import (
@@ -103,12 +105,14 @@ def process_alert_info(
     alert_info_entry: XmlElement,
     mgr: BulkCreateManager,
     ns: dict,
-) -> tuple[AlertInfo | None, list[GEOSGeometry]]:
+) -> tuple[AlertInfo | None, list[GEOSGeometry], list[tuple[Point, int]]]:
+    polygons: list[GEOSGeometry] = []
+    circles: list[tuple[Point, int]] = []
+
     expire_time = convert_datetime(find_element(alert_info_entry, ns, 'cap:expires'))
     if expire_time is not None and expire_time < timezone.now():
-        return None, []
+        return None, polygons, circles
 
-    polygons = []
     alert_info = create_alert_info(alert, alert_info_entry, expire_time, ns)
 
     # navigate alert info parameter
@@ -132,12 +136,13 @@ def process_alert_info(
 
         # navigate alert info area circle
         for alert_info_area_circle_entry in alert_info_area_entry.findall('cap:circle', ns):
-            mgr.add(
-                AlertInfoAreaCircle(
-                    alert_info_area=alert_info_area,
-                    value=alert_info_area_circle_entry.text,
-                )
+            alert_info_area_circle = AlertInfoAreaCircle(
+                alert_info_area=alert_info_area,
+                value=alert_info_area_circle_entry.text,
             )
+            mgr.add(alert_info_area_circle)
+            if parsed_circle := alert_info_area_circle.get_geos():
+                circles.append(parsed_circle)
 
         # navigate info area geocode
         for alert_info_area_geocode_entry in alert_info_area_entry.findall('cap:geocode', ns):
@@ -159,7 +164,42 @@ def process_alert_info(
                 mgr.add(alert_info_area_polygon)
                 if parsed_polygon := alert_info_area_polygon.value_geojson:
                     polygons.append(parsed_polygon)
-    return alert_info, polygons
+    return alert_info, polygons, circles
+
+
+def process_geo_code_type(
+    admin1_base_qs: models.QuerySet[Admin1], geocode_name: Admin1.GeoCode, values: set[str]
+) -> list[int]:
+    if geocode_name == Admin1.GeoCode.EMMA_ID:
+        qs = admin1_base_qs.filter(emma_id__in=values)
+    elif geocode_name == Admin1.GeoCode.NUTS1:
+        qs = admin1_base_qs.filter(nuts1__in=values)
+    elif geocode_name == Admin1.GeoCode.NUTS2:
+        qs = admin1_base_qs.filter(nuts2__in=values)
+    elif geocode_name == Admin1.GeoCode.NUTS3:
+        qs = admin1_base_qs.filter(nuts3__in=values)
+    elif geocode_name == Admin1.GeoCode.FIPS_CODE:
+        qs = admin1_base_qs.filter(fips_code__in=values)
+    return list(qs.values_list('id', flat=True))
+
+
+def process_geo_codes(
+    alert: Alert,
+    admin1_base_qs: models.QuerySet[Admin1],
+) -> list[int]:
+    geocode_map: dict[Admin1.GeoCode, set[str]] = defaultdict(set)
+
+    qs = AlertInfoAreaGeocode.objects.filter(alert_info_area__alert_info__alert=alert)
+    for value_name, value in qs.values_list("value_name", "value"):
+        # TODO: Remove _value2member_map_ after upgrading python version
+        if value_name.upper() in Admin1.GeoCode._value2member_map_:
+            geocode_map[Admin1.GeoCode[value_name.upper()]].add(value)
+
+    possible_admin1_ids: list[int] = []
+    for geocode_name, values in geocode_map.items():
+        possible_admin1_ids.extend(process_geo_code_type(admin1_base_qs, geocode_name, values))
+
+    return list(set(possible_admin1_ids))
 
 
 def process_alert(
@@ -174,21 +214,23 @@ def process_alert(
 
     mgr = BulkCreateManager()
     alert_has_valid_info = False
+    alert_info_circles_collections = []
     tagged_admin1s_id = set()
+    admin1_base_qs = Admin1.objects.filter(country=alert.country)
 
     # navigate alert info
     for alert_info_entry in alert_root.findall('cap:info', ns):
-        alert_info, alert_info_polygons = process_alert_info(alert, alert_info_entry, mgr, ns)
+        alert_info, alert_info_polygons, alert_info_circles = process_alert_info(alert, alert_info_entry, mgr, ns)
         if not alert_info:
             continue
+        alert_info_circles_collections.extend(alert_info_circles)
 
         alert_has_valid_info = True
 
         # XXX: Do we need to check circles as well?
         # check polygon intersection with admin1s
         for polygon in alert_info_polygons:
-            possible_admin1s = Admin1.objects.filter(
-                country=alert.country,
+            possible_admin1s = admin1_base_qs.filter(
                 # TODO: Check for performance issues
                 geometry__intersects=polygon,
             ).exclude(id__in=tagged_admin1s_id)
@@ -202,8 +244,36 @@ def process_alert(
                 )
 
     if alert_has_valid_info:
+        # Fallback: Try circles
         if not tagged_admin1s_id:
-            if unknown_admin1 := Admin1.objects.filter(country=alert.country, name='Unknown').first():
+            for circle in alert_info_circles_collections:
+                possible_admin1s = admin1_base_qs.filter(
+                    # TODO: Check for performance issues
+                    geometry___dwithin=(circle[0], Distance(m=circle[1])),
+                ).exclude(id__in=tagged_admin1s_id)
+                for admin1_id in possible_admin1s.values_list('id', flat=True):
+                    tagged_admin1s_id.add(admin1_id)
+                    mgr.add(
+                        AlertAdmin1(
+                            alert=alert,
+                            admin1_id=admin1_id,
+                        )
+                    )
+
+        # Fallback: Try geocodes
+        if not tagged_admin1s_id:
+            for admin1_id in process_geo_codes(alert, admin1_base_qs):
+                tagged_admin1s_id.add(admin1_id)
+                mgr.add(
+                    AlertAdmin1(
+                        alert=alert,
+                        admin1_id=admin1_id,
+                    )
+                )
+
+        # Last fallback is Unknown admin1
+        if not tagged_admin1s_id:
+            if unknown_admin1 := admin1_base_qs.filter(name='Unknown').first():
                 mgr.add(
                     AlertAdmin1(
                         alert=alert,

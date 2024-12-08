@@ -743,6 +743,7 @@ type UserAlertSubscriptionType {
   filterAlertCategoriesDisplay: [String!]!
   emailFrequency: UserAlertSubscriptionEmailFrequencyEnum!
   emailFrequencyDisplay: String!
+  totalAlertsCount: Int!
   alerts(filters: AlertFilter, order: AlertOrder, pagination: OffsetPaginationInput): AlertTypeCountList!
   filterAlertCountry: CountryType!
   filterAlertAdmin1sDisplay: [Admin1Type!]!

@@ -32,6 +32,7 @@ class PrivateQuery:
     async def user_alert_subscription(self, info: Info, pk: strawberry.ID) -> UserAlertSubscriptionType | None:
         return await UserAlertSubscriptionType.get_queryset(None, None, info).filter(pk=pk).afirst()
 
+    # XXX: Is this used?
     @strawberry_django.field
     async def subscripted_alerts(
         self,

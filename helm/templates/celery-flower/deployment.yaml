@@ -1,22 +1,23 @@
 {{- if .Values.worker.enabled }}
+{{- if .Values.worker.flower.enabled }}
 
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ template "ifrcgo-alert-hub.fullname" . }}-worker-beat
+  name: {{ template "ifrcgo-alert-hub.fullname" . }}-celery-flower
   labels:
     app: {{ include "ifrcgo-alert-hub.fullname" . }}
-    component: worker-beat
+    component: worker-flower
     environment: {{ .Values.environment }}
     release: {{ .Release.Name }}
   annotations:
     reloader.stakater.com/auto: "true"
 spec:
-  replicas: 1  # This should only 1
+  replicas: 1
   selector:
     matchLabels:
       app: {{ include "ifrcgo-alert-hub.fullname" . }}
-      component: worker-beat
+      component: worker-flower
   template:
     metadata:
       {{- if not .Values.azure.aksSecretsProviderAvailable }}
@@ -26,15 +27,15 @@ spec:
       {{- end }}
       labels:
         app: {{ include "ifrcgo-alert-hub.fullname" . }}
-        component: worker-beat
+        component: worker-flower
     spec:
       containers:
-        - name: worker-beat
+        - name: worker
           image: "{{ .Values.image.name }}:{{ .Values.image.tag }}"
-          command: ["/code/deploy/run_worker_beat.sh"]
+          command: ["celery", "-A", "main", "flower", "--port=8000"]
           # TODO: livenessProbe
           resources:
-            {{- toYaml .Values.worker.beat.resources | nindent 12 }}
+            {{- toYaml .Values.worker.flower.resources | nindent 12 }}
           env:
             - name: DJANGO_APP_TYPE
               value: worker
@@ -49,4 +50,5 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
 
+{{- end }}
 {{- end }}
