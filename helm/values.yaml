@@ -102,6 +102,10 @@ argoHooks:
     hook: PostSync
     preserveHistory: true
     command: ["./manage.py", "migrate"]
+    requestsCpu: 0.1
+    requestsMemory: 1G
+    limitsCpu: 4
+    limitsMemory: 2G
   collect-static:
     enabled: true
     hook: PostSync
@@ -129,6 +133,11 @@ env:
   # Sentry
   SENTRY_TRACES_SAMPLE_RATE: 0.2
   SENTRY_PROFILE_SAMPLE_RATE: 0.2
+  # Azure configs TODO: Add support for AZURE_STORAGE_TOKEN_CREDENTIAL
+  USE_AZURE_STORAGE: false  # NOTE: Make sure this is boolean and not string
+  AZURE_STORAGE_MEDIA_CONTAINER:
+  AZURE_STORAGE_STATIC_CONTAINER:
+  AZURE_STORAGE_ACCOUNT_NAME:
 # NOTE: Used to pass additional configs to api/worker containers
 # NOTE: Not used by azure vault
 envAdditional:

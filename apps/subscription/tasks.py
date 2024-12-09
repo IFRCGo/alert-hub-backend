@@ -47,7 +47,10 @@ TAG_MUTATION_RAW_QUERY = f'''
             alert_data.id AS alert_id
         FROM
             alert_data
-            CROSS JOIN {_tb_name(UserAlertSubscription)} AS subscriptions
+            CROSS JOIN (
+                SELECT * FROM {_tb_name(UserAlertSubscription)}
+                WHERE {_cl_name(UserAlertSubscription.is_active)} is True
+            ) AS subscriptions
         WHERE
             (
                 subscriptions.{_cl_name(UserAlertSubscription.filter_alert_country)} = alert_data.country_id
@@ -102,9 +105,10 @@ def process_pending_subscription_alerts():
 
 @shared_task
 def send_daily_user_alert_subscriptions_email():
-    with redis_lock(CacheKey.RedisLockKey.SEND_DAILY_USER_ALERT_SUBSCRIPTION_EMAIL) as acquired:
+    redis_lock_key = CacheKey.RedisLockKey.SEND_DAILY_USER_ALERT_SUBSCRIPTION_EMAIL
+    with redis_lock(redis_lock_key) as acquired:
         if not acquired:
-            logger.warning(f'{CacheKey.RedisLockKey.SEND_DAILY_USER_ALERT_SUBSCRIPTION_EMAIL} is already running')
+            logger.warning(f'{redis_lock_key} is already running')
             return
         start_time = time.time()
         send_user_alert_subscriptions_email(UserAlertSubscription.EmailFrequency.DAILY)
@@ -113,24 +117,26 @@ def send_daily_user_alert_subscriptions_email():
 
 @shared_task
 def send_weekly_user_alert_subscriptions_email():
-    with redis_lock(CacheKey.RedisLockKey.SEND_WEEKLY_USER_ALERT_SUBSCRIPTION_EMAIL) as acquired:
+    redis_lock_key = CacheKey.RedisLockKey.SEND_WEEKLY_USER_ALERT_SUBSCRIPTION_EMAIL
+    with redis_lock(redis_lock_key) as acquired:
         if not acquired:
-            logger.warning(f'{CacheKey.RedisLockKey.SEND_WEEKLY_USER_ALERT_SUBSCRIPTION_EMAIL} is already running')
+            logger.warning(f'{redis_lock_key} is already running')
             return
         start_time = time.time()
         send_user_alert_subscriptions_email(UserAlertSubscription.EmailFrequency.WEEKLY)
-        logger.info(f'Send daily user alert subscription email. Runtime: {time.time() - start_time} seconds')
+        logger.info(f'Send weekly user alert subscription email. Runtime: {time.time() - start_time} seconds')
 
 
 @shared_task
 def send_monthly_user_alert_subscriptions_email():
-    with redis_lock(CacheKey.RedisLockKey.SEND_MONTHLY_USER_ALERT_SUBSCRIPTION_EMAIL) as acquired:
+    redis_lock_key = CacheKey.RedisLockKey.SEND_MONTHLY_USER_ALERT_SUBSCRIPTION_EMAIL
+    with redis_lock(redis_lock_key) as acquired:
         if not acquired:
-            logger.warning(f'{CacheKey.RedisLockKey.SEND_MONTHLY_USER_ALERT_SUBSCRIPTION_EMAIL} is already running')
+            logger.warning(f'{redis_lock_key} is already running')
             return
         start_time = time.time()
         send_user_alert_subscriptions_email(UserAlertSubscription.EmailFrequency.MONTHLY)
-        logger.info(f'Send daily user alert subscription email. Runtime: {time.time() - start_time} seconds')
+        logger.info(f'Send monthly user alert subscription email. Runtime: {time.time() - start_time} seconds')
 
 
 # TODO: Add tasks to clean up SubscriptionAlert table data for old entries

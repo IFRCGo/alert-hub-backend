@@ -14,23 +14,43 @@ redis:
   master:
     resourcesPreset: micro  # https://github.com/bitnami/charts/blob/main/bitnami/common/templates/_resources.tpl#L16
 
+# FIXME: Use proper requests.cpu
 worker:
-  enabled: true
-  resources:
-    requests:
-      cpu: "2"
-      memory: 2Gi
-    limits:
-      cpu: "4"
-      memory: 4Gi
   beat:
     resources:
       requests:
         cpu: "0.1"
-        memory: 0.1Gi
+        memory: 0.5Gi
       limits:
-        cpu: "4"
+        cpu: "1"
         memory: 1Gi
+  flower:
+    resources:
+      requests:
+        cpu: "0.1"
+        memory: 0.5Gi
+      limits:
+        cpu: "1"
+        memory: 1Gi
+  queues:
+    # NOTE: Make sure keys are lowercase
+    default:
+      resources:
+        requests:
+          cpu: "1"
+          memory: 1Gi
+        limits:
+          cpu: "2"
+          memory: 2Gi
+    feeds:
+      replicaCount: 2
+      resources:
+        requests:
+          cpu: "1"
+          memory: 1Gi
+        limits:
+          cpu: "4"
+          memory: 2Gi
 
 api:
   resources:
