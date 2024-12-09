@@ -9,7 +9,7 @@ def validate_hcaptcha(captcha):
 
     data = {
         'sitekey': settings.HCAPTCHA_SITEKEY,
-        'secret': settings.SECRET_KEY,
+        'secret': settings.HCAPTCHA_SECRET,
         'response': captcha,
     }
 
