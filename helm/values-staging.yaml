@@ -35,7 +35,6 @@ worker:
   queues:
     # NOTE: Make sure keys are lowercase
     default:
-      replicaCount: 2
       resources:
         requests:
           cpu: "0.1"
@@ -44,7 +43,7 @@ worker:
           cpu: "1"
           memory: 2Gi
     feeds:
-      replicaCount: 1
+      replicaCount: 2
       resources:
         requests:
           cpu: "0.2"
@@ -62,14 +61,6 @@ api:
     limits:
       cpu: "4"
       memory: 2Gi
-
-argoHooks:
-  # NOTE: Make sure keys are lowercase
-  db-migrate:
-    requestsCpu: 0.1
-    requestsMemory: 1G
-    limitsCpu: 4
-    limitsMemory: 2G
 
 env:
   DJANGO_DEBUG: false

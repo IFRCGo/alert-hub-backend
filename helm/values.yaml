@@ -102,6 +102,10 @@ argoHooks:
     hook: PostSync
     preserveHistory: true
     command: ["./manage.py", "migrate"]
+    requestsCpu: 0.1
+    requestsMemory: 1G
+    limitsCpu: 4
+    limitsMemory: 2G
   collect-static:
     enabled: true
     hook: PostSync
