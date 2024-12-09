@@ -50,12 +50,12 @@ app.conf.beat_schedule = {
     },
     f'{INTERNAL_CELERY_TASK_NAME_PREFIX}send_weekly_user_alert_subscriptions_email': {
         'task': 'apps.subscription.tasks.send_weekly_user_alert_subscriptions_email',
-        'schedule': crontab(day_of_week='monday'),
+        'schedule': crontab(minute=1, hour=1, day_of_week='monday'),
         'options': {'queue': 'default'},
     },
     f'{INTERNAL_CELERY_TASK_NAME_PREFIX}send_monthly_user_alert_subscriptions_email': {
         'task': 'apps.subscription.tasks.send_monthly_user_alert_subscriptions_email',
-        'schedule': crontab(day_of_month='1'),
+        'schedule': crontab(minute=1, hour=1, day_of_month='1'),
         'options': {'queue': 'default'},
     },
     f'{INTERNAL_CELERY_TASK_NAME_PREFIX}uptime_push': {
