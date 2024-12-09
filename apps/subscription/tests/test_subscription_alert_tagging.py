@@ -86,6 +86,7 @@ class TestSubscriptionMutation(TestCase):
         subs = [
             UserAlertSubscriptionFactory.create(
                 user=self.user,
+                is_active=True,
                 filter_alert_country=_data[0],
                 filter_alert_admin1s=_data[1],
                 filter_alert_urgencies=_data[2],
@@ -112,8 +113,21 @@ class TestSubscriptionMutation(TestCase):
             ]
         ]
 
+        # Noise subscriptions (In active subscriptions)
+        UserAlertSubscriptionFactory.create_batch(
+            5,
+            user=self.user,
+            is_active=False,
+            filter_alert_country=self.c_nepal,
+            filter_alert_admin1s=[],
+            filter_alert_urgencies=[],
+            filter_alert_severities=[],
+            filter_alert_certainties=[],
+            filter_alert_categories=[],
+        )
+
         assert Alert.objects.filter(is_processed_by_subscription=False).count() == len(all_alerts)
-        assert UserAlertSubscription.objects.filter(user=self.user).count() == len(subs)
+        assert UserAlertSubscription.objects.filter(user=self.user).count() == len(subs) + 5
         assert SubscriptionAlert.objects.count() == 0
 
         # Run this twice to make sure re-running doesn't break anything

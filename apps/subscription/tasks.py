@@ -47,7 +47,10 @@ TAG_MUTATION_RAW_QUERY = f'''
             alert_data.id AS alert_id
         FROM
             alert_data
-            CROSS JOIN {_tb_name(UserAlertSubscription)} AS subscriptions
+            CROSS JOIN (
+                SELECT * FROM {_tb_name(UserAlertSubscription)}
+                WHERE {_cl_name(UserAlertSubscription.is_active)} is True
+            ) AS subscriptions
         WHERE
             (
                 subscriptions.{_cl_name(UserAlertSubscription.filter_alert_country)} = alert_data.country_id

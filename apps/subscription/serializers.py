@@ -31,7 +31,7 @@ class UserAlertSubscriptionSerializer(serializers.ModelSerializer):
 
     def validate_is_active(self, is_active):
         if is_active:
-            qs = UserAlertSubscription.objects.filter(user=self.context["request"].user, is_active=True)
+            qs = UserAlertSubscription.objects.filter(is_active=True, user=self.context["request"].user)
             if self.instance and self.instance.pk:
                 qs = qs.exclude(pk=self.instance.pk)
             if qs.count() >= UserAlertSubscription.LIMIT_PER_USER:
