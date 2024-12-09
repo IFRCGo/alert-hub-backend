@@ -15,6 +15,10 @@ metadata:
     argocd.argoproj.io/hook: {{ $hook.hook }}
 spec:
   template:
+    metadata:
+      {{- if $.Values.serviceAccount.create }}
+      azure.workload.identity/use: "true"
+      {{- end }}
     spec:
       restartPolicy: "Never"
       containers:
@@ -36,6 +40,10 @@ spec:
                 name: {{ template "ifrcgo-alert-hub.secretname" $ }}
             - configMapRef:
                 name: {{ template "ifrcgo-alert-hub.fullname" $ }}-api-configmap
+
+      {{- if $.Values.serviceAccount.create }}
+      serviceAccountName: {{ include "ifrcgo-alert-hub.serviceAccountName" $ }}
+      {{- end }}
 
       {{- with $.Values.imagePullSecrets }}
       imagePullSecrets:
