@@ -33,6 +33,16 @@ data:
   SENTRY_TRACES_SAMPLE_RATE: {{ required "env.SENTRY_TRACES_SAMPLE_RATE" .Values.env.SENTRY_TRACES_SAMPLE_RATE | quote }}
   SENTRY_PROFILE_SAMPLE_RATE: {{ required "env.SENTRY_PROFILE_SAMPLE_RATE" .Values.env.SENTRY_PROFILE_SAMPLE_RATE | quote }}
 
+  {{- if .Values.env.USE_AZURE_STORAGE }}
+  # Azure configs
+  USE_AZURE_STORAGE: "true"
+  # TODO: Add support for AZURE_STORAGE_TOKEN_CREDENTIAL
+  AZURE_STORAGE_MANAGED_IDENTITY: "true"
+  AZURE_STORAGE_ACCOUNT_NAME: {{ required "env.AZURE_STORAGE_ACCOUNT_NAME" .Values.env.AZURE_STORAGE_ACCOUNT_NAME | quote }}
+  AZURE_STORAGE_MEDIA_CONTAINER: {{ required "env.AZURE_STORAGE_MEDIA_CONTAINER" .Values.env.AZURE_STORAGE_MEDIA_CONTAINER | quote }}
+  AZURE_STORAGE_STATIC_CONTAINER: {{ required "env.AZURE_STORAGE_STATIC_CONTAINER" .Values.env.AZURE_STORAGE_STATIC_CONTAINER | quote }}
+  {{- end }}
+
   # Additional configs
   {{- range $name, $value := .Values.envAdditional }}
   {{ $name }}: {{ $value | quote }}
