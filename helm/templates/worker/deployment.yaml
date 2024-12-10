@@ -33,6 +33,9 @@ spec:
         app: {{ include "ifrcgo-alert-hub.fullname" $ }}
         component: worker
         queue: {{ $queue_name }}
+        {{- if $.Values.serviceAccount.create }}
+        azure.workload.identity/use: "true"
+        {{- end }}
     spec:
       containers:
         - name: worker
@@ -51,6 +54,10 @@ spec:
                 name: {{ template "ifrcgo-alert-hub.secretname" $ }}
             - configMapRef:
                 name: {{ template "ifrcgo-alert-hub.fullname" $ }}-api-configmap
+
+      {{- if $.Values.serviceAccount.create }}
+      serviceAccountName: {{ include "ifrcgo-alert-hub.serviceAccountName" $ }}
+      {{- end }}
 
       {{- with $.Values.imagePullSecrets }}
       imagePullSecrets:
