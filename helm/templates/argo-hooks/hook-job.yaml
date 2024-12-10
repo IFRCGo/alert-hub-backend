@@ -16,9 +16,10 @@ metadata:
 spec:
   template:
     metadata:
-      {{- if $.Values.serviceAccount.create }}
-      azure.workload.identity/use: "true"
-      {{- end }}
+      labels:
+        {{- if $.Values.serviceAccount.create }}
+        azure.workload.identity/use: "true"
+        {{- end }}
     spec:
       restartPolicy: "Never"
       containers:
