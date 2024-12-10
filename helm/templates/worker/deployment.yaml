@@ -59,7 +59,7 @@ spec:
                 name: {{ template "ifrcgo-alert-hub.fullname" $ }}-api-configmap
 
       {{- if $.Values.serviceAccount.create }}
-      serviceAccountName: {{ include "ifrcgo-alert-hub.serviceAccountName" . }}
+      serviceAccountName: {{ include "ifrcgo-alert-hub.serviceAccountName" $ }}
       {{- end }}
 
       {{- with $.Values.imagePullSecrets }}
