@@ -27,9 +27,9 @@ spec:
       labels:
         app: {{ include "ifrcgo-alert-hub.fullname" . }}
         component: api
-        {{- if .Values.serviceAccount.create }}
-        azure.workload.identity/use: "true"
-        {{- end }}
+#        {{- if .Values.serviceAccount.create }}
+#        azure.workload.identity/use: "true"
+#        {{- end }}
     spec:
       containers:
         - name: api
