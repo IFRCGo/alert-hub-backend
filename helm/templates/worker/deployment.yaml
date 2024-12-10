@@ -22,9 +22,6 @@ spec:
       app: {{ include "ifrcgo-alert-hub.fullname" $ }}
       component: worker
       queue: {{ $queue_name }}
-      {{- if $.Values.serviceAccount.create }}
-      azure.workload.identity/use: "true"
-      {{- end }}
   template:
     metadata:
       {{- if not $.Values.azure.aksSecretsProviderAvailable }}
