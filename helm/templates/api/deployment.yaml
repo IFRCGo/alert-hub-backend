@@ -17,9 +17,6 @@ spec:
     matchLabels:
       app: {{ include "ifrcgo-alert-hub.fullname" . }}
       component: api
-      {{- if .Values.serviceAccount.create }}
-      azure.workload.identity/use: "true"
-      {{- end }}
   template:
     metadata:
       {{- if not .Values.azure.aksSecretsProviderAvailable }}
