@@ -29,7 +29,12 @@ def generate_user_alert_subscription_email_context(
     email_frequency: UserAlertSubscription.EmailFrequency,
 ) -> tuple[bool, dict, models.QuerySet[UserAlertSubscription]]:
     # NOTE: Number of subscription is static and less than UserAlertSubscription.LIMIT_PER_USER
-    subscription_qs = UserAlertSubscription.objects.filter(is_active=True, user=user, email_frequency=email_frequency)
+    subscription_qs = UserAlertSubscription.objects.filter(
+        is_active=True,
+        send_email=True,
+        email_frequency=email_frequency,
+        user=user,
+    )
 
     if email_frequency == UserAlertSubscription.EmailFrequency.DAILY:
         from_datetime_threshold = timezone.now() - timedelta(hours=24)
@@ -104,7 +109,11 @@ def send_user_alert_subscription_email(user: User, email_frequency: UserAlertSub
 def send_user_alert_subscriptions_email(email_frequency: UserAlertSubscription.EmailFrequency):
     # TODO: Send in parallel if email service supports it?
     users_qs = User.objects.filter(
-        id__in=UserAlertSubscription.objects.filter(is_active=True, email_frequency=email_frequency).values('user'),
+        id__in=UserAlertSubscription.objects.filter(
+            is_active=True,
+            send_email=True,
+            email_frequency=email_frequency,
+        ).values('user'),
     )
 
     for user in users_qs.iterator():
