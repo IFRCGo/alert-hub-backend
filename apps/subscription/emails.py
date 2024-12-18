@@ -31,7 +31,7 @@ def generate_user_alert_subscription_email_context(
     # NOTE: Number of subscription is static and less than UserAlertSubscription.LIMIT_PER_USER
     subscription_qs = UserAlertSubscription.objects.filter(
         is_active=True,
-        send_email=True,
+        notify_by_email=True,
         email_frequency=email_frequency,
         user=user,
     )
@@ -111,7 +111,7 @@ def send_user_alert_subscriptions_email(email_frequency: UserAlertSubscription.E
     users_qs = User.objects.filter(
         id__in=UserAlertSubscription.objects.filter(
             is_active=True,
-            send_email=True,
+            notify_by_email=True,
             email_frequency=email_frequency,
         ).values('user'),
     )
