@@ -44,6 +44,7 @@ class PrivateQuery(
 @strawberry.type
 class PublicMutation(
     user_mutations.PublicMutation,
+    subscription_mutations.PublicMutation,
 ):
     id: strawberry.ID = strawberry.ID('public')
 
