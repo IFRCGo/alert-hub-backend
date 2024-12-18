@@ -627,6 +627,7 @@ type PublicMutation {
   accountActivation(data: UserActivationInput!): MutationEmptyResponseType!
   passwordResetTrigger(data: UserPasswordResetTriggerInput!): MutationEmptyResponseType!
   passwordResetConfirm(data: UserPasswordResetConfirmInput!): MutationEmptyResponseType!
+  unsubscribeUserAlertSubscription(data: UserAlertSubscriptionUnsubscribeInput!): MutationEmptyResponseType!
   id: ID!
 }
 
@@ -760,6 +761,11 @@ type UserAlertSubscriptionTypeMutationResponseType {
   ok: Boolean!
   errors: CustomErrorType
   result: UserAlertSubscriptionType
+}
+
+input UserAlertSubscriptionUnsubscribeInput {
+  uuid: String!
+  token: String!
 }
 
 input UserLoginInput {
