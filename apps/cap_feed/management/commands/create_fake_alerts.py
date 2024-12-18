@@ -118,6 +118,8 @@ class Command(BaseCommand):
         for name, filters in SUBSCRIPTION_FILTERSET:
             UserAlertSubscriptionFactory.create(
                 name=f"[Fake] {name}",
+                is_active=True,
+                notify_by_email=True,
                 email_frequency=UserAlertSubscription.EmailFrequency.DAILY,
                 user=user,
                 filter_alert_country=c_nepal,

@@ -81,7 +81,9 @@ class UserAlertSubscriptionUnsubscribeSerializer(serializers.Serializer):
             attrs['token'],
         ):
             return user_subscription
-        raise serializers.ValidationError(gettext('Invalid or expired token'))
+        raise serializers.ValidationError(
+            gettext('Invalid/expired token. You may have already unsubscribed or the token has expired.')
+        )
 
     def validate(self, attrs):
         return {
