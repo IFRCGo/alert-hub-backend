@@ -243,6 +243,8 @@ def process_alert(
                     )
                 )
 
+    mgr.done()  # Make sure everything is saved to DB before we start tagging admin1s
+
     if alert_has_valid_info:
         # Fallback: Try circles
         if not tagged_admin1s_id:
