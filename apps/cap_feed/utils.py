@@ -1,6 +1,9 @@
 import json
 import logging
+import math
 
+from django.contrib.gis.geos import Point
+from django.contrib.gis.measure import Distance
 from django.utils import timezone
 from django_celery_beat.models import IntervalSchedule, PeriodicTask
 
@@ -64,3 +67,10 @@ class FeedTaskManager:
     def update_task(cls, feed: Feed):
         cls.remove_task(feed)
         cls.add_task(feed)
+
+
+def distance_to_decimal_degrees(distance: Distance, point: Point):
+    # https://gis.stackexchange.com/a/384823
+    lat_radians = point.y * (math.pi / 180)  # Where point.y is latitude
+    # 1 longitudinal degree at the equator equal 111,319.5m equiv to 111.32km
+    return distance.m / (111_319.5 * math.cos(lat_radians))
