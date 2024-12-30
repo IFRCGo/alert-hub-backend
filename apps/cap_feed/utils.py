@@ -10,7 +10,6 @@ from django_celery_beat.models import IntervalSchedule, PeriodicTask
 from main.celery import INTERNAL_CELERY_TASK_NAME_PREFIX
 
 from .models import Feed
-from .tasks import poll_feed
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +37,9 @@ class FeedTaskManager:
 
     @classmethod
     def add_task(cls, feed: Feed):
+        # XXX: Circular dependency fix
+        from .tasks import poll_feed
+
         interval_schedule, _ = IntervalSchedule.objects.get_or_create(
             every=feed.polling_interval,
             period='seconds',
