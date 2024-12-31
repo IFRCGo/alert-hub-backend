@@ -27,6 +27,7 @@ from apps.cap_feed.models import (
     Feed,
     ProcessedAlert,
 )
+from apps.cap_feed.utils import distance_to_decimal_degrees
 from main.managers import BulkCreateManager
 
 logger = logging.getLogger(__name__)
@@ -251,7 +252,13 @@ def process_alert(
             for circle in alert_info_circles_collections:
                 possible_admin1s = admin1_base_qs.filter(
                     # TODO: Check for performance issues
-                    geometry___dwithin=(circle[0], Distance(m=circle[1])),
+                    geometry__dwithin=(
+                        circle[0],
+                        distance_to_decimal_degrees(
+                            Distance(km=circle[1]),
+                            circle[0],
+                        ),
+                    ),
                 ).exclude(id__in=tagged_admin1s_id)
                 for admin1_id in possible_admin1s.values_list('id', flat=True):
                     tagged_admin1s_id.add(admin1_id)

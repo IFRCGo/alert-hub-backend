@@ -1,13 +1,15 @@
 import json
 import logging
+import math
 
+from django.contrib.gis.geos import Point
+from django.contrib.gis.measure import Distance
 from django.utils import timezone
 from django_celery_beat.models import IntervalSchedule, PeriodicTask
 
 from main.celery import INTERNAL_CELERY_TASK_NAME_PREFIX
 
 from .models import Feed
-from .tasks import poll_feed
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +37,9 @@ class FeedTaskManager:
 
     @classmethod
     def add_task(cls, feed: Feed):
+        # XXX: Circular dependency fix
+        from .tasks import poll_feed
+
         interval_schedule, _ = IntervalSchedule.objects.get_or_create(
             every=feed.polling_interval,
             period='seconds',
@@ -64,3 +69,10 @@ class FeedTaskManager:
     def update_task(cls, feed: Feed):
         cls.remove_task(feed)
         cls.add_task(feed)
+
+
+def distance_to_decimal_degrees(distance: Distance, point: Point):
+    # https://gis.stackexchange.com/a/384823
+    lat_radians = point.y * (math.pi / 180)  # Where point.y is latitude
+    # 1 longitudinal degree at the equator equal 111,319.5m equiv to 111.32km
+    return distance.m / (111_319.5 * math.cos(lat_radians))
