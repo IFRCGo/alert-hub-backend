@@ -450,6 +450,7 @@ input DjangoModelFilterInput {
 
 input FeedFilter {
   id: IDBaseFilterLookup
+  enablePolling: BoolBaseFilterLookup
   AND: FeedFilter
   OR: FeedFilter
   NOT: FeedFilter

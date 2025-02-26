@@ -89,6 +89,7 @@ class AlertFilter:
 @strawberry_django.filters.filter(Feed, lookups=True)
 class FeedFilter:
     id: strawberry.auto
+    enable_polling: strawberry.auto
 
     def _language_field(self, field, queryset, value, prefix) -> tuple[models.QuerySet, models.Q]:
         if value:
