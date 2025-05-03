@@ -23,6 +23,27 @@ def _cl_name(field):
     return field.field.column
 
 
+"""
+# TODO: Use this
+def get_sql_query_with_db_lock(lock_key: str, sql_query: str):
+    return (
+        f'''
+        DO $$
+        DECLARE
+            got_lock boolean;
+        BEGIN
+            SELECT pg_try_advisory_lock(hashtext('{lock_key}')) INTO got_lock;
+            IF got_lock THEN
+                {sql_query}
+                PERFORM pg_advisory_unlock(hashtext('daily_aggregation_task'));
+            ELSE
+                RAISE NOTICE 'Task with key {lock_key} already running. Skipping...';
+            END IF;
+        END $$;
+        '''
+    )
+"""
+
 TAG_MUTATION_RAW_QUERY = f'''
     WITH alert_data AS (
         SELECT
@@ -38,7 +59,7 @@ TAG_MUTATION_RAW_QUERY = f'''
             {_tb_name(Alert)} AS alert
             LEFT JOIN {_tb_name(AlertInfo)} AS alert_info ON alert_info.alert_id = alert.id
             LEFT JOIN {_tb_name(AlertAdmin1)} AS alert_admin1 ON alert_admin1.alert_id = alert.id
-        WHERE alert.{_cl_name(Alert.is_processed_by_subscription)} IS FALSE
+        WHERE alert.{_cl_name(Alert.is_processed_by_subscription)} = FALSE
         GROUP BY alert.id, alert.country_id
     ),
     tagged_alerts AS (
@@ -86,7 +107,7 @@ TAG_MUTATION_RAW_QUERY = f'''
     SET {_cl_name(Alert.is_processed_by_subscription)} = TRUE
     WHERE id in (
         SELECT id FROM alert_data
-    )
+    );
 '''
 
 
