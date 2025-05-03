@@ -18,7 +18,8 @@ RUN apt-get update -y \
         # Helper packages
         wait-for-it \
     # Upgrade pip and install python packages for code
-    && pip install --upgrade --no-cache-dir pip poetry \
+    # TODO: Replace poetry with uv
+    && pip install --upgrade --no-cache-dir pip "poetry==1.8.0" \
     && poetry --version \
     # Configure to use system instead of virtualenvs
     && poetry config virtualenvs.create false \

@@ -65,7 +65,6 @@ api:
 env:
   DJANGO_DEBUG: false
   # Misc
-  UPTIME_WORKER_HEARTBEAT: https://heartbeat.uptimerobot.com/m798146031-523d3d6be0eb9cf9944d17298734203fa506b839
   DEFAULT_FROM_EMAIL: Alerthub Staging <hazard.alerts@ifrc.org>
   # Sentry
   SENTRY_TRACES_SAMPLE_RATE: 0.5
