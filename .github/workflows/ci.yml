@@ -19,6 +19,9 @@ on:
   pull_request:
   # NOTE: For other, they should be run through helm github action ./helm-publish.yml
 
+permissions:
+  contents: read
+  packages: write
 
 jobs:
   pre_commit_checks:
