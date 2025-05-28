@@ -8,6 +8,7 @@ on:
     # XXX: To add tags: Update the -dev logic
 
 permissions:
+  contents: read
   packages: write
 
 jobs:
