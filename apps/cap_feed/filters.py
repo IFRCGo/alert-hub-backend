@@ -19,7 +19,6 @@ class AlertInfoFilter:
     def _info_enum_fields(self, field, queryset, value, prefix) -> tuple[models.QuerySet, models.Q]:
         if value:
             # NOTE: With this field, disctinct should be used by the client
-            print(f"{prefix}{field}__in")
             return queryset, models.Q(**{f"{prefix}{field}__in": value})
         return queryset, models.Q()
 
