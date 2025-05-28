@@ -1,35 +1,35 @@
 FROM python:3.11-slim-buster
+COPY --from=ghcr.io/astral-sh/uv:0.6.2 /uv /uvx /bin/
 
 LABEL maintainer="Alert-Hub Dev"
 LABEL org.opencontainers.image.source="https://github.com/IFRCGo/alert-hub-backend"
 
 ENV PYTHONUNBUFFERED=1
 
+ENV UV_COMPILE_BYTECODE=1
+ENV UV_LINK_MODE=copy
+ENV UV_PROJECT_ENVIRONMENT="/usr/local/"
+ENV UV_CACHE_DIR="/root/.cache/uv"
+
 WORKDIR /code
 
-COPY pyproject.toml poetry.lock /code/
-
-RUN apt-get update -y \
+RUN --mount=type=cache,target=/root/.cache/uv \
+    --mount=type=bind,source=uv.lock,target=uv.lock \
+    --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
+    apt-get update -y \
+    # FIXME(thenav56): Check and clean up not required packages from here
     && apt-get install -y --no-install-recommends \
-        # Build required packages
         gcc libc-dev gdal-bin libproj-dev \
         # Django translation
         gettext \
         # Helper packages
         wait-for-it \
-    # Upgrade pip and install python packages for code
-    # TODO: Replace poetry with uv
-    && pip install --upgrade --no-cache-dir pip "poetry==1.8.0" \
-    && poetry --version \
-    # Configure to use system instead of virtualenvs
-    && poetry config virtualenvs.create false \
-    && poetry install --no-root --no-cache --no-interaction \
+    && uv lock --locked --offline \
+        && uv sync --frozen --no-install-project --all-groups \
     # Clean-up
-    && pip uninstall -y poetry virtualenv-clone virtualenv \
-    && apt-get remove -y gcc libc-dev libproj-dev \
+    && apt-get remove -y build-essential gcc libc-dev libgdal-dev libproj-dev \
     && apt-get autoremove -y \
-    && rm -rf /var/lib/apt/lists/* \
-    && rm -rf /root/.cache/
+    && rm -rf /var/lib/apt/lists/*
 
 
 COPY . /code/

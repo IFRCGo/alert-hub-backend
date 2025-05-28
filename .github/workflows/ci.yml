@@ -27,12 +27,23 @@ jobs:
 
     steps:
       - uses: actions/checkout@main
-      - name: Install poetry
-        run: pipx install poetry
-      - uses: actions/setup-python@main
+      - uses: astral-sh/setup-uv@v5
         with:
-          cache: 'poetry'
-      - run: poetry install
+          enable-cache: true
+
+      - uses: awalsh128/cache-apt-pkgs-action@latest
+        with:
+          packages: gdal-bin libgdal-dev
+
+      - name: Setup uv python environment
+        run: uv venv
+
+      - name: uv lock check
+        run: uv lock --locked --offline
+
+      - name: uv sync
+        run: uv sync --all-extras
+
       - uses: pre-commit/action@main
 
   test:
