@@ -1,11 +1,10 @@
-name: Builds and pushes Docker Images and Helm charts to Github Registry
+name: Helm publish
 
 on:
   workflow_dispatch:
   push:
     branches:
       - develop
-      - project/*
     # XXX: To add tags: Update the -dev logic
 
 permissions:
@@ -62,8 +61,8 @@ jobs:
             sed -i 's/^\(name:.*\)-helm$/\1-dev-helm/' ./helm/Chart.yaml
         fi
 
-        sed -i "s/SET-BY-CICD/$IMAGE_TAG/g" helm/Chart.yaml
-        helm package ./helm -d .helm-charts
+        sed -i "s/SET-BY-CICD/$IMAGE_TAG/g" ./helm/Chart.yaml
+        helm package ./helm/ -d ./helm/.helm-charts
 
     - name: Push Helm Chart
       env:
@@ -71,13 +70,19 @@ jobs:
         OCI_REPO: oci://ghcr.io/${{ github.repository }}
       run: |
         OCI_REPO=$(echo $OCI_REPO | tr '[:upper:]' '[:lower:]')
-        PACKAGE_FILE=$(ls .helm-charts/*.tgz | head -n 1)
+        PACKAGE_FILE=$(ls ./helm/.helm-charts/*.tgz | head -n 1)
         echo "# Helm Chart" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
-        echo "Tagged Image: **$IMAGE**" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "Helm push output" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo '```bash' >> $GITHUB_STEP_SUMMARY
-        helm push "$PACKAGE_FILE" $OCI_REPO >> $GITHUB_STEP_SUMMARY
+        echo '```yaml' >> $GITHUB_STEP_SUMMARY
+        helm push "$PACKAGE_FILE" $OCI_REPO 2>> $GITHUB_STEP_SUMMARY
         echo '```' >> $GITHUB_STEP_SUMMARY
+        echo "> [!Important]" >> $GITHUB_STEP_SUMMARY
+        echo "> Helm Repo URL: **$OCI_REPO**" >> $GITHUB_STEP_SUMMARY
+        echo "> Helm Chart: **$(helm show chart "$PACKAGE_FILE" | grep '^name:' | awk '{print $2}')**" >> $GITHUB_STEP_SUMMARY
+        echo "> Helm Target Revision: **$(helm show chart "$PACKAGE_FILE" | grep '^version:' | awk '{print $2}')**" >> $GITHUB_STEP_SUMMARY
+        echo "> Docker image: **$IMAGE**" >> $GITHUB_STEP_SUMMARY
+
+        # Add annotations as well
+        echo "::notice::Helm Repo URL: **$OCI_REPO**"
+        echo "::notice::Helm Chart: **$(helm show chart "$PACKAGE_FILE" | grep '^name:' | awk '{print $2}')**"
+        echo "::notice::Helm Target Revision: **$(helm show chart "$PACKAGE_FILE" | grep '^version:' | awk '{print $2}')**"
