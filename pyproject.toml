@@ -1,48 +1,56 @@
-[tool.poetry]
+[project]
 name = "alert-hub-backend"
 version = "0.1.0"
 description = ""
-authors = ["IFRC"]
+authors = [{ name = "IFRC" }]
+requires-python = "~=3.11"
 readme = "README.md"
-package-mode = false
+dependencies = [
+    "Django>=4.2,<4.3",
+    "celery~=5.3",
+    "flower",
+    "django-celery-beat",
+    "django-cors-headers",
+    "django-environ",
+    "django-redis>=5.3.0,<6",
+    "django-storages[s3, azure, azure-identity]",
+    "django-admin-autocomplete-filter",
+    "django-modeltranslation==0.19.5",
+    "iso639-lang>=2.1.0,<3",
+    "psycopg2-binary>=2.9.9,<3",
+    "pytz",
+    "colorlog",
+    "requests",
+    "strawberry-graphql-django[strawberry-graphql]==0.49.1",
+    "sentry-sdk",
+    "djangorestframework",
+    "validators",
+    "django-health-check",
+    "psutil",
+    "uwsgi",
+    "django-premailer",
+    "user-agents",
+    "factory-boy",
+    "azure-identity",
+]
 
-[tool.poetry.dependencies]
-python = "^3.11"
-Django = ">=4.2,<4.3"
-celery = "^5.3"
-flower="*"  # celery-dashboard
-django-celery-beat = "*"
-django-cors-headers = "*"
-django-environ = "*"
-django-redis = "^5.3.0"
-django-storages = {extras = ["s3", "azure", "azure-identity"], version = "*"}
-django-admin-autocomplete-filter = "*"
-django-modeltranslation = "==0.19.5"
-iso639-lang = "^2.1.0"
-psycopg2-binary = "^2.9.9"
-pytz = "*"
-colorlog = "*"
-requests = "*"
-strawberry-graphql-django = {extras = ["strawberry-graphql"], version = "0.49.1"}
-sentry-sdk = "*"
-djangorestframework = "*"
-validators = "*"
-django-health-check = "*"
-psutil = "*"
-uwsgi = "*"
-django-premailer = "*"
-user-agents = "*"
-factory-boy = "*"
-azure-identity = "*"
+[dependency-groups]
+dev = [
+    "pytest",
+    "ipython",
+    "pytest-profiling",
+    "pytest-ordering",
+    "pytest-django",
+    "django-stubs==4.2.6",
+    "celery-types",
+]
 
-[tool.poetry.dev-dependencies]
-pytest = "*"
-ipython = "*"
-pytest-profiling = "*"
-pytest-ordering = "*"
-pytest-django = "*"
-django-stubs = "==4.2.6"  # NOTE: 4.2.7 is messing with TextChoices/IntergerChoices
-celery-types = "*"
+[tool.uv]
+package = false
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [tool.ruff]
 exclude = [
@@ -86,7 +94,3 @@ venv = ".venv"
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "main.settings"
 log_cli = true
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
