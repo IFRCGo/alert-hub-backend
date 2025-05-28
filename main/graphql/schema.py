@@ -16,7 +16,12 @@ from .permissions import IsAuthenticated
 
 
 class CustomAsyncGraphQLView(AsyncGraphQLView):
-    async def get_context(self, *args, **kwargs) -> GraphQLContext:
+    # FIXME(thenav56): remove the type ignore
+    async def get_context(  # type: ignore[reportIncompatibleMethodOverride]
+        self,
+        *args,
+        **kwargs,
+    ) -> GraphQLContext:
         return GraphQLContext(
             *args,
             **kwargs,
