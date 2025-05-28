@@ -91,6 +91,7 @@ reportMissingImports = true
 reportMissingTypeStubs = false
 venvPath = "."
 venv = ".venv"
+reportPrivateImportUsage = "warning"
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "main.settings"
