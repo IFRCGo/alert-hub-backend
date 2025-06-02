@@ -6,7 +6,7 @@ authors = [{ name = "IFRC" }]
 requires-python = "~=3.11"
 readme = "README.md"
 dependencies = [
-    "Django>=4.2,<4.3",
+    "Django>=4.2,<5.3",
     "celery~=5.3",
     "flower",
     "django-celery-beat",
