@@ -65,6 +65,7 @@ api:
 env:
   DJANGO_DEBUG: false
   # Misc
+  UPTIME_WORKER_HEARTBEAT: ""
   DEFAULT_FROM_EMAIL: Alerthub Staging <hazard.alerts@ifrc.org>
   # Sentry
   SENTRY_TRACES_SAMPLE_RATE: 0.5
