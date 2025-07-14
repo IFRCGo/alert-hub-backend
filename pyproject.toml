@@ -15,7 +15,7 @@ dependencies = [
     "django-redis>=5.3.0,<6",
     "django-storages[s3, azure]",
     "django-admin-autocomplete-filter",
-    "django-modeltranslation==0.19.5",
+    "django-modeltranslation==0.19.16",
     "iso639-lang>=2.1.0,<2.2.0",
     "psycopg2-binary>=2.9.9,<3",
     "pytz",
