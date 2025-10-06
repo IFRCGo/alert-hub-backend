@@ -203,7 +203,7 @@ class FeedType:
 
     @staticmethod
     def get_queryset(_, queryset: models.QuerySet | None, info: Info):
-        return get_queryset_for_model(Feed, queryset)
+        return get_queryset_for_model(Feed, queryset).filter(is_archived=False)
 
     @strawberry.field
     async def country(self, info: Info) -> CountryType:

@@ -2,6 +2,7 @@ import logging
 
 from django.db.models.signals import post_delete, post_save, pre_save
 from django.dispatch import receiver
+from django.utils import timezone
 
 from .models import Feed
 from .utils import FeedTaskManager
@@ -23,6 +24,16 @@ def update_feed(sender, instance, **_):
     if instance.pk is None:
         # NOTE: Create will be handled by create_feed signal
         return
+
+    if instance.is_archived:
+        if not instance.archived_at:
+            instance.archived_at = timezone.now()
+        FeedTaskManager.remove_task(instance)
+        return
+
+    instance.archived_at = None
+    # TODO: Use enable_polling and is_archived to create/delete the tasks
+    FeedTaskManager.add_task(instance)
 
     # NOTE: pre/post polling_interval is required to update tasks
     existing_feed = Feed.objects.get(pk=instance.pk)

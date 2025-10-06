@@ -498,8 +498,8 @@ type FeedType {
   official: Boolean!
   countryId: ID!
   url: String!
-  authorName: String!
-  authorEmail: String!
+  authorName: String
+  authorEmail: String
   notes: String
   format: FeedFormatEnum!
   pollingInterval: FeedPoolingIntervalEnum!

@@ -46,6 +46,10 @@ class FeedTaskManager:
         )
 
         try:
+            if PeriodicTask.objects.filter(name=cls.get_task_name(feed)).exists():
+                logger.info(f'Periodic task for feed: pk={feed.pk} url={feed.url} already exists')
+                return
+
             PeriodicTask.objects.create(
                 interval=interval_schedule,
                 name=cls.get_task_name(feed),
