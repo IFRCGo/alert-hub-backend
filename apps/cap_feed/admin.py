@@ -156,6 +156,7 @@ class FeedAdmin(admin.ModelAdmin):
         'enable_polling',
         AutocompleteFilterFactory('Country', 'country'),
     )
+    readonly_fields = ("archived_at",)
     search_fields = ['url']
     inlines = [LanguageInfoInline]
 

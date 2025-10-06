@@ -190,10 +190,13 @@ class Feed(models.Model):
     enable_rebroadcast = models.BooleanField(default=False)
     official = models.BooleanField(default=False)
     status = models.CharField(choices=Status.choices, default=Status.ACTIVE)
-    author_name = models.CharField(default='')
-    author_email = models.CharField(default='')
+    author_name = models.CharField(default='', blank=True)
+    author_email = models.CharField(default='', blank=True)
 
     notes = models.TextField(blank=True, default='')
+
+    is_archived = models.BooleanField(default=False)
+    archived_at = models.DateTimeField(null=True, blank=True)
 
     country_id: int
 

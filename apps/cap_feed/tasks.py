@@ -25,9 +25,11 @@ def poll_feed(pk: int):
         polled_alerts_count = 0
         try:
             feed = Feed.objects.get(pk=pk)
+            if feed.is_archived:
+                return f"Feed with (id={feed.pk}) (url={feed.url}) is archived"
             if not feed.enable_polling:
-                return f"Feed with url {feed.url} is disabled for polling"
-            with RuntimeProfile(f"Feed: {feed.url} alerts pull"):
+                return f"Feed with (id={feed.pk}) (url={feed.url}) is disabled for polling"
+            with RuntimeProfile(f"Feed: (id={feed.pk}) (url={feed.url}) alerts pull"):
                 polled_alerts_count += fh.get_alerts(feed)
             return f"polled {polled_alerts_count} alerts from {feed.url}"
         except Feed.DoesNotExist:
