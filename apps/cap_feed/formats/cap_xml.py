@@ -26,6 +26,7 @@ from apps.cap_feed.models import (
     AlertInfoParameter,
     Feed,
     ProcessedAlert,
+    alert_info_default_expire,
 )
 from apps.cap_feed.utils import distance_to_decimal_degrees
 from main.managers import BulkCreateManager
@@ -97,7 +98,7 @@ def create_alert_info(
         instruction=find_element(alert_info_entry, ns, 'cap:instruction'),
         web=find_element(alert_info_entry, ns, 'cap:web'),
         contact=find_element(alert_info_entry, ns, 'cap:contact'),
-        expires=expire_time,
+        expires=expire_time or alert_info_default_expire(),
     )
 
 
