@@ -27,41 +27,70 @@ app = Celery('main')
 
 INTERNAL_CELERY_TASK_NAME_PREFIX = 'alert_hub_'
 
+
+class TimeConstants:
+    SECONDS_IN_A_DAY = 24 * 60 * 60
+    SECONDS_IN_A_HOUR = 60 * 60
+    SECONDS_IN_A_WEEK = 7 * 24 * 60 * 60
+    SECONDS_IN_A_MINUTE = 60
+
+
+# TODO: Sync this with the database, don't overwrite enabled flag (show warning), add a command?
 app.conf.beat_schedule = {
     f'{INTERNAL_CELERY_TASK_NAME_PREFIX}tag_expired_alerts': {
         'task': 'apps.cap_feed.tasks.tag_expired_alerts',
         'schedule': timedelta(minutes=1),
-        'options': {'queue': 'default'},
+        'options': {
+            'queue': 'default',
+            'expire_seconds': TimeConstants.SECONDS_IN_A_MINUTE,
+        },
     },
     f'{INTERNAL_CELERY_TASK_NAME_PREFIX}remove_expired_alert_records': {
         'task': 'apps.cap_feed.tasks.remove_expired_alert_records',
         'schedule': timedelta(days=1),
-        'options': {'queue': 'default'},
+        'options': {
+            'queue': 'default',
+            'expire_seconds': TimeConstants.SECONDS_IN_A_DAY,
+        },
     },
     f'{INTERNAL_CELERY_TASK_NAME_PREFIX}process_pending_subscription_alerts': {
         'task': 'apps.subscription.tasks.process_pending_subscription_alerts',
         'schedule': timedelta(minutes=10),
-        'options': {'queue': 'default'},
+        'options': {
+            'queue': 'default',
+            'expire_seconds': 10 * TimeConstants.SECONDS_IN_A_MINUTE,
+        },
     },
     f'{INTERNAL_CELERY_TASK_NAME_PREFIX}send_daily_user_alert_subscriptions_email': {
         'task': 'apps.subscription.tasks.send_daily_user_alert_subscriptions_email',
         'schedule': timedelta(days=1),
-        'options': {'queue': 'default'},
+        'options': {
+            'queue': 'default',
+            'expire_seconds': TimeConstants.SECONDS_IN_A_DAY,
+        },
     },
     f'{INTERNAL_CELERY_TASK_NAME_PREFIX}send_weekly_user_alert_subscriptions_email': {
         'task': 'apps.subscription.tasks.send_weekly_user_alert_subscriptions_email',
         'schedule': crontab(minute=1, hour=1, day_of_week='monday'),
-        'options': {'queue': 'default'},
+        'options': {
+            'queue': 'default',
+            'expire_seconds': TimeConstants.SECONDS_IN_A_WEEK,
+        },
     },
     f'{INTERNAL_CELERY_TASK_NAME_PREFIX}send_monthly_user_alert_subscriptions_email': {
         'task': 'apps.subscription.tasks.send_monthly_user_alert_subscriptions_email',
         'schedule': crontab(minute=1, hour=1, day_of_month='1'),
-        'options': {'queue': 'default'},
+        'options': {
+            'queue': 'default',
+        },
     },
     f'{INTERNAL_CELERY_TASK_NAME_PREFIX}uptime_push': {
         'task': 'main.celery.uptime_push',
         'schedule': timedelta(minutes=30),
-        'options': {'queue': 'default'},
+        'options': {
+            'queue': 'default',
+            'expire_seconds': 30 * TimeConstants.SECONDS_IN_A_MINUTE,
+        },
     },
 }
 

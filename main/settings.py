@@ -339,6 +339,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # CELERY
 CELERY_RESULT_BACKEND = CELERY_BROKER_URL = env('CELERY_BROKER_URL')
 CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
+CELERY_TASK_RESULT_EXPIRES = 5 * (60 * 60)  # 5 hours
 CELERY_TASK_SOFT_TIME_LIMIT = 30 * 60  # 30 mins max (To tackle worst cases)
 CELERY_TASK_TIME_LIMIT = 35 * 60
 
