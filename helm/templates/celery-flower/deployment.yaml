@@ -20,11 +20,6 @@ spec:
       component: worker-flower
   template:
     metadata:
-      {{- if not .Values.azure.aksSecretsProviderAvailable }}
-      annotations:
-        checksum/secret: {{ include (print .Template.BasePath "/config/secret.yaml") . | sha256sum }}
-        checksum/configmap: {{ include (print .Template.BasePath "/config/configmap.yaml") . | sha256sum }}
-      {{- end }}
       labels:
         app: {{ include "ifrcgo-alert-hub.fullname" . }}
         component: worker-flower
