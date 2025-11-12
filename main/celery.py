@@ -3,7 +3,7 @@ import os
 from datetime import timedelta
 
 import celery
-import requests
+import httpx
 from celery.schedules import crontab
 from django.conf import settings
 from kombu import Queue
@@ -133,4 +133,4 @@ def debug_task(self):
 @app.task(bind=False)
 def uptime_push():
     if settings.UPTIME_WORKER_HEARTBEAT:
-        requests.get(settings.UPTIME_WORKER_HEARTBEAT)
+        httpx.get(settings.UPTIME_WORKER_HEARTBEAT)

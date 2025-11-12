@@ -1,7 +1,7 @@
 import logging
 import xml.etree.ElementTree as ET
 
-import requests
+import httpx
 import validators
 
 from apps.cap_feed.formats.cap_xml import get_alert
@@ -21,7 +21,7 @@ def get_alerts_nws_us(feed, ns):
 
     # navigate list of alerts
     try:
-        response = requests.get(
+        response = httpx.get(
             feed.url,
             headers={
                 **COMMON_REQUESTS_HEADERS,
@@ -30,7 +30,7 @@ def get_alerts_nws_us(feed, ns):
             timeout=Feed.MAX_REQUEST_TIMEOUT,
         )
         response.raise_for_status()
-    except requests.exceptions.RequestException:
+    except httpx.HTTPError:
         logger.error(
             '[NWS_US] Failed to fetch feed alerts',
             exc_info=True,

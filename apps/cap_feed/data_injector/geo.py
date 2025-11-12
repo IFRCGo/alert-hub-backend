@@ -4,7 +4,7 @@ import os
 import re
 from collections import defaultdict
 
-import requests
+import httpx
 from django.conf import settings
 from django.contrib.gis.gdal import DataSource
 from django.contrib.gis.geos import GEOSGeometry
@@ -136,7 +136,7 @@ class IfrcGoGeoInjector:
         self.log_info(f'Fetching data from IFRC-GO: ({_lang})', _url)
         # TODO: Add some check to avoid infinite run
         while True:
-            resp = requests.get(_url, **requests_kwargs).json()
+            resp = httpx.get(_url, **requests_kwargs).json()
             for item in resp['results']:
                 yield item
             if resp['next'] is not None:
