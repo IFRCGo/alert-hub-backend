@@ -47,17 +47,22 @@ class FeedTaskManager:
 
         try:
             if PeriodicTask.objects.filter(name=cls.get_task_name(feed)).exists():
-                logger.info(f'Periodic task for feed: pk={feed.pk} url={feed.url} already exists')
+                logger.warning(f'Periodic task for feed: pk={feed.pk} url={feed.url} already exists')
+                return
+
+            if feed.is_archived:
+                logger.warning(f'Feed: pk={feed.pk} url={feed.url} is archived')
                 return
 
             PeriodicTask.objects.create(
-                interval=interval_schedule,
                 name=cls.get_task_name(feed),
                 task=f'{poll_feed.__module__}.{poll_feed.__name__}',
+                interval=interval_schedule,
                 start_time=timezone.now(),
+                expire_seconds=feed.polling_interval + 60 * 10,
                 kwargs=json.dumps({"pk": feed.pk}),
             )
-            logger.info(f'Create periodic task for feed: {feed.url}')
+            logger.info(f'Created periodic task for feed: {feed.url}')
         except Exception:
             logger.error('Error while adding new PeriodicTask', exc_info=True)
 
