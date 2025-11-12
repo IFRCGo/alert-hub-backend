@@ -10,7 +10,7 @@ ingress:
   className: "nginx"
 
 env:
-  # DJANGO_APP_ENVIRONMENT: using .environment
+  # APP_ENVIRONMENT: using .environment
   # APP_RELEASE: using .image.tag
   DJANGO_DEBUG: false
   DJANGO_TIME_ZONE: UTC

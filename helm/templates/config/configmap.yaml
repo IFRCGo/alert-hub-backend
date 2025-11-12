@@ -8,7 +8,7 @@ metadata:
     release: {{ .Release.Name }}
 data:
   APP_RELEASE: {{ .Values.image.tag | quote }}
-  DJANGO_APP_ENVIRONMENT: {{ .Values.environment | quote | upper }}
+  APP_ENVIRONMENT: {{ .Values.environment | quote | upper }}
   DJANGO_DEBUG: {{ required "env.DJANGO_DEBUG" .Values.env.DJANGO_DEBUG | quote }}
   DJANGO_TIME_ZONE: {{ required "env.DJANGO_TIME_ZONE" .Values.env.DJANGO_TIME_ZONE | quote }}
 

@@ -27,7 +27,7 @@ env = environ.Env(
     DJANGO_SECRET_KEY=str,
     DJANGO_TIME_ZONE=(str, 'UTC'),
     DJANGO_APP_TYPE=str,  # web/worker/hook
-    DJANGO_APP_ENVIRONMENT=str,  # dev/prod
+    APP_ENVIRONMENT=str,  # dev/prod
     # App Domain
     APP_RELEASE=(str, 'develop'),
     APP_DOMAIN=str,  # api.example.com
@@ -107,7 +107,7 @@ APP_DOMAIN = env('APP_DOMAIN')
 APP_FRONTEND_HOST = env('APP_FRONTEND_HOST')
 DJANGO_APP_TYPE = env('DJANGO_APP_TYPE')
 
-DJANGO_APP_ENVIRONMENT = env('DJANGO_APP_ENVIRONMENT').upper()
+APP_ENVIRONMENT = env('APP_ENVIRONMENT').upper()
 
 
 # Application definition
@@ -186,8 +186,8 @@ WSGI_APPLICATION = 'main.wsgi.application'
 # Security
 
 # Security Header configuration
-SESSION_COOKIE_NAME = f'alert-hub-{DJANGO_APP_ENVIRONMENT}-sessionid'
-CSRF_COOKIE_NAME = f'alert-hub-{DJANGO_APP_ENVIRONMENT}-csrftoken'
+SESSION_COOKIE_NAME = f'alert-hub-{APP_ENVIRONMENT}-sessionid'
+CSRF_COOKIE_NAME = f'alert-hub-{APP_ENVIRONMENT}-csrftoken'
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = 'DENY'
@@ -492,7 +492,7 @@ if SENTRY_DSN:
         'dsn': SENTRY_DSN,
         'send_default_pii': True,
         'release': env('APP_RELEASE'),
-        'environment': DJANGO_APP_ENVIRONMENT,
+        'environment': APP_ENVIRONMENT,
         'traces_sample_rate': env('SENTRY_TRACES_SAMPLE_RATE'),
         'profiles_sample_rate': env('SENTRY_PROFILE_SAMPLE_RATE'),
         'debug': DEBUG,
