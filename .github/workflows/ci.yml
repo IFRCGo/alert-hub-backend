@@ -125,11 +125,21 @@ jobs:
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new
 
+      - name: Start app resources
+        timeout-minutes: 1
+        env:
+          DOCKER_IMAGE: ${{ steps.prep.outputs.tagged_image }}
+        run: |
+          timeout 60s docker compose run --rm web bash -c './manage.py wait_for_resources --all' || {
+            echo 'Failed to wait for resources'
+            exit 1
+          }
+
       - name: 🕮 Validate if there are no pending django migrations.
         env:
           DOCKER_IMAGE_BACKEND: ${{ steps.prep.outputs.tagged_image }}
         run: |
-          docker compose run --rm web bash -c 'wait-for-it db:5432 && ./manage.py makemigrations --check --dry-run' || {
+          docker compose run --rm web bash -c './manage.py makemigrations --check --dry-run' || {
             echo 'There are some changes to be reflected in the migration. Make sure to run makemigrations';
             exit 1;
           }
@@ -138,7 +148,7 @@ jobs:
         env:
           DOCKER_IMAGE_BACKEND: ${{ steps.prep.outputs.tagged_image }}
         run: |
-          docker compose run --rm web bash -c 'wait-for-it db:5432 && ./manage.py graphql_schema --out /ci-share/schema-latest.graphql' &&
+          docker compose run --rm web bash -c './manage.py graphql_schema --out /ci-share/schema-latest.graphql' &&
           cmp --silent schema.graphql ./ci-share/schema-latest.graphql || {
             echo 'The schema.graphql is not up to date with the latest changes. Please update and push latest';
             diff schema.graphql ./ci-share/schema-latest.graphql;

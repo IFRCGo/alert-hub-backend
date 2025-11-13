@@ -119,7 +119,9 @@ app:
         enabled: true
         hook: PostSync
         preserveHistory: true
-        command: ["./manage.py", "migrate"]
+        command: ["/bin/bash", "-c"]
+        args:
+          - "./manage.py wait_for_resources --db && ./manage.py migrate"
       collect-static:
         enabled: true
         hook: PostSync

@@ -22,8 +22,6 @@ RUN --mount=type=cache,target=/root/.cache/uv \
         gcc libc-dev gdal-bin libproj-dev \
         # Django translation
         gettext \
-        # Helper packages
-        wait-for-it \
     && uv lock --locked --offline \
         && uv sync --frozen --no-install-project --all-groups \
     # Clean-up
