@@ -1,0 +1,61 @@
+app:
+  fullnameOverride: ifrcgo-alert-hub
+
+  podLabels:
+    azure.workload.identity/use: 'true'
+
+  ingress:
+    enabled: true
+    className: nginx
+    tls:
+      enabled: true
+
+  env:
+    DJANGO_DEBUG: "false"
+    # App Domain
+    # APP_FRONTEND_HOST: XXX: go-deploy
+    # APP_DOMAIN: XXX: go-deploy
+    # DJANGO_ALLOWED_HOSTS: XXX: go-deploy
+    # SESSION_COOKIE_DOMAIN: XXX: go-deploy
+    # CSRF_COOKIE_DOMAIN: XXX: go-deploy
+    # CORS_ALLOWED_ORIGINS: XXX: go-deploy
+    # Blob Storage Configs
+    # USE_AZURE_STORAGE: XXX: go-deploy
+    # AZURE_CLIENT_ID: XXX: go-deploy
+    # AZURE_TENANT_ID: XXX: go-deploy
+    # AZURE_STORAGE_MEDIA_CONTAINER: XXX: go-deploy
+    # AZURE_STORAGE_STATIC_CONTAINER: XXX: go-deploy
+    # AZURE_STORAGE_ACCOUNT_NAME: XXX: go-deploy
+    # AZURE_STORAGE_MANAGED_IDENTITY: XXX: go-deploy
+
+  serviceAccountName: "service-token-reader"
+  serviceAccount:
+    create: true
+    automountServiceAccountToken: true
+    # annotations:
+    #   azure.workload.identity/client-id: # XXX: go-deploy
+    labels:
+      azure.workload.identity/use: "true"
+
+  secretsStoreCsiDriver:
+    create: true
+    provider: azure
+    parameters:
+      usePodIdentity: "false"
+      # clientID: # XXX: go-deploy
+      # keyvaultName: # XXX: go-deploy
+      # tenantId: # XXX: go-deploy
+    secretsKeyMap:
+      DB_HOST: DB-HOST
+      DB_NAME: DB-NAME
+      DB_PASSWORD: DB-PASSWORD
+      DB_PORT: DB-PORT
+      DB_USER: DB-USER
+      DJANGO_SECRET_KEY: DJANGO-SECRET-KEY
+      EMAIL_HOST: EMAIL-HOST
+      EMAIL_HOST_PASSWORD: EMAIL-HOST-PASSWORD
+      EMAIL_HOST_USER: EMAIL-HOST-USER
+      EMAIL_PORT: EMAIL-PORT
+      HCAPTCHA_SECRET: HCAPTCHA-SECRET
+      HCAPTCHA_SITEKEY: HCAPTCHA-SITEKEY
+      SENTRY_DSN: SENTRY-DSN
