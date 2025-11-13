@@ -1,0 +1,7 @@
+app:
+  environment: ALPHA
+
+  # NOTE: Check main/settings.py for all available options
+  env:
+    SENTRY_TRACES_SAMPLE_RATE: "0.8"
+    SENTRY_PROFILE_SAMPLE_RATE: "0.8"

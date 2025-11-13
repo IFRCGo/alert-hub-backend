@@ -1,192 +1,249 @@
-environment: prod
+app:
+  environment: PROD
+  nameOverride: ifrcgo-alert-hub-helm
 
-image:
-  name: SET-BY-CICD-IMAGE
-  tag: SET-BY-CICD-TAG
+  appTypeEnvName: "DJANGO_APP_TYPE"
 
-ingress:
-  enabled: false
-  host:
-  className:
-  tls:
+  # Global Image
+  image:
+    name: SET-BY-CICD-IMAGE
+    tag: SET-BY-CICD-TAG
+    imagePullPolicy: IfNotPresent
+
+  ingress:
+    enabled: true
+    className:
+    host:
+
+  redis:
     enabled: false
-    secretName:
 
-redis:
-  enabled: true
-  architecture: standalone
-  fullnameOverride: alert-hub-redis
-  auth:
+  postgresql:
     enabled: false
-  master:
-    persistence:
-      enabled: true
-      size: .5Gi
-      storageClass:
+    fullnameOverride: ""
+    architecture: standalone
+    auth:
+      postgresPassword: ""
+      username: ""
+      password: ""
+      database: ""
+    primary:
+      persistence:
+        enabled: true
+        storageClass: ""
+        size: 8Gi
 
-postgresql:
-  enabled: false
-  fullnameOverride: ""
-  architecture: standalone
-  auth:
-    postgresPassword: ""
-    username: ""
-    password: ""
-    database: ""
-  primary:
-    persistence:
-      enabled: true
-      storageClass: ""
-      size: 8Gi
+  minio:
+    enabled: false
 
-api:
-  enabled: true
-  replicaCount: 1
-  containerPort: 80
-  resources:
-    requests:
-      cpu: "2"
-      memory: 0.5Gi
-    limits:
-      cpu: "2"
-      memory: 1Gi
-
-worker:
-  enabled: true
-  beat:
+  api:
+    enabled: true
+    replicaCount: 1
+    containerPort: 80
+    command: ["/code/deploy/run_web.sh"]
     resources:
       requests:
-        cpu: "1"
-        memory: 0.5Gi
+        cpu: "0.2"
+        memory: 1Gi
+      limits:
+        cpu: "2"
+        memory: 1Gi
+
+  worker:
+    enabled: true
+    beat:
+      command: ["celery", "-A", "main", "beat", "-l", "INFO"]
+      resources:
+        requests:
+          cpu: "0.1"
+          memory: 0.2Gi
+        limits:
+          cpu: "1"
+          memory: 0.5Gi
+    queueDefaultResources:
+      requests:
+        cpu: "0.1"
+        memory: 1Gi
       limits:
         cpu: "1"
         memory: 1Gi
-  flower:
+    queueCommandPrefix:
+      - "celery"
+      - "-A"
+      - "main"
+      - "worker"
+      - "-l"
+      - "INFO"
+    queues:
+      # NOTE: Make sure keys are lowercase
+      default:
+        enabled: true
+        replicaCount: 1
+        celeryArgs:
+          - "-Q"
+          - "default"
+          - "--concurrency"
+          - "4"
+          - "--max-tasks-per-child"
+          - "10"
+      feeds:
+        enabled: true
+        replicaCount: 2
+        celeryArgs:
+          - "-Q"
+          - "feeds"
+          - "--concurrency"
+          - "4"
+          - "--max-tasks-per-child"
+          - "10"
+          - "--soft-time-limit"
+          - "300"
+          - "--time-limit"
+          - "500"
+        resources:
+          limits:
+            cpu: "2"
+
+  argoHook:
     enabled: true
     resources:
       requests:
         cpu: "0.1"
-        memory: 0.5Gi
-      limits:
-        cpu: "1"
         memory: 1Gi
-  queues:
-    # NOTE: Make sure keys are lowercase
-    default:
-      enabled: true
-      replicaCount: 1
-      celeryArgs: "-Q default --concurrency 4 --max-tasks-per-child 10"
-      resources:
-        requests:
-          cpu: "1"
-          memory: 1Gi
-        limits:
-          cpu: "1"
-          memory: 2Gi
-    feeds:
-      enabled: true
-      replicaCount: 2
-      celeryArgs: "-Q feeds --concurrency 4 --max-tasks-per-child 10 --soft-time-limit 300 --time-limit 500"
-      resources:
-        requests:
-          cpu: "2"
-          memory: 1Gi
-        limits:
-          cpu: "1"
-          memory: 2Gi
+      limits:
+        cpu: "4"
+        memory: 2Gi
+    hooks:
+      # NOTE: Make sure keys are lowercase
+      db-migrate:
+        enabled: true
+        hook: PostSync
+        preserveHistory: true
+        command: ["./manage.py", "migrate"]
+      collect-static:
+        enabled: true
+        hook: PostSync
+        command: ["./manage.py", "collectstatic", "--noinput"]
 
-argoHooks:
-  # NOTE: Make sure keys are lowercase
-  db-migrate:
-    enabled: true
-    hook: PostSync
-    preserveHistory: true
-    command: ["./manage.py", "migrate"]
-    requestsCpu: 0.1
-    requestsMemory: 1G
-    limitsCpu: 4
-    limitsMemory: 2G
-  collect-static:
-    enabled: true
-    hook: PostSync
-    command: ["./manage.py", "collectstatic", "--noinput"]
+  cronjobs:
+    enabled: false
 
-env:
-  # APP_ENVIRONMENT: using .environment
-  # APP_RELEASE: using .image.tag
-  DJANGO_DEBUG: false
-  DJANGO_TIME_ZONE: UTC
-  # App Domain
-  APP_DOMAIN:
-  APP_HTTP_PROTOCOL: https
-  APP_FRONTEND_HOST:
-  DJANGO_ALLOWED_HOSTS: "*"
-  SESSION_COOKIE_DOMAIN:
-  CSRF_COOKIE_DOMAIN:
-  # CORS
-  CORS_ALLOWED_ORIGINS:
-  CORS_ALLOWED_ORIGIN_REGEXES:
-  # Misc
-  UPTIME_WORKER_HEARTBEAT:
-  EMAIL_USE_TLS: true
-  DEFAULT_FROM_EMAIL:
-  # Sentry
-  SENTRY_TRACES_SAMPLE_RATE: 0.2
-  SENTRY_PROFILE_SAMPLE_RATE: 0.2
-  # Azure configs TODO: Add support for AZURE_STORAGE_TOKEN_CREDENTIAL
-  USE_AZURE_STORAGE: false  # NOTE: Make sure this is boolean and not string
-  AZURE_STORAGE_MEDIA_CONTAINER:
-  AZURE_STORAGE_STATIC_CONTAINER:
-  AZURE_STORAGE_ACCOUNT_NAME:
-# NOTE: Used to pass additional configs to api/worker containers
-# NOTE: Not used by azure vault
-envAdditional:
-  # USE_S3_BUCKET: "true"
+  # NOTE: Check main/settings.py for all available options
+  env:
+    APP_RELEASE: "{{ $.Values.image.tag }}"
+    APP_ENVIRONMENT: "{{ $.Values.environment }}"
+    DJANGO_DEBUG: "false"
+    DJANGO_TIME_ZONE: UTC
+    # App Domain
+    APP_DOMAIN: "{{ required \".app.env.APP_DOMAIN\" nil }}"
+    APP_HTTP_PROTOCOL: https
+    APP_FRONTEND_HOST: "{{ required \".app.env.APP_FRONTEND_HOST\" nil }}"
+    DJANGO_ALLOWED_HOSTS: "*"
+    SESSION_COOKIE_DOMAIN: "{{ required \".app.env.SESSION_COOKIE_DOMAIN\" nil }}"
+    CSRF_COOKIE_DOMAIN: "{{ required \".app.env.CSRF_COOKIE_DOMAIN\" nil }}"
+    # CORS
+    CORS_ALLOWED_ORIGINS: "{{ required \".app.env.CORS_ALLOWED_ORIGINS\" nil }}"
+    CORS_ALLOWED_ORIGIN_REGEXES: ""
+    # Misc
+    UPTIME_WORKER_HEARTBEAT: ""
+    EMAIL_USE_TLS: "true"
+    DEFAULT_FROM_EMAIL: "{{ required \".app.env.DEFAULT_FROM_EMAIL\" nil }}"
+    # Sentry
+    SENTRY_TRACES_SAMPLE_RATE: "0.2"
+    SENTRY_PROFILE_SAMPLE_RATE: "0.2"
+    # Azure configs TODO: Add support for AZURE_STORAGE_TOKEN_CREDENTIAL
+    USE_AZURE_STORAGE: "false"  # NOTE: Make sure this is boolean and not string
+    AZURE_STORAGE_MANAGED_IDENTITY: "true"
+    AZURE_STORAGE_MEDIA_CONTAINER: "{{- if (eq (lower (toString .Values.env.USE_AZURE_STORAGE)) \"true\") }}{{ required \".app.env.AZURE_STORAGE_MEDIA_CONTAINER\" nil }}{{- end }}"
+    AZURE_STORAGE_STATIC_CONTAINER: "{{- if (eq (lower (toString .Values.env.USE_AZURE_STORAGE)) \"true\") }}{{ required \".app.env.AZURE_STORAGE_STATIC_CONTAINER\" nil }}{{- end }}"
+    AZURE_STORAGE_ACCOUNT_NAME: "{{- if (eq (lower (toString .Values.env.USE_AZURE_STORAGE)) \"true\") }}{{ required \".app.env.AZURE_STORAGE_ACCOUNT_NAME\" nil }}{{- end }}"
 
-secretsName: ""
-secrets:
-  DJANGO_SECRET_KEY:
-  # Database
-  DB_NAME:
-  DB_USER:
-  DB_PASSWORD:
-  DB_HOST:
-  DB_PORT:
-  # Email
-  EMAIL_HOST:
-  EMAIL_PORT:
-  EMAIL_HOST_USER:
-  EMAIL_HOST_PASSWORD:
-  # Sentry
-  SENTRY_DSN:
-  # Redis (Provide: if not redis.enabled)
-  # - Celery
-  CELERY_BROKER_URL:
-  # - Cache
-  CACHE_REDIS_URL:
-  # Hcaptcha
-  HCAPTCHA_SITEKEY:
-  HCAPTCHA_SECRET:
-# NOTE: Used to pass additional secrets to api/worker containers
-# NOTE: Not used by azure vault
-secretsAdditional:
-  # AWS_S3_ACCESS_KEY_ID: "VERY-SENSITIVE-KEY-ID"
+  # NOTE: Check main/settings.py for all available options
+  secrets:
+    DJANGO_SECRET_KEY: "{{ required \".app.secrets.DJANGO_SECRET_KEY\" nil }}"
+    # Postgres
+    DB_NAME: "{{ required \".app.secrets.DB_NAME\" nil }}"
+    DB_USER: "{{ required \".app.secrets.DB_USER\" nil }}"
+    DB_PASSWORD: "{{ required \".app.secrets.DB_PASSWORD\" nil }}"
+    DB_HOST: "{{ required \".app.secrets.DB_HOST\" nil }}"
+    DB_PORT: "{{ required \".app.secrets.DB_PORT\" nil }}"
+    # Sentry
+    SENTRY_DSN: "{{ required \".app.secrets.SENTRY_DSN\" nil }}"
+    # Email
+    EMAIL_HOST: "{{ required \".app.secrets.EMAIL_HOST\" nil }}"
+    EMAIL_PORT: "{{ required \".app.secrets.EMAIL_PORT\" nil }}"
+    EMAIL_HOST_USER: "{{ required \".app.secrets.EMAIL_HOST_USER\" nil }}"
+    EMAIL_HOST_PASSWORD: "{{ required \".app.secrets.EMAIL_HOST_PASSWORD\" nil }}"
+    # Hcaptcha
+    HCAPTCHA_SITEKEY: "{{ required \".app.secrets.HCAPTCHA_SITEKEY\" nil }}"
+    HCAPTCHA_SECRET: "{{ required \".app.secrets.HCAPTCHA_SECRET\" nil }}"
+    # - Celery
+    # CELERY_RABBITMQ_CONNECTION_STRING: Defined using extraEnvVars
+    # CELERY_RABBITMQ_VHOST: Defined using extraEnvVars
+    # CELERY_RESULT_BACKEND: Defined using extraEnvVars
+    # - Cache
+    # CACHE_REDIS_URL: Defined using extraEnvVars
 
-# Azure configurations
-azure:
-  aksSecretsProviderAvailable: false
-  keyvault:
-    name: ""
-    clientId: ""
-    tenantId: ""
+  extraEnvVars:
+    # Checkout the resources defined by extraManifests
+    - name: CELERY_RABBITMQ_CONNECTION_STRING
+      valueFrom:
+        secretKeyRef:
+          name: alert-hub-rabbitmq-default-user
+          key: connection_string
+    - name: CELERY_RABBITMQ_VHOST
+      value: celery
+    - name: CELERY_RESULT_BACKEND
+      value: redis://alert-hub-dragonfly:6379/0
+    - name: CACHE_REDIS_URL
+      value: redis://alert-hub-dragonfly:6379/1
 
-serviceAccount:
-  # Specifies whether a service account should be created
-  # Required when using workload identity to access Azure Key Vault Secrets
-  create: false
-  automount: true
-  annotations:
-    azure.workload.identity/client-id : "<workload_identity_client_id>"
-  labels:
-    azure.workload.identity/use: "true"
-  name: ""
+  extraManifests:
+    dragonflydb-cluster:
+      apiVersion: dragonflydb.io/v1alpha1
+      kind: Dragonfly
+      metadata:
+        labels:
+          app.kubernetes.io/name: dragonfly
+        name: alert-hub-dragonfly  # NOTE: this will be the service name
+      spec:
+        replicas: 1
+        args: ["--dbfilename=mainSnapshot"]  # NOTE: Only maintains 1 last snapshot
+        resources:
+          requests:
+            cpu: "0.1"
+            memory: 500Mi
+          limits:
+            cpu: "1"
+            memory: 750Mi
+        snapshot:
+          cron: "*/5 * * * *"
+          persistentVolumeClaimSpec:
+            # storageClassName:
+            accessModes:
+            - ReadWriteOnce
+            resources:
+              requests:
+                storage: 1Gi
+
+    # RabbitMQ https://www.rabbitmq.com/kubernetes/operator/using-operator
+    rabbitmq-cluster:
+      apiVersion: rabbitmq.com/v1beta1
+      kind: RabbitmqCluster
+      metadata:
+        name: alert-hub-rabbitmq  # NOTE: This is used secert name
+      spec:
+        replicas: 1  # Scaling down is not supported
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "2Gi"
+          limits:
+            cpu: "4"
+            memory: "2Gi"
+        rabbitmq:
+          additionalConfig: |
+            default_vhost = celery
+        persistence:
+         # storageClassName:
+         storage: "2Gi"
