@@ -30,8 +30,11 @@ x-server: &base_server_setup
     DB_NAME: ${DB_NAME:-postgres}
     DB_USER: ${DB_USER:-postgres}
     DB_PASSWORD: ${DB_PASSWORD:-postgres}
+    # Celery
+    CELERY_RABBITMQ_CONNECTION_STRING: ${CELERY_RABBITMQ_CONNECTION_STRING:-amqp://alerthub:alerthub@rabbitmq:5672/}
+    CELERY_RABBITMQ_VHOST: ${CELERY_RABBITMQ_VHOST:-celery}
+    CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND:-redis://redis:6379/0}
     # Redis config
-    CELERY_BROKER_URL: ${CELERY_BROKER_URL:-redis://redis:6379/0}
     CACHE_REDIS_URL: ${CACHE_REDIS_URL:-redis://redis:6379/1}
     TEST_CACHE_REDIS_URL: ${TEST_CACHE_REDIS_URL:-redis://redis:6379/11}
     # Email config
@@ -50,6 +53,7 @@ x-server: &base_server_setup
   depends_on:
     - db
     - redis
+    - rabbitmq
   logging:
     driver: "json-file"
     options:
@@ -86,6 +90,18 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  rabbitmq:
+    image: rabbitmq:4-management
+    hostname: "rabbit"  # https://github.com/docker-library/rabbitmq/issues/392
+    environment:
+      RABBITMQ_DEFAULT_VHOST: celery
+      RABBITMQ_DEFAULT_USER: alerthub
+      RABBITMQ_DEFAULT_PASS: alerthub
+    ports:
+      - 127.0.0.1:${RABBITMQ_CONSOLE_PORT:-15672}:15672  # Managements console
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
 
   redis:
     image: redis:6-alpine
@@ -131,3 +147,4 @@ volumes:
   ipython_data_local:
   mailpit-data:
   backend_data:
+  rabbitmq_data:

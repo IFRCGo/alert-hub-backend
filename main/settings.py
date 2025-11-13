@@ -49,7 +49,9 @@ env = environ.Env(
     DJANGO_STATIC_ROOT=(str, os.path.join(BASE_DIR, '/data/static')),  # Where to store
     DJANGO_MEDIA_ROOT=(str, os.path.join(BASE_DIR, '/data/media')),  # Where to store
     # Celery
-    CELERY_BROKER_URL=str,  # redis://redis:6379/0
+    CELERY_RABBITMQ_CONNECTION_STRING=str,
+    CELERY_RABBITMQ_VHOST=str,
+    CELERY_RESULT_BACKEND=str,
     # Cache
     CACHE_REDIS_URL=str,  # redis://redis:6379/1
     TEST_CACHE_REDIS_URL=(str, None),  # redis://redis:6379/11
@@ -136,6 +138,7 @@ INSTALLED_APPS = [
     'health_check.contrib.migrations',
     'health_check.contrib.psutil',  # disk and memory utilization; requires psutil
     'health_check.contrib.redis',  # requires Redis broker
+    'health_check.contrib.rabbitmq',  # requires RabbitMQ broker
     # Using custom push check for celery workers
     # Internal
     'apps.common',
@@ -337,7 +340,8 @@ else:
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # CELERY
-CELERY_RESULT_BACKEND = CELERY_BROKER_URL = env('CELERY_BROKER_URL')
+CELERY_BROKER_URL = f"{env('CELERY_RABBITMQ_CONNECTION_STRING')}{env('CELERY_RABBITMQ_VHOST')}"
+CELERY_RESULT_BACKEND = env('CELERY_RESULT_BACKEND')
 CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 CELERY_TASK_RESULT_EXPIRES = 5 * (60 * 60)  # 5 hours
 CELERY_TASK_SOFT_TIME_LIMIT = 30 * 60  # 30 mins max (To tackle worst cases)
@@ -397,7 +401,12 @@ CACHES = {
 
 # HEALTH-CHECK
 REDIS_URL = CACHE_REDIS_URL
+BROKER_URL = CELERY_BROKER_URL
+HEALTHCHECK_CACHE_KEY = "ALERT_HUB_HEALTH_CHECK_KEY"
+
 TEST_CACHE_REDIS_URL = env('TEST_CACHE_REDIS_URL')
+
+
 HEALTHCHECK_CACHE_KEY = "alert_hub_healthcheck_key"
 HEALTH_CHECK = {
     'DISK_USAGE_MAX': 80,  # percent
