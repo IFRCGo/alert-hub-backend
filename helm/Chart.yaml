@@ -9,5 +9,5 @@ sources:
 dependencies:
   - name: toggle-django-helm
     alias: app
-    version: 0.2.2
+    version: 0.2.3
     repository: oci://ghcr.io/toggle-corp
