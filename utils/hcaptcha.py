@@ -1,4 +1,4 @@
-import requests
+import httpx
 from django.conf import settings
 from django.utils.translation import gettext
 from rest_framework import serializers
@@ -13,7 +13,7 @@ def validate_hcaptcha(captcha):
         'response': captcha,
     }
 
-    response = requests.post(url=CAPTCHA_VERIFY_URL, data=data)
+    response = httpx.post(url=CAPTCHA_VERIFY_URL, data=data)
 
     response_json = response.json()
     return response_json['success']

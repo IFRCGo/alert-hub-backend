@@ -20,7 +20,7 @@ dependencies = [
     "psycopg2-binary>=2.9.9,<3",
     "pytz",
     "colorlog",
-    "requests",
+    "httpx",
     "strawberry-graphql-django==0.49.1",
     "strawberry-graphql==0.257.0",
     "sentry-sdk",

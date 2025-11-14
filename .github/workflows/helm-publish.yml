@@ -39,8 +39,8 @@ jobs:
 
     - name: 🐳 Helm dependency
       run: |
-        yq --indent 0 '.dependencies | map(["helm", "repo", "add", .name, .repository] | join(" ")) | .[]' ./helm/Chart.lock  | sh --
-        helm dependency build ./helm
+        yq --indent 0 '.dependencies | map(select(.repository | test("^oci:") | not)) | map(["helm", "repo", "add", .name, .repository] | join(" ")) | .[]' ./helm/Chart.lock | sh --
+        helm dependency build ./helm/
 
     - name: Tag docker image in Helm Chart values.yaml
       env:

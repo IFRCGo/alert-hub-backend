@@ -3,8 +3,8 @@ import typing
 import xml.etree.ElementTree as ET
 from datetime import datetime
 
+import httpx
 import pytz
-import requests
 
 from apps.cap_feed.models import FeedLog
 
@@ -25,7 +25,7 @@ def convert_datetime(original_datetime):
 
 def fetch_alert_using_url(url) -> tuple[typing.Literal[False], None] | tuple[typing.Literal[True], ET.Element]:
     # navigate alert
-    alert_response = requests.get(url, headers=COMMON_REQUESTS_HEADERS)
+    alert_response = httpx.get(url, headers=COMMON_REQUESTS_HEADERS)
     alert_response_content = alert_response.content
     if alert_response.status_code != 200:
         logger.warning(f'Skipping for url {url}: Invalid status_code {alert_response.status_code}')

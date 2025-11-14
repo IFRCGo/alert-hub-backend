@@ -5,7 +5,7 @@ BASE_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 ROOT_DIR=$(dirname "$BASE_DIR")
 
 # Wait until database is ready
-wait-for-it ${DB_HOST:-db}:${DB_PORT-5432}
+./manage.py wait_for_resources --db
 
 if [ "$CI" == "true" ]; then
     pip3 install coverage pytest-xdist

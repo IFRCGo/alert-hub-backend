@@ -1,6 +1,5 @@
 import logging
 
-from apps.cap_feed.models import Alert
 from main.sentry import SentryTag
 
 from .atom import get_alerts_atom
@@ -37,12 +36,16 @@ def get_alerts(feed, all_alert_urls=set()):
         logger.error(f'Error getting alerts from {feed.url}', exc_info=True)
     else:
         if valid_poll:
+            all_alert_urls.update(alert_urls)
+            # XXX: Remove this later...
+            # for now not deleting the alerts missing from alerting authority..
+            # just using expire date
+            # ---------------------------------------------------------------------------------
             # alerts that are in the database and have not expired but are no longer available -
             # - on the feed must have been deleted by the alerting authority
             # remove these alerts from the database
-            all_alert_urls.update(alert_urls)
-            deleted_alerts = Alert.objects.filter(feed=feed).exclude(url__in=all_alert_urls)
-            # Tag expired alerts
-            deleted_alerts.filter(is_expired=False).update(is_expired=True)
+            # deleted_alerts = Alert.objects.filter(feed=feed).exclude(url__in=all_alert_urls)
+            # # Tag expired alerts
+            # deleted_alerts.filter(is_expired=False).update(is_expired=True)
 
     return polled_alerts_count

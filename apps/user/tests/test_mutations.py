@@ -44,7 +44,7 @@ class TestUserMutation(TestCase):
         self.assertEqual(content['data']['public']['login']['result']['id'], self.gID(user.id), content)
         self.assertEqual(content['data']['public']['login']['result']['email'], user.email, content)
 
-    @mock.patch('utils.hcaptcha.requests')
+    @mock.patch('utils.hcaptcha.httpx')
     @mock.patch('apps.user.serializers.send_account_activation', side_effect=send_account_activation)
     def test_register(self, send_account_activation_mock, captcha_requests_mock):
         mutation = '''
@@ -132,7 +132,7 @@ class TestUserMutation(TestCase):
         content = self.query_check(query)
         self.assertEqual(content['data']['public']['me'], None, content)
 
-    @mock.patch('utils.hcaptcha.requests')
+    @mock.patch('utils.hcaptcha.httpx')
     @mock.patch('apps.user.serializers.send_password_reset', side_effect=send_password_reset)
     @mock.patch('apps.user.serializers.send_password_changed_notification', side_effect=send_password_changed_notification)
     def test_password_reset(

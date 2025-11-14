@@ -26,9 +26,11 @@ from apps.cap_feed.models import (
     AlertInfoParameter,
     Feed,
     ProcessedAlert,
+    alert_info_default_expire,
 )
 from apps.cap_feed.utils import distance_to_decimal_degrees
 from main.managers import BulkCreateManager
+from utils.common import logger_log_extra
 
 logger = logging.getLogger(__name__)
 
@@ -97,7 +99,7 @@ def create_alert_info(
         instruction=find_element(alert_info_entry, ns, 'cap:instruction'),
         web=find_element(alert_info_entry, ns, 'cap:web'),
         contact=find_element(alert_info_entry, ns, 'cap:contact'),
-        expires=expire_time,
+        expires=expire_time or alert_info_default_expire(),
     )
 
 
@@ -203,6 +205,61 @@ def process_geo_codes(
     return list(set(possible_admin1_ids))
 
 
+def process_related_alerts(alert: Alert):
+    # Currenlty only processing "Cancel" update to pre-expire existing active alerts
+
+    """
+    Source: https://docs.oasis-open.org/emergency/cap/v1.2/CAP-v1.2-os.html
+
+    # `msg_type`
+    Code Values:
+    "Alert" - Initial information requiring attention by targeted recipients
+    "Update" - Updates and supercedes the earlier message(s) identified in <references>
+    "Cancel" - Cancels the earlier message(s) identified in <references>
+    "Ack" - Acknowledges receipt and acceptance of the message(s) identified in <references>
+    "Error" - Indicates rejection of the message(s) identified in <references>; explanation SHOULD appear in <note>
+
+    # `references`
+    (1) The extended message identifier(s) (in the form sender,identifier,sent) of an earlier CAP message or messages referenced by this one.
+    (2) If multiple messages are referenced, they SHALL be separated by whitespace.
+    """  # noqa: E501
+
+    if alert.msg_type.lower() != "cancel":
+        return
+
+    # Auto expire this alert
+    alert.is_expired = True
+    alert.save(update_fields=("is_expired",))
+
+    # Now also expire existing alerts
+    references_raw = (alert.references or "").strip(" ")
+
+    if not references_raw:
+        return
+
+    existing_alert_identifiers = set()
+
+    try:
+        for reference in references_raw.split(" "):
+            reference_split = reference.split(",") or []
+            if len(reference_split) > 1:
+                existing_alert_identifiers.add(reference_split[1])
+    except Exception:
+        logger.error(
+            "Failed to extract existing alert identifiers from references",
+            exc_info=True,
+            extra=logger_log_extra({"alert_id": alert.pk}),
+        )
+
+    if existing_alert_identifiers:
+        updated_qs_resp = Alert.objects.filter(
+            feed=alert.feed,
+            is_expired=False,
+            identifier__in=existing_alert_identifiers,
+        ).update(is_expired=True)
+        logger.info("Expired existing alerts due to cancel msg_type: %s", updated_qs_resp)
+
+
 def process_alert(
     url: str,
     alert_root: XmlElement,
@@ -296,6 +353,7 @@ def process_alert(
     mgr.done()
     if mrg_summary := mgr.summary(ignore_empty=True):
         logger.debug(f"DB ops summary for alert: {alert.pk}: {str(mrg_summary)}")
+    process_related_alerts(alert)
     return alert
 
 
