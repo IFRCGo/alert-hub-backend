@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 
 from django.contrib.gis.db import models as gid_models
 from django.contrib.gis.geos import GEOSGeometry, Point, Polygon
-from django.core.validators import MaxValueValidator, MinValueValidator
+from django.core.validators import MinLengthValidator
 from django.db import IntegrityError, models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -45,7 +45,7 @@ class Region(models.Model):
 class Country(models.Model):
     ifrc_go_id = models.IntegerField(unique=True, null=True, editable=False)
     name = models.CharField()
-    iso3 = models.CharField(unique=True, validators=[MinValueValidator(3), MaxValueValidator(3)])
+    iso3 = models.CharField(unique=True, max_length=3, validators=[MinLengthValidator(3)])
     region = models.ForeignKey(Region, on_delete=models.CASCADE)
     bbox = gid_models.PolygonField(srid=4326, blank=True, null=True)
 
