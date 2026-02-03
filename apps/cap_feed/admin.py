@@ -122,10 +122,11 @@ class RegionAdmin(TranslationAdmin):
 
 @admin.register(Country)
 class CountryAdmin(TranslationAdmin):
-    list_display = ['name', 'iso3', 'region', 'continent']
+    list_display = ['name', 'iso3', 'region', 'continent', 'has_preparedness_messages']
     list_filter = (
         'region',
         'continent',
+        'has_preparedness_messages',
     )
     search_fields = ['name', 'iso3']
 

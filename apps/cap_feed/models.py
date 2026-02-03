@@ -1,4 +1,5 @@
 import enum
+import typing
 from datetime import timedelta
 from typing import TYPE_CHECKING
 
@@ -51,11 +52,28 @@ class Country(models.Model):
     # XXX: Not used anywhere right now, maybe we can remove this. Need to confirm first
     continent = models.ForeignKey(Continent, on_delete=models.CASCADE, null=True, blank=True)
 
+    has_preparedness_messages = models.BooleanField(
+        default=False,
+        help_text=_(
+            "Flags whether https://preparemessages.ifrc.org includes data for this country."
+            " Updated automatically by the system."
+        ),
+    )
+
     region_id: int
     continent_id: int | None
 
     def __str__(self):
         return self.iso3 + ' ' + self.name
+
+    @property
+    def preparedness_messages_url(self) -> typing.Optional[str]:
+        if self.has_preparedness_messages:
+            return f"https://preparemessages.ifrc.org/data/whatnow/{self.iso3.upper()}"
+
+    @property
+    def default_preparedness_messages_url(self) -> str:
+        return "https://www.ifrc.org/our-work/disasters-climate-and-crises/climate-smart-disaster-risk-reduction/PAPE"
 
 
 @receiver(post_save, sender=Country)
