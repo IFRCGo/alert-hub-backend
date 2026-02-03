@@ -98,8 +98,31 @@ You got new <br /> Alerts!
                 </div>
             </td>
         </tr>
-    {% endfor %}
+        {% endfor %}
 
+        <!-- What you can do now section -->
+        <tr>
+            <td colspan="5" style="padding: 20px 0px;">
+                <div style="font-size: 16px; font-weight: 500; margin: 10px 0;">
+                    What Can The Public Do To Prepare
+                </div>
+
+                <div style="font-size: 14px;">
+                    {% if subscription_data.subscription.filter_alert_country.preparedness_messages_url %}
+                        <a href="{{ subscription_data.subscription.filter_alert_country.preparedness_messages_url }}"
+                        style="color: #4284FF; text-decoration: none; font-weight: 500;">
+                        Visit {{ subscription_data.subscription.filter_alert_country.name }}'s WhatNow Resource Center
+                        </a>
+                    {% else %}
+                        <a href="{{ subscription_data.subscription.filter_alert_country.default_preparedness_messages_url }}"
+                        style="color: #4284FF; text-decoration: none; font-weight: 500;">
+                        Visit the PAPE Platform
+                        </a>
+                    {% endif %}
+                </div>
+
+            </td>
+        </tr>
     </table>
 
 {% endfor %}

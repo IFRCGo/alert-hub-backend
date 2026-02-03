@@ -12,4 +12,18 @@ Alerts: {% for alert_data in subscription_data.latest_alerts %}
     Alert Severity: {{ alert_data.severity }}
     Alert certainty: {{ alert_data.certainty }}
     Alert Admins: {{ alert_data.admins|truncatechars:40}}
-{% endfor %}{% endfor %}{% endblock %}
+{% endfor %}
+What Can The Public Do To Prepare
+
+{% if subscription_data.subscription.filter_alert_country.preparedness_messages_url %}
+
+Visit {{ subscription_data.subscription.filter_alert_country.name }}'s WhatNow Resource Center:
+{{ subscription_data.subscription.filter_alert_country.preparedness_messages_url }}
+
+{% else %}
+
+Visit the PAPE Platform:
+{{ subscription_data.subscription.filter_alert_country.default_preparedness_messages_url }}
+
+{% endif %}
+{% endfor %}{% endblock %}
