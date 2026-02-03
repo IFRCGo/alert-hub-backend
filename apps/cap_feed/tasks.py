@@ -3,6 +3,7 @@ from __future__ import absolute_import, unicode_literals
 import logging
 
 from celery import shared_task
+from django.core.management import call_command
 from django.db import models
 from django.utils import timezone
 
@@ -71,3 +72,13 @@ def remove_expired_alert_records():
         # Remove records of expired alerts
         ProcessedAlert.objects.filter(expires__lt=timezone.now()).delete()
         return "removed records of expired alerts"
+
+
+@shared_task
+def update_countries_preparedness_messages_flag():
+    with redis_lock(CacheKey.RedisLockKey.UPDATE_COUNTRIES_PREPAREDNESS_MESSAGES_FLAG) as acquired:
+        if not acquired:
+            logger.warning('Update countries preparedness messages flag is already running')
+            return
+        call_command("update_countries_preparedness_messages_flag")
+        return "Updated countries preparedness messages flag"

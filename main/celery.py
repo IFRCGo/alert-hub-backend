@@ -92,6 +92,13 @@ app.conf.beat_schedule = {
             'expire_seconds': 30 * TimeConstants.SECONDS_IN_A_MINUTE,
         },
     },
+    f'{INTERNAL_CELERY_TASK_NAME_PREFIX}update_country_preparedness_messages_flag': {
+        'task': 'apps.cap_feed.tasks.update_countries_preparedness_messages_flag',
+        'schedule': crontab(minute=1, hour=1, day_of_week='monday'),  # NOTE: Needed monthly, but using weekly for now
+        'options': {
+            'queue': 'default',
+        },
+    },
 }
 
 

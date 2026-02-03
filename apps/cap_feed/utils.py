@@ -1,6 +1,7 @@
 import json
 import logging
 import math
+import typing
 
 from django.contrib.gis.geos import Point
 from django.contrib.gis.measure import Distance
@@ -9,7 +10,7 @@ from django_celery_beat.models import IntervalSchedule, PeriodicTask
 
 from main.celery import INTERNAL_CELERY_TASK_NAME_PREFIX
 
-from .models import Feed
+from .models import Country, Feed
 
 logger = logging.getLogger(__name__)
 
@@ -85,3 +86,18 @@ def distance_to_decimal_degrees(distance: Distance, point: Point):
     lat_radians = point.y * (math.pi / 180)  # Where point.y is latitude
     # 1 longitudinal degree at the equator equal 111,319.5m equiv to 111.32km
     return distance.m / (111_319.5 * math.cos(lat_radians))
+
+
+class CountryCache:
+    _countries: list[Country]
+    _countries_iso3_map: dict[str, Country]
+
+    def __init__(self):
+        self.fetch()
+
+    def fetch(self):
+        self._countries = list(Country.objects.all())
+        self._countries_iso3_map = {country.iso3.upper(): country for country in self._countries}
+
+    def get_country_by_iso3(self, iso3: str) -> typing.Optional[Country]:
+        return self._countries_iso3_map.get(iso3.upper())
