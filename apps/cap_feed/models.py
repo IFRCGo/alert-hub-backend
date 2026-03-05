@@ -1,10 +1,11 @@
 import enum
+import typing
 from datetime import timedelta
 from typing import TYPE_CHECKING
 
 from django.contrib.gis.db import models as gid_models
 from django.contrib.gis.geos import GEOSGeometry, Point, Polygon
-from django.core.validators import MaxValueValidator, MinValueValidator
+from django.core.validators import MinLengthValidator
 from django.db import IntegrityError, models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -44,18 +45,35 @@ class Region(models.Model):
 class Country(models.Model):
     ifrc_go_id = models.IntegerField(unique=True, null=True, editable=False)
     name = models.CharField()
-    iso3 = models.CharField(unique=True, validators=[MinValueValidator(3), MaxValueValidator(3)])
+    iso3 = models.CharField(unique=True, max_length=3, validators=[MinLengthValidator(3)])
     region = models.ForeignKey(Region, on_delete=models.CASCADE)
     bbox = gid_models.PolygonField(srid=4326, blank=True, null=True)
 
     # XXX: Not used anywhere right now, maybe we can remove this. Need to confirm first
     continent = models.ForeignKey(Continent, on_delete=models.CASCADE, null=True, blank=True)
 
+    has_preparedness_messages = models.BooleanField(
+        default=False,
+        help_text=_(
+            "Flags whether https://preparemessages.ifrc.org includes data for this country."
+            " Updated automatically by the system."
+        ),
+    )
+
     region_id: int
     continent_id: int | None
 
     def __str__(self):
         return self.iso3 + ' ' + self.name
+
+    @property
+    def preparedness_messages_url(self) -> typing.Optional[str]:
+        if self.has_preparedness_messages:
+            return f"https://preparemessages.ifrc.org/data/whatnow/{self.iso3.upper()}"
+
+    @property
+    def default_preparedness_messages_url(self) -> str:
+        return "https://www.ifrc.org/our-work/disasters-climate-and-crises/climate-smart-disaster-risk-reduction/PAPE"
 
 
 @receiver(post_save, sender=Country)

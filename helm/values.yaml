@@ -233,7 +233,7 @@ app:
       apiVersion: rabbitmq.com/v1beta1
       kind: RabbitmqCluster
       metadata:
-        name: alert-hub-rabbitmq  # NOTE: This is used secert name
+        name: alert-hub-rabbitmq  # NOTE: This is used secret name
       spec:
         replicas: 1  # Scaling down is not supported
         resources:

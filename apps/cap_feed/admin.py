@@ -81,7 +81,7 @@ class AlertInfoInline(admin.StackedInline):
 
 @admin.register(Alert)
 class AlertAdmin(admin.ModelAdmin):
-    list_display = ['url', 'country', 'feed', 'sent', 'status', 'msg_type', 'scope']
+    list_display = ['url', 'country', 'feed', 'is_expired', 'sent', 'status', 'msg_type', 'scope']
     list_filter = (
         'is_expired',
         AutocompleteFilterFactory('Feed', 'feed'),
@@ -122,10 +122,11 @@ class RegionAdmin(TranslationAdmin):
 
 @admin.register(Country)
 class CountryAdmin(TranslationAdmin):
-    list_display = ['name', 'iso3', 'region', 'continent']
+    list_display = ['name', 'iso3', 'region', 'continent', 'has_preparedness_messages']
     list_filter = (
         'region',
         'continent',
+        'has_preparedness_messages',
     )
     search_fields = ['name', 'iso3']
 
