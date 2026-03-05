@@ -1,3 +1,5 @@
+import time
+
 import httpx
 import typing_extensions
 from django.core.management.base import BaseCommand
@@ -26,8 +28,17 @@ class Command(BaseCommand):
             api_country_map[db_country.pk] = country_code
         return api_country_map
 
-    def _country_has_messages(self, country_code: str) -> bool:
+    def _country_has_messages(self, country_code: str, retry: int = 0) -> bool:
+        # To avoid 429 Too Many Requests
         resp = httpx.get(f"https://preparemessages.ifrc.org/api/organisations/{country_code}/instructions")
+        if resp.status_code == 429:
+            if retry > 5:
+                raise Exception("To many '429 Too Many Requests' from the server")
+            # Try again after few seconds
+            self.stdout.write("\t- Got '429 Too Many Requests' from server.. waiting for 10 seconds before continuing")
+            time.sleep(10)
+            return self._country_has_messages(country_code, retry=retry + 1)
+
         resp.raise_for_status()
         return len(resp.json()["data"]) > 0
 
