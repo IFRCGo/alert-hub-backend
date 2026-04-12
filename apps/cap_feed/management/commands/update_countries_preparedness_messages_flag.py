@@ -1,11 +1,14 @@
-import time
+import logging
 
 import httpx
 import typing_extensions
+from django.conf import settings
 from django.core.management.base import BaseCommand
 
 from apps.cap_feed.models import Country
 from apps.cap_feed.utils import CountryCache
+
+logger = logging.getLogger(__name__)
 
 
 # NOTE: This is run automatically using celery schedule job
@@ -15,54 +18,51 @@ class Command(BaseCommand):
         super().__init__(*args, **kwargs)
         self.country_cache = CountryCache()
 
-    def _get_country_api_map(self) -> dict[int, str]:
-        self.stdout.write("Fetching countries data..")
-        resp = httpx.get("https://preparemessages.ifrc.org/api/organisations")
-        resp.raise_for_status()
-        api_country_map = {}
-        for country_data in resp.json()["data"]:
+    def get_countries_id_with_messages(self) -> list[int]:
+        self.stdout.write("Fetching countries data")
+        resp = httpx.get(
+            # NOTE: This endpoint doesn't require token unlike other
+            f"{settings.PREPAREMESSAGES_API_DOMAIN}/v2/org",
+            params={
+                "published": True,
+            },
+        )
+        countries_data = resp.json()["data"]
+
+        db_countries_with_messages_id = []
+        for country_data in countries_data:
             country_code = country_data["countryCode"]
             db_country = self.country_cache.get_country_by_iso3(country_code)
             if db_country is None:
+                logger.warning("Remote countryCode missing in DB: %s", country_code)
                 continue
-            api_country_map[db_country.pk] = country_code
-        return api_country_map
+            db_countries_with_messages_id.append(db_country.pk)
 
-    def _country_has_messages(self, country_code: str, retry: int = 0) -> bool:
-        # To avoid 429 Too Many Requests
-        resp = httpx.get(f"https://preparemessages.ifrc.org/api/organisations/{country_code}/instructions")
-        if resp.status_code == 429:
-            if retry > 5:
-                raise Exception("To many '429 Too Many Requests' from the server")
-            # Try again after few seconds
-            self.stdout.write("\t- Got '429 Too Many Requests' from server.. waiting for 10 seconds before continuing")
-            time.sleep(10)
-            return self._country_has_messages(country_code, retry=retry + 1)
+        return db_countries_with_messages_id
 
-        resp.raise_for_status()
-        return len(resp.json()["data"]) > 0
+    def show_db_state(self, prefix: str):
+        with_message_qs = Country.objects.filter(has_preparedness_messages=True)
+        without_message_qs = Country.objects.filter(has_preparedness_messages=False)
+        self.stdout.write(f"{prefix}Countries with has_preparedness_messages: {without_message_qs.count()}")
+        self.stdout.write(f"{prefix}Countries without has_preparedness_messages: {with_message_qs.count()}")
 
     def handle(self, *_, **options):
-        country_api_map = self._get_country_api_map()
-        country_api_map_len = len(country_api_map)
-
-        self.stdout.write(f"Country data to fetch {country_api_map_len}")
-        db_countries_with_messages_id = []
-        for idx, (db_country_id, what_now_country_code) in enumerate(country_api_map.items(), start=1):
-            self.stdout.write(f"({idx:3}/{country_api_map_len}) Fetching country data.. {what_now_country_code}")
-            if self._country_has_messages(what_now_country_code):
-                self.stdout.write("\t- Has messages")
-                db_countries_with_messages_id.append(db_country_id)
+        self.show_db_state("(Before) ")
+        db_countries_with_messages_id = self.get_countries_id_with_messages()
 
         self.stdout.write("Updating database")
+        self.stdout.write(f"Marking {len(db_countries_with_messages_id)} with has_preparedness_messages")
         # Flag as has messages
         Country.objects.filter(
             pk__in=db_countries_with_messages_id,
             has_preparedness_messages=False,
         ).update(has_preparedness_messages=True)
 
+        self.stdout.write("Marking other without has_preparedness_messages")
         # Flag as doesn't messages
         Country.objects.exclude(
             pk__in=db_countries_with_messages_id,
             has_preparedness_messages=True,
         ).update(has_preparedness_messages=False)
+
+        self.show_db_state("(After) ")

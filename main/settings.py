@@ -93,6 +93,8 @@ env = environ.Env(
     HCAPTCHA_SITEKEY=str,
     HCAPTCHA_SECRET=str,
     ALLOW_FAKE_DATA=(bool, False),
+    # ---
+    PREPAREMESSAGES_API_DOMAIN=(str, "https://api-preparemessages.ifrc.org"),  # NOTE: Without trailing slash
 )
 
 # SECURITY WARNING: keep the secret key used in production secret!
@@ -427,6 +429,8 @@ EMAIL_PORT = env('EMAIL_PORT')
 EMAIL_HOST_USER = env('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL')
+
+PREPAREMESSAGES_API_DOMAIN = env('PREPAREMESSAGES_API_DOMAIN')
 
 # TODO: Add logging for PROD
 if DEBUG:

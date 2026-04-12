@@ -98,6 +98,10 @@ class CountryCache:
     def fetch(self):
         self._countries = list(Country.objects.all())
         self._countries_iso3_map = {country.iso3.upper(): country for country in self._countries}
+        self._countries_id_map = {country.pk: country for country in self._countries}
+
+    def get_country_by_id(self, id: int) -> typing.Optional[Country]:
+        return self._countries_id_map.get(id)
 
     def get_country_by_iso3(self, iso3: str) -> typing.Optional[Country]:
         return self._countries_iso3_map.get(iso3.upper())
