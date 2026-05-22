@@ -239,10 +239,10 @@ app:
         resources:
           requests:
             cpu: "100m"
-            memory: "2Gi"
+            memory: "512Mi"
           limits:
             cpu: "4"
-            memory: "2Gi"
+            memory: "1Gi"
         rabbitmq:
           additionalConfig: |
             default_vhost = celery
