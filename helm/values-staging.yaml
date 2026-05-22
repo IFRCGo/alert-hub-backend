@@ -6,7 +6,7 @@ app:
   worker:
     queueDefaultResources:
       requests:
-        memory: 0.5Gi
+        memory: 512Mi
 
   env:
     UPTIME_WORKER_HEARTBEAT: ""  # Not tracking staging for now

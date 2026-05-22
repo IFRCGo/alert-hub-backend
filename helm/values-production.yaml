@@ -3,6 +3,14 @@
 app:
   environment: production
 
+  api:
+    replicaCount: 2
+    resources:
+      requests:
+        memory: 2Gi  # XXX: Large payload from PowerBI
+      limits:
+        memory: 2Gi
+
   worker:
     queueDefaultResources:
       requests:
