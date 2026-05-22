@@ -1,6 +1,6 @@
 dependencies:
-- name: toggle-django-helm
+- name: banjo-helm
   repository: oci://ghcr.io/toggle-corp
-  version: 0.2.3
-digest: sha256:b6d113e5b14a87e64d88ab7d5e6b82cb992cf3469b7b61b08c599326299f0ba4
-generated: "2025-11-14T16:10:39.814994182+05:45"
+  version: 0.3.0
+digest: sha256:f251ba6ae521e76644b02ba0525f01fe233497b5c5e9fda368ab46703fe13dcf
+generated: "2026-05-22T15:39:31.219151686+05:45"

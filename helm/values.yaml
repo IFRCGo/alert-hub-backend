@@ -52,6 +52,7 @@ app:
   worker:
     enabled: true
     beat:
+      enabled: true
       command: ["celery", "-A", "main", "beat", "-l", "INFO"]
       resources:
         requests:
@@ -65,8 +66,8 @@ app:
         cpu: "0.1"
         memory: 1Gi
       limits:
-        cpu: "1"
-        memory: 1Gi
+        cpu: "2"
+        memory: 1536Mi
     queueCommandPrefix:
       - "celery"
       - "-A"

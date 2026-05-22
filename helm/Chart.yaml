@@ -7,7 +7,7 @@ sources:
   - https://github.com/IFRCGo/alert-hub-backend
 
 dependencies:
-  - name: toggle-django-helm
+  - name: banjo-helm
     alias: app
-    version: 0.2.3
+    version: 0.3.0
     repository: oci://ghcr.io/toggle-corp

@@ -11,14 +11,6 @@ app:
       limits:
         memory: 2Gi
 
-  worker:
-    queueDefaultResources:
-      requests:
-        memory: 1Gi
-      limits:
-        cpu: "2"
-        memory: 1Gi
-
   env:
     UPTIME_WORKER_HEARTBEAT: "https://heartbeat.uptimerobot.com/m798706781-9c8ce80c58dd15e073bcd9f9adae1b0dd78dba47"
     DEFAULT_FROM_EMAIL: Alerthub <hazard.alerts@ifrc.org>
