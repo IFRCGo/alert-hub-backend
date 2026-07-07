@@ -6,11 +6,12 @@ app:
     name: local.example.com/ifrcgo/alert-hub
     tag: develop.xxxxxxxx
 
-  ingress:
-    className: nginx
-    host: alert-hub.example.com
-    tls:
-      secretName: alert-hub-tls
+  api:
+    ingress:
+      className: nginx
+      host: alert-hub.example.com
+      tls:
+        secretName: alert-hub-tls
 
   env:
     # App Domain

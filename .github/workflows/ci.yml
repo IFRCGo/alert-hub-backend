@@ -130,7 +130,7 @@ jobs:
         env:
           DOCKER_IMAGE: ${{ steps.prep.outputs.tagged_image }}
         run: |
-          timeout 60s docker compose run --rm web bash -c './manage.py wait_for_resources --all' || {
+          timeout 60s docker compose run --rm web bash -c './manage.py wait_for_resources --db --cache --celery-broker' || {
             echo 'Failed to wait for resources'
             exit 1
           }

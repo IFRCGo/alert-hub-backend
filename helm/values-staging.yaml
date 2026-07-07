@@ -4,9 +4,13 @@ app:
   environment: staging
 
   worker:
-    queueDefaultResources:
-      requests:
-        memory: 512Mi
+    queueDefaults:
+      resources:
+        requests:
+          memory: 512Mi
+    queues:
+      feeds:
+        replicaCount: 2
 
   env:
     UPTIME_WORKER_HEARTBEAT: ""  # Not tracking staging for now

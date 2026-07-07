@@ -122,6 +122,11 @@ app.config_from_object('django.conf:settings', namespace='CELERY')
 # Load task modules from all registered Django apps.
 app.autodiscover_tasks()
 
+# banjo-utils worker heartbeat writer (read by banjo-celery-probe for k8s liveness).
+from banjo_utils.celery_health.worker import setup_worker_heartbeat  # noqa: E402
+
+setup_worker_heartbeat(app)
+
 app.conf.result_expires = settings.CELERY_TASK_EXPIRE
 app.conf.task_default_queue = CeleryQueue.default.name
 
