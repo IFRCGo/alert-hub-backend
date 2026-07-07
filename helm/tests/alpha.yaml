@@ -1,0 +1,4 @@
+app:
+  fullnameOverride: alert-hub-alpha
+  ingress:
+    host: alpha.alert-hub.example.com

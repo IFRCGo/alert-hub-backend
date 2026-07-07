@@ -1,0 +1,557 @@
+---
+# Source: ifrcgo-alert-hub-helm/charts/app/templates/config/secret.yaml
+kind: Secret
+apiVersion: v1
+metadata:
+  name: alert-hub-alpha-secret
+  labels:
+    app: alert-hub-alpha
+    environment: ALPHA
+    release: release-name
+type: Opaque
+stringData:
+  # secrets
+  DB_HOST: "dummy"
+  DB_NAME: "dummy"
+  DB_PASSWORD: "dummy"
+  DB_PORT: "5432"
+  DB_USER: "dummy"
+  DJANGO_SECRET_KEY: "dummy-secret-key"
+  EMAIL_HOST: "smtp.example.com"
+  EMAIL_HOST_PASSWORD: "dummy"
+  EMAIL_HOST_USER: "dummy"
+  EMAIL_PORT: "443"
+  HCAPTCHA_SECRET: "0x0000000000000000000000000000000000000000"
+  HCAPTCHA_SITEKEY: "10000000-ffff-ffff-ffff-000000000001"
+  SENTRY_DSN: "https://dummy@sentry.example.com/1"
+
+---
+# Source: ifrcgo-alert-hub-helm/charts/app/templates/config/configmap.yaml
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: alert-hub-alpha-env-name
+  labels:
+    app: alert-hub-alpha
+    environment: ALPHA
+    release: release-name
+data:
+  # Configs
+  APP_DOMAIN: "alert-hub.example.com"
+  APP_ENVIRONMENT: "ALPHA"
+  APP_FRONTEND_HOST: "alert-hub.example.com"
+  APP_HTTP_PROTOCOL: "https"
+  APP_RELEASE: "develop.xxxxxxxx"
+  AZURE_STORAGE_ACCOUNT_NAME: ""
+  AZURE_STORAGE_MANAGED_IDENTITY: "true"
+  AZURE_STORAGE_MEDIA_CONTAINER: ""
+  AZURE_STORAGE_STATIC_CONTAINER: ""
+  CORS_ALLOWED_ORIGINS: "https://alert-hub.example.com"
+  CORS_ALLOWED_ORIGIN_REGEXES: ""
+  CSRF_COOKIE_DOMAIN: ".alert-hub.example.com"
+  DEFAULT_FROM_EMAIL: "Alerthub <noreply@example.com>"
+  DJANGO_ALLOWED_HOSTS: "*"
+  DJANGO_DEBUG: "false"
+  DJANGO_TIME_ZONE: "UTC"
+  EMAIL_USE_TLS: "true"
+  SENTRY_PROFILE_SAMPLE_RATE: "0.8"
+  SENTRY_TRACES_SAMPLE_RATE: "0.8"
+  SESSION_COOKIE_DOMAIN: ".alert-hub.example.com"
+  UPTIME_WORKER_HEARTBEAT: ""
+  USE_AZURE_STORAGE: "false"
+
+---
+# Source: ifrcgo-alert-hub-helm/charts/app/templates/api/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: alert-hub-alpha-api
+  labels:
+    app: alert-hub-alpha
+    component: api
+    environment: ALPHA
+    release: release-name
+spec:
+  type: ClusterIP
+  selector:
+    app: alert-hub-alpha
+    component: api
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+
+---
+# Source: ifrcgo-alert-hub-helm/charts/app/templates/api/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alert-hub-alpha-api
+  annotations:
+    reloader.stakater.com/auto: "true"
+  labels:
+    app: alert-hub-alpha
+    component: api
+    environment: ALPHA
+    release: release-name
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: alert-hub-alpha
+      component: api
+  template:
+    metadata:
+      annotations:
+        checksum/secret: b598e08590a21ddb031cf82db2103027311910cfff0eabcdd8fb8806e868576c
+        checksum/configmap: 8399dea1f22cbd0b66c326f4b9b0dae07396067f9b454ba7c742564c2301a165
+      labels:
+        app: alert-hub-alpha
+        component: api
+    spec:
+      containers:
+        - name: api
+          image: "local.example.com/ifrcgo/alert-hub:develop.xxxxxxxx"
+          imagePullPolicy: IfNotPresent
+          command:
+            - /code/deploy/run_web.sh
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+          # TODO: livenessProbe
+          resources:
+            limits:
+              cpu: "2"
+              memory: 1Gi
+            requests:
+              cpu: "0.2"
+              memory: 1Gi
+          envFrom:
+            - secretRef:
+                name: alert-hub-alpha-secret
+            - configMapRef:
+                name: alert-hub-alpha-env-name
+          env:
+            - name: DJANGO_APP_TYPE
+              value: "web"
+            - name: CELERY_RABBITMQ_CONNECTION_STRING
+              valueFrom:
+                secretKeyRef:
+                  key: connection_string
+                  name: alert-hub-rabbitmq-default-user
+            - name: CELERY_RABBITMQ_VHOST
+              value: celery
+            - name: CELERY_RESULT_BACKEND
+              value: redis://alert-hub-dragonfly:6379/0
+            - name: CACHE_REDIS_URL
+              value: redis://alert-hub-dragonfly:6379/1
+
+---
+# Source: ifrcgo-alert-hub-helm/charts/app/templates/worker-beat/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alert-hub-alpha-worker-beat
+  annotations:
+    reloader.stakater.com/auto: "true"
+  labels:
+    app: alert-hub-alpha
+    component: worker-beat
+    environment: ALPHA
+    release: release-name
+spec:
+  replicas: 1  # This should only 1
+  selector:
+    matchLabels:
+      app: alert-hub-alpha
+      component: worker-beat
+  template:
+    metadata:
+      annotations:
+        checksum/secret: b598e08590a21ddb031cf82db2103027311910cfff0eabcdd8fb8806e868576c
+        checksum/configmap: 8399dea1f22cbd0b66c326f4b9b0dae07396067f9b454ba7c742564c2301a165
+      labels:
+        app: alert-hub-alpha
+        component: worker-beat
+    spec:
+      containers:
+        - name: worker-beat
+          image: "local.example.com/ifrcgo/alert-hub:develop.xxxxxxxx"
+          imagePullPolicy: IfNotPresent
+          command:
+            - celery
+            - -A
+            - main
+            - beat
+            - -l
+            - INFO
+          # TODO: livenessProbe
+          resources:
+            limits:
+              cpu: "1"
+              memory: 512Mi
+            requests:
+              cpu: "0.1"
+              memory: 256Mi
+          envFrom:
+            - secretRef:
+                name: alert-hub-alpha-secret
+            - configMapRef:
+                name: alert-hub-alpha-env-name
+          env:
+            - name: DJANGO_APP_TYPE
+              value: "worker"
+            - name: CELERY_RABBITMQ_CONNECTION_STRING
+              valueFrom:
+                secretKeyRef:
+                  key: connection_string
+                  name: alert-hub-rabbitmq-default-user
+            - name: CELERY_RABBITMQ_VHOST
+              value: celery
+            - name: CELERY_RESULT_BACKEND
+              value: redis://alert-hub-dragonfly:6379/0
+            - name: CACHE_REDIS_URL
+              value: redis://alert-hub-dragonfly:6379/1
+
+---
+# Source: ifrcgo-alert-hub-helm/charts/app/templates/worker/deployment.yaml
+# Queue: default
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alert-hub-alpha-worker-default
+  annotations:
+    reloader.stakater.com/auto: "true"
+  labels:
+    app: alert-hub-alpha
+    component: worker
+    queue: default
+    environment: ALPHA
+    release: release-name
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: alert-hub-alpha
+      component: worker
+      queue: default
+  template:
+    metadata:
+      annotations:
+        checksum/secret: b598e08590a21ddb031cf82db2103027311910cfff0eabcdd8fb8806e868576c
+        checksum/configmap: 8399dea1f22cbd0b66c326f4b9b0dae07396067f9b454ba7c742564c2301a165
+      labels:
+        app: alert-hub-alpha
+        component: worker
+        queue: default
+    spec:
+      containers:
+        - name: worker
+          command:
+            - celery
+            - -A
+            - main
+            - worker
+            - -l
+            - INFO
+            - -Q
+            - default
+            - --concurrency
+            - "4"
+            - --max-tasks-per-child
+            - "10"
+          image: "local.example.com/ifrcgo/alert-hub:develop.xxxxxxxx"
+          imagePullPolicy: IfNotPresent
+          # TODO: livenessProbe
+          resources:
+            limits:
+              cpu: "2"
+              memory: 1536Mi
+            requests:
+              cpu: "0.1"
+              memory: 1Gi
+          envFrom:
+            - secretRef:
+                name: alert-hub-alpha-secret
+            - configMapRef:
+                name: alert-hub-alpha-env-name
+          env:
+            - name: DJANGO_APP_TYPE
+              value: "worker"
+            - name: CELERY_RABBITMQ_CONNECTION_STRING
+              valueFrom:
+                secretKeyRef:
+                  key: connection_string
+                  name: alert-hub-rabbitmq-default-user
+            - name: CELERY_RABBITMQ_VHOST
+              value: celery
+            - name: CELERY_RESULT_BACKEND
+              value: redis://alert-hub-dragonfly:6379/0
+            - name: CACHE_REDIS_URL
+              value: redis://alert-hub-dragonfly:6379/1
+---
+# Source: ifrcgo-alert-hub-helm/charts/app/templates/worker/deployment.yaml
+# Queue: feeds
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alert-hub-alpha-worker-feeds
+  annotations:
+    reloader.stakater.com/auto: "true"
+  labels:
+    app: alert-hub-alpha
+    component: worker
+    queue: feeds
+    environment: ALPHA
+    release: release-name
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: alert-hub-alpha
+      component: worker
+      queue: feeds
+  template:
+    metadata:
+      annotations:
+        checksum/secret: b598e08590a21ddb031cf82db2103027311910cfff0eabcdd8fb8806e868576c
+        checksum/configmap: 8399dea1f22cbd0b66c326f4b9b0dae07396067f9b454ba7c742564c2301a165
+      labels:
+        app: alert-hub-alpha
+        component: worker
+        queue: feeds
+    spec:
+      containers:
+        - name: worker
+          command:
+            - celery
+            - -A
+            - main
+            - worker
+            - -l
+            - INFO
+            - -Q
+            - feeds
+            - --concurrency
+            - "4"
+            - --max-tasks-per-child
+            - "10"
+            - --soft-time-limit
+            - "300"
+            - --time-limit
+            - "500"
+          image: "local.example.com/ifrcgo/alert-hub:develop.xxxxxxxx"
+          imagePullPolicy: IfNotPresent
+          # TODO: livenessProbe
+          resources:
+            limits:
+              cpu: "2"
+              memory: 1536Mi
+            requests:
+              cpu: "0.1"
+              memory: 1Gi
+          envFrom:
+            - secretRef:
+                name: alert-hub-alpha-secret
+            - configMapRef:
+                name: alert-hub-alpha-env-name
+          env:
+            - name: DJANGO_APP_TYPE
+              value: "worker"
+            - name: CELERY_RABBITMQ_CONNECTION_STRING
+              valueFrom:
+                secretKeyRef:
+                  key: connection_string
+                  name: alert-hub-rabbitmq-default-user
+            - name: CELERY_RABBITMQ_VHOST
+              value: celery
+            - name: CELERY_RESULT_BACKEND
+              value: redis://alert-hub-dragonfly:6379/0
+            - name: CACHE_REDIS_URL
+              value: redis://alert-hub-dragonfly:6379/1
+
+---
+# Source: ifrcgo-alert-hub-helm/charts/app/templates/argo-hooks/hook-job.yaml
+# Hook: collect-static
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: alert-hub-alpha-collect-static
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+spec:
+  template:
+    metadata:
+      annotations:
+        checksum/secret: b598e08590a21ddb031cf82db2103027311910cfff0eabcdd8fb8806e868576c
+        checksum/configmap: 8399dea1f22cbd0b66c326f4b9b0dae07396067f9b454ba7c742564c2301a165
+      labels:
+        app: alert-hub-alpha
+        component: argo-hooks
+    spec:
+      restartPolicy: "Never"
+      containers:
+        - name: collect-static
+          image: "local.example.com/ifrcgo/alert-hub:develop.xxxxxxxx"
+          imagePullPolicy: IfNotPresent
+          command: 
+            - ./manage.py
+            - collectstatic
+            - --noinput
+          resources:
+            limits:
+              cpu: "4"
+              memory: 2Gi
+            requests:
+              cpu: "0.1"
+              memory: 1Gi
+          envFrom:
+            - secretRef:
+                name: alert-hub-alpha-secret
+            - configMapRef:
+                name: alert-hub-alpha-env-name
+          env:
+            - name: DJANGO_APP_TYPE
+              value: "hook"
+            - name: CELERY_RABBITMQ_CONNECTION_STRING
+              valueFrom:
+                secretKeyRef:
+                  key: connection_string
+                  name: alert-hub-rabbitmq-default-user
+            - name: CELERY_RABBITMQ_VHOST
+              value: celery
+            - name: CELERY_RESULT_BACKEND
+              value: redis://alert-hub-dragonfly:6379/0
+            - name: CACHE_REDIS_URL
+              value: redis://alert-hub-dragonfly:6379/1
+---
+# Source: ifrcgo-alert-hub-helm/charts/app/templates/argo-hooks/hook-job.yaml
+# Hook: db-migrate
+apiVersion: batch/v1
+kind: Job
+metadata:
+  generateName: alert-hub-alpha-db-migrate-
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+spec:
+  template:
+    metadata:
+      annotations:
+        checksum/secret: b598e08590a21ddb031cf82db2103027311910cfff0eabcdd8fb8806e868576c
+        checksum/configmap: 8399dea1f22cbd0b66c326f4b9b0dae07396067f9b454ba7c742564c2301a165
+      labels:
+        app: alert-hub-alpha
+        component: argo-hooks
+    spec:
+      restartPolicy: "Never"
+      containers:
+        - name: db-migrate
+          image: "local.example.com/ifrcgo/alert-hub:develop.xxxxxxxx"
+          imagePullPolicy: IfNotPresent
+          command: 
+            - /bin/bash
+            - -c
+          args: 
+            - ./manage.py wait_for_resources --db && ./manage.py migrate
+          resources:
+            limits:
+              cpu: "4"
+              memory: 2Gi
+            requests:
+              cpu: "0.1"
+              memory: 1Gi
+          envFrom:
+            - secretRef:
+                name: alert-hub-alpha-secret
+            - configMapRef:
+                name: alert-hub-alpha-env-name
+          env:
+            - name: DJANGO_APP_TYPE
+              value: "hook"
+            - name: CELERY_RABBITMQ_CONNECTION_STRING
+              valueFrom:
+                secretKeyRef:
+                  key: connection_string
+                  name: alert-hub-rabbitmq-default-user
+            - name: CELERY_RABBITMQ_VHOST
+              value: celery
+            - name: CELERY_RESULT_BACKEND
+              value: redis://alert-hub-dragonfly:6379/0
+            - name: CACHE_REDIS_URL
+              value: redis://alert-hub-dragonfly:6379/1
+
+---
+# Source: ifrcgo-alert-hub-helm/charts/app/templates/api/ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: alert-hub-alpha-api
+  labels:
+    app: alert-hub-alpha
+    component: api
+    environment: ALPHA
+    release: release-name
+spec:
+  ingressClassName: "nginx"
+  rules:
+    - host: "alpha.alert-hub.example.com"
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: alert-hub-alpha-api
+                port:
+                  number: 80
+
+---
+# Source: ifrcgo-alert-hub-helm/charts/app/templates/extraManifests.yaml
+# Manifest: dragonflydb-cluster
+apiVersion: dragonflydb.io/v1alpha1
+kind: Dragonfly
+metadata:
+  labels:
+    app.kubernetes.io/name: dragonfly
+  name: alert-hub-dragonfly
+spec:
+  args:
+  - --dbfilename=mainSnapshot
+  replicas: 1
+  resources:
+    limits:
+      cpu: "1"
+      memory: 750Mi
+    requests:
+      cpu: "0.1"
+      memory: 512Mi
+  snapshot:
+    cron: '*/5 * * * *'
+    persistentVolumeClaimSpec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 1Gi
+---
+# Source: ifrcgo-alert-hub-helm/charts/app/templates/extraManifests.yaml
+# Manifest: rabbitmq-cluster
+apiVersion: rabbitmq.com/v1beta1
+kind: RabbitmqCluster
+metadata:
+  name: alert-hub-rabbitmq
+spec:
+  persistence:
+    storage: 2Gi
+  rabbitmq:
+    additionalConfig: |
+      default_vhost = celery
+  replicas: 1
+  resources:
+    limits:
+      cpu: "4"
+      memory: 1Gi
+    requests:
+      cpu: 100m
+      memory: 512Mi

@@ -1,0 +1,4 @@
+app:
+  fullnameOverride: alert-hub-production
+  ingress:
+    host: production.alert-hub.example.com
