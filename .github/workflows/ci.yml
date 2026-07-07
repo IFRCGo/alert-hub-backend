@@ -182,6 +182,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@main
+        with:
+          # fugit submodule provides helm/update-snapshots.sh (snapshot testing)
+          submodules: recursive
 
       - name: Install Helm
         uses: azure/setup-helm@v4
@@ -196,3 +199,6 @@ jobs:
 
       - name: 🐳 Helm template
         run: helm template ./helm --values ./helm/values-test.yaml
+
+      - name: 🐳 Helm snapshot diff check
+        run: ./helm/update-snapshots.sh --check-diff-only

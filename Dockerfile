@@ -20,12 +20,14 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     # FIXME(thenav56): Check and clean up not required packages from here
     && apt-get install -y --no-install-recommends \
         gcc libc-dev gdal-bin libproj-dev \
+        # Required by uv to fetch the banjo-utils git dependency
+        git \
         # Django translation
         gettext \
     && uv lock --locked --offline \
         && uv sync --frozen --no-install-project --all-groups \
     # Clean-up
-    && apt-get remove -y build-essential gcc libc-dev libgdal-dev libproj-dev \
+    && apt-get remove -y build-essential gcc libc-dev libgdal-dev libproj-dev git \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/*
 
