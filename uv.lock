@@ -51,7 +51,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "azure-identity" },
-    { name = "banjo-utils", git = "https://github.com/toggle-corp/banjo-utils.git?branch=feature%2Fhealth-endpoints" },
+    { name = "banjo-utils", git = "https://github.com/toggle-corp/banjo-utils.git?tag=v0.2.0" },
     { name = "celery", specifier = "~=5.3" },
     { name = "colorlog" },
     { name = "django", specifier = ">=4.2,<4.3" },
@@ -191,8 +191,8 @@ wheels = [
 
 [[package]]
 name = "banjo-utils"
-version = "0.1.0"
-source = { git = "https://github.com/toggle-corp/banjo-utils.git?branch=feature%2Fhealth-endpoints#395c8cab67a3f8d2fe3ee072c395240c911e0cab" }
+version = "0.2.0"
+source = { git = "https://github.com/toggle-corp/banjo-utils.git?tag=v0.2.0#5fc5a5d66c1fa0730863b86b17b14e92b34c2714" }
 dependencies = [
     { name = "django" },
     { name = "httpx" },
