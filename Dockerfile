@@ -20,12 +20,20 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     # FIXME(thenav56): Check and clean up not required packages from here
     && apt-get install -y --no-install-recommends \
         gcc libc-dev gdal-bin libproj-dev \
+        # PCRE headers so the pip-built uWSGI gets internal routing support
+        # (needed for the `route = ... donotlog:` probe-log suppression in uwsgi.ini)
+        libpcre3-dev \
+        # Required by uv to fetch the banjo-utils git dependency
+        git \
         # Django translation
         gettext \
     && uv lock --locked --offline \
+    # Evict any cached uWSGI wheel so it recompiles against libpcre3-dev now that
+    # the headers are present (a wheel cached before PCRE existed lacks routing support).
+    && uv cache clean uwsgi \
         && uv sync --frozen --no-install-project --all-groups \
     # Clean-up
-    && apt-get remove -y build-essential gcc libc-dev libgdal-dev libproj-dev \
+    && apt-get remove -y build-essential gcc libc-dev libgdal-dev libproj-dev git \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/*
 

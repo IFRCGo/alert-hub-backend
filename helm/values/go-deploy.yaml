@@ -4,11 +4,12 @@ app:
   podLabels:
     azure.workload.identity/use: 'true'
 
-  ingress:
-    enabled: true
-    className: nginx
-    tls:
+  api:
+    ingress:
       enabled: true
+      className: nginx
+      tls:
+        enabled: true
 
   env:
     DJANGO_DEBUG: "false"

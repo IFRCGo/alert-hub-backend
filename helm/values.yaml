@@ -1,6 +1,6 @@
 app:
   environment: PROD
-  nameOverride: ifrcgo-alert-hub-helm
+  nameOverride: alerthub
 
   appTypeEnvName: "DJANGO_APP_TYPE"
 
@@ -10,37 +10,21 @@ app:
     tag: SET-BY-CICD-TAG
     imagePullPolicy: IfNotPresent
 
-  ingress:
-    enabled: true
-    className:
-    host:
-
-  redis:
-    enabled: false
-
-  postgresql:
-    enabled: false
-    fullnameOverride: ""
-    architecture: standalone
-    auth:
-      postgresPassword: ""
-      username: ""
-      password: ""
-      database: ""
-    primary:
-      persistence:
-        enabled: true
-        storageClass: ""
-        size: 8Gi
-
-  minio:
-    enabled: false
+  # NOTE: DB/cache/broker are supplied externally (extraManifests + user secrets);
+  # the old bundled postgresql/redis/minio subcharts are gone in banjo-helm 0.4.
 
   api:
     enabled: true
-    replicaCount: 1
     containerPort: 80
     command: ["/code/deploy/run_web.sh"]
+    ingress:
+      enabled: true
+      className:
+      host:
+    probes:
+      # banjo-utils HealthProbeMiddleware serves /healthz/live/ and /healthz/ready/.
+      # Chart defaults (liveness /healthz/live/, readiness+startup /healthz/ready/) apply.
+      enabled: true
     resources:
       requests:
         cpu: "0.2"
@@ -51,35 +35,44 @@ app:
 
   worker:
     enabled: true
-    beat:
-      enabled: true
-      command: ["celery", "-A", "main", "beat", "-l", "INFO"]
+    queueDefaults:
+      commandPrefix:
+        - "celery"
+        - "-A"
+        - "main"
+        - "worker"
+        - "-l"
+        - "INFO"
+      # banjo-celery-probe heartbeat wiring (writer via setup_worker_heartbeat,
+      # reader via banjo-celery-probe) on a RAM emptyDir.
+      extraEnv:
+        BANJO_CELERY_HEARTBEAT_FILE: /var/run/celery/worker_heartbeat
+      volumes:
+        celery-heartbeat: {emptyDir: {medium: Memory, sizeLimit: 1Mi}}
+      volumeMounts:
+        celery-heartbeat: {mountPath: /var/run/celery}
+      probes:
+        enabled: true
+        liveness:
+          exec: {command: [banjo-celery-probe]}
+          periodSeconds: 20
+          timeoutSeconds: 5
+          failureThreshold: 6
+        startup:
+          exec: {command: [banjo-celery-probe]}
+          periodSeconds: 5
+          failureThreshold: 30
       resources:
         requests:
           cpu: "0.1"
-          memory: 256Mi
+          memory: 1Gi
         limits:
-          cpu: "1"
-          memory: 512Mi
-    queueDefaultResources:
-      requests:
-        cpu: "0.1"
-        memory: 1Gi
-      limits:
-        cpu: "2"
-        memory: 1536Mi
-    queueCommandPrefix:
-      - "celery"
-      - "-A"
-      - "main"
-      - "worker"
-      - "-l"
-      - "INFO"
+          cpu: "2"
+          memory: 1536Mi
     queues:
       # NOTE: Make sure keys are lowercase
       default:
         enabled: true
-        replicaCount: 1
         celeryArgs:
           - "-Q"
           - "default"
@@ -89,7 +82,6 @@ app:
           - "10"
       feeds:
         enabled: true
-        replicaCount: 2
         celeryArgs:
           - "-Q"
           - "feeds"
@@ -104,29 +96,60 @@ app:
         resources:
           limits:
             cpu: "2"
+    addons:
+      beat:
+        enabled: true
+        # HeartbeatPersistentScheduler keeps celery's built-in PersistentScheduler
+        # (schedule stays code-defined in main.celery) while touching the beat
+        # heartbeat file each tick for banjo-celery-probe liveness.
+        command:
+          - "celery"
+          - "-A"
+          - "main"
+          - "beat"
+          - "-l"
+          - "INFO"
+          - "--scheduler=banjo_utils.celery_health.persistent.HeartbeatPersistentScheduler"
+        strategy: {type: Recreate}
+        extraEnv:
+          BANJO_CELERY_HEARTBEAT_FILE: /var/run/celery/beat_heartbeat
+        volumes:
+          celery-heartbeat: {emptyDir: {medium: Memory, sizeLimit: 1Mi}}
+        volumeMounts:
+          celery-heartbeat: {mountPath: /var/run/celery}
+        probes:
+          enabled: true
+          liveness:
+            # --max-age must exceed PersistentScheduler's max_interval (300s)
+            exec: {command: [banjo-celery-probe, --max-age, "360"]}
+            periodSeconds: 60
+            timeoutSeconds: 5
+            failureThreshold: 3
+        resources:
+          requests:
+            cpu: "0.1"
+            memory: 256Mi
+          limits:
+            cpu: "1"
+            memory: 512Mi
 
-  argoHook:
+  hooks:
     enabled: true
-    resources:
-      requests:
-        cpu: "0.1"
-        memory: 1Gi
-      limits:
-        cpu: "4"
-        memory: 2Gi
-    hooks:
-      # NOTE: Make sure keys are lowercase
-      db-migrate:
-        enabled: true
-        hook: PostSync
-        preserveHistory: true
-        command: ["/bin/bash", "-c"]
-        args:
-          - "./manage.py wait_for_resources --db && ./manage.py migrate"
-      collect-static:
-        enabled: true
-        hook: PostSync
-        command: ["./manage.py", "collectstatic", "--noinput"]
+    defaults:
+      resources:
+        requests:
+          cpu: "0.1"
+          memory: 1Gi
+        limits:
+          cpu: "4"
+          memory: 2Gi
+    jobs:
+      # NOTE: Make sure keys are lowercase.
+      # db-migrate and collect-static inherit the chart defaults verbatim
+      # (Sync hook @ wave 20, `manage.py migrate` / `collectstatic --noinput`).
+      # Only wait-for-resources overrides the default (bare) command.
+      wait-for-resources:
+        command: ["./manage.py", "wait_for_resources", "--db", "--cache", "--celery-broker"]
 
   cronjobs:
     enabled: false
@@ -187,66 +210,5 @@ app:
     # - Cache
     # CACHE_REDIS_URL: Defined using extraEnvVars
 
-  extraEnvVars:
-    # Checkout the resources defined by extraManifests
-    - name: CELERY_RABBITMQ_CONNECTION_STRING
-      valueFrom:
-        secretKeyRef:
-          name: alert-hub-rabbitmq-default-user
-          key: connection_string
-    - name: CELERY_RABBITMQ_VHOST
-      value: celery
-    - name: CELERY_RESULT_BACKEND
-      value: redis://alert-hub-dragonfly:6379/0
-    - name: CACHE_REDIS_URL
-      value: redis://alert-hub-dragonfly:6379/1
-
-  extraManifests:
-    dragonflydb-cluster:
-      apiVersion: dragonflydb.io/v1alpha1
-      kind: Dragonfly
-      metadata:
-        labels:
-          app.kubernetes.io/name: dragonfly
-        name: alert-hub-dragonfly  # NOTE: this will be the service name
-      spec:
-        replicas: 1
-        args: ["--dbfilename=mainSnapshot"]  # NOTE: Only maintains 1 last snapshot
-        resources:
-          requests:
-            cpu: "0.1"
-            memory: 512Mi
-          limits:
-            cpu: "1"
-            memory: 750Mi
-        snapshot:
-          cron: "*/5 * * * *"
-          persistentVolumeClaimSpec:
-            # storageClassName:
-            accessModes:
-            - ReadWriteOnce
-            resources:
-              requests:
-                storage: 1Gi
-
-    # RabbitMQ https://www.rabbitmq.com/kubernetes/operator/using-operator
-    rabbitmq-cluster:
-      apiVersion: rabbitmq.com/v1beta1
-      kind: RabbitmqCluster
-      metadata:
-        name: alert-hub-rabbitmq  # NOTE: This is used secret name
-      spec:
-        replicas: 1  # Scaling down is not supported
-        resources:
-          requests:
-            cpu: "100m"
-            memory: "512Mi"
-          limits:
-            cpu: "4"
-            memory: "1Gi"
-        rabbitmq:
-          additionalConfig: |
-            default_vhost = celery
-        persistence:
-         # storageClassName:
-         storage: "2Gi"
+  # NOTE: Operator-managed infra (Dragonfly cache, RabbitMQ broker) and the
+  # matching extraEnvVars/extraManifests live in ./values/operators.yaml.

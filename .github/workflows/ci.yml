@@ -1,198 +1,22 @@
-name: Python check
+name: CI
 
 on:
-  workflow_call:
-    inputs:
-      push_docker_image:
-        type: string  # true or false
-        default: "false"
-    outputs:
-      docker_image_name:
-        description: "Only docker image name"
-        value: ${{ jobs.test.outputs.docker_image_name }}
-      docker_image_tag:
-        description: "Only docker image tag"
-        value: ${{ jobs.test.outputs.docker_image_tag }}
-      docker_image:
-        description: "docker image with tag"
-        value: ${{ jobs.test.outputs.docker_image }}
   pull_request:
-  # NOTE: For other, they should be run through helm github action ./helm-publish.yml
-
-permissions:
-  contents: read
-  packages: write
-
-env:
-  COMPOSE_FILE: docker-compose.yml:./.github/docker-compose.yml
-  DJANGO_SECRET_KEY: INSECURE_DJANGO_SECRET_KEY
+  # NOTE: For push/publish, see ./helm-publish.yml
 
 jobs:
-  pre_commit_checks:
-    name: 🚴 Pre-Commit checks 🚴
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@main
-      - uses: astral-sh/setup-uv@v5
-        with:
-          enable-cache: true
-
-      - uses: awalsh128/cache-apt-pkgs-action@latest
-        with:
-          packages: gdal-bin libgdal-dev
-
-      - name: Setup uv python environment
-        run: uv venv
-
-      - name: uv lock check
-        run: uv lock --locked --offline
-
-      - name: uv sync
-        run: uv sync --all-extras
-
-      - uses: pre-commit/action@main
-
-  test:
-    name: 🚴 Test 🚴
-    runs-on: ubuntu-latest
-    needs: pre_commit_checks
-
-    outputs:
-      docker_image_name: ${{ steps.prep.outputs.tagged_image_name }}
-      docker_image_tag: ${{ steps.prep.outputs.tag }}
-      docker_image: ${{ steps.prep.outputs.tagged_image }}
-
-    steps:
-      - uses: actions/checkout@main
-
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v3
-        if: ${{ inputs.push_docker_image }}
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: 🐳 Prepare Docker
-        id: prep
-        env:
-          IMAGE_NAME: ghcr.io/${{ github.repository }}
-        run: |
-          BRANCH_NAME=$(echo $GITHUB_REF_NAME | sed 's|:|-|' | tr '[:upper:]' '[:lower:]' | sed 's/_/-/g' | cut -c1-100 | sed 's/-*$//')
-
-          # NOTE: `c` is to avoid error by helm if GITHUB_SHA[:7] has only numbers
-          GIT_HASH="c$(echo $GITHUB_SHA | head -c7)"
-
-          # XXX: Check if there is a slash in the BRANCH_NAME eg: project/add-docker
-          if [[ "$BRANCH_NAME" == *"/"* ]]; then
-              # XXX: Change the docker image package to -dev
-              IMAGE_NAME="$IMAGE_NAME-dev"
-              TAG="$(echo "$BRANCH_NAME" | sed 's|/|-|g').$(echo $GIT_HASH)"
-          else
-              TAG="$BRANCH_NAME.$(echo $GIT_HASH)"
-          fi
-
-          IMAGE_NAME=$(echo $IMAGE_NAME | tr '[:upper:]' '[:lower:]')
-          echo "tagged_image_name=${IMAGE_NAME}" >> $GITHUB_OUTPUT
-          echo "tag=${TAG}" >> $GITHUB_OUTPUT
-          echo "tagged_image=${IMAGE_NAME}:${TAG}" >> $GITHUB_OUTPUT
-          echo "::notice::Tagged docker image: ${IMAGE_NAME}:${TAG}"
-
-      - name: 🐳 Set up Docker Buildx
-        id: buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: 🐳 Cache Docker layers
-        uses: actions/cache@v4
-        with:
-          path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ github.ref }}
-          restore-keys: |
-            ${{ runner.os }}-buildx-refs/develop
-            ${{ runner.os }}-buildx-
-
-      - name: 🐳 Build image
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          builder: ${{ steps.buildx.outputs.name }}
-          file: Dockerfile
-          push: false
-          load: true
-          provenance: false  # XXX: Without this we have untagged images in ghcr.io
-          tags: ${{ steps.prep.outputs.tagged_image }}
-          cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,dest=/tmp/.buildx-cache-new
-
-      - name: Start app resources
-        timeout-minutes: 1
-        env:
-          DOCKER_IMAGE: ${{ steps.prep.outputs.tagged_image }}
-        run: |
-          timeout 60s docker compose run --rm web bash -c './manage.py wait_for_resources --all' || {
-            echo 'Failed to wait for resources'
-            exit 1
-          }
-
-      - name: 🕮 Validate if there are no pending django migrations.
-        env:
-          DOCKER_IMAGE_BACKEND: ${{ steps.prep.outputs.tagged_image }}
-        run: |
-          docker compose run --rm web bash -c './manage.py makemigrations --check --dry-run' || {
-            echo 'There are some changes to be reflected in the migration. Make sure to run makemigrations';
-            exit 1;
-          }
-
-      - name: 🕮 Validate latest graphql schema.
-        env:
-          DOCKER_IMAGE_BACKEND: ${{ steps.prep.outputs.tagged_image }}
-        run: |
-          docker compose run --rm web bash -c './manage.py graphql_schema --out /ci-share/schema-latest.graphql' &&
-          cmp --silent schema.graphql ./ci-share/schema-latest.graphql || {
-            echo 'The schema.graphql is not up to date with the latest changes. Please update and push latest';
-            diff schema.graphql ./ci-share/schema-latest.graphql;
-            exit 1;
-          }
-
-      - name: 🤞 Run Test 🧪 & Publish coverage to code climate
-        env:
-          DOCKER_IMAGE_BACKEND: ${{ steps.prep.outputs.tagged_image }}
-        run: docker compose run --rm web /code/scripts/run_tests.sh
-
-      - name: 🐳 Docker push
-        if: ${{ inputs.push_docker_image }}
-        uses: docker/build-push-action@v6
-        with:
-          tags: ${{ steps.prep.outputs.tagged_image }}
-          push: true
-
-        # Temp fix
-        # https://github.com/docker/build-push-action/blob/master/docs/advanced/cache.md#github-cache
-        # https://github.com/docker/build-push-action/issues/252
-        # https://github.com/moby/buildkit/issues/1896
-      - name: 🐳 Move docker cache (🧙 Hack fix)
-        run: |
-          rm -rf /tmp/.buildx-cache
-          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
-
-  validate_helm:
-    name: 🚴 Validate Helm 🚴
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@main
-
-      - name: Install Helm
-        uses: azure/setup-helm@v4
-
-      - name: 🐳 Helm dependency
-        run: |
-          yq --indent 0 '.dependencies | map(select(.repository | test("^oci:") | not)) | map(["helm", "repo", "add", .name, .repository] | join(" ")) | .[]' ./helm/Chart.lock | sh --
-          helm dependency build ./helm/
-
-      - name: 🐳 Helm lint
-        run: helm lint ./helm --values ./helm/values-test.yaml
-
-      - name: 🐳 Helm template
-        run: helm template ./helm --values ./helm/values-test.yaml
+  _:
+    uses: toggle-corp/banjo-action/.github/workflows/pipeline.yml@v0.2.0
+    with:
+      # Job: Pre-commit
+      pre_commit__apt_packages: "gdal-bin libgdal-dev"
+      # Job: Docker
+      docker__wait_cmd: "./manage.py wait_for_resources --db --cache --celery-broker"
+      docker__migration_dummy_test: "main.tests.test_fake"
+      docker__run_graphql_check: true
+      docker__run_openapi_check: false
+      docker__compose_file: "docker-compose.yml:./.github/docker-compose.yml"
+      docker__compose_service_name: "web"
+      docker__compose_test_cmd: "/code/scripts/run_tests.sh"
+      # Job: Helm
+      helm__chart_directory: "./helm"

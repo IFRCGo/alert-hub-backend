@@ -1,4 +1,4 @@
-# This extends ./values-go-deploy.yaml
+# This extends ./go-deploy.yaml
 
 app:
   environment: production
@@ -10,6 +10,11 @@ app:
         memory: 2Gi  # XXX: Large payload from PowerBI
       limits:
         memory: 2Gi
+
+  worker:
+    queues:
+      feeds:
+        replicaCount: 2
 
   env:
     UPTIME_WORKER_HEARTBEAT: "https://heartbeat.uptimerobot.com/m798706781-9c8ce80c58dd15e073bcd9f9adae1b0dd78dba47"

@@ -1,0 +1,81 @@
+app:
+  environment: TEST
+
+  image:
+    name: test-image
+    tag: random-hash
+
+  api:
+    ingress:
+      enabled: true
+      host: test.com
+      className: "nginx"
+
+  env:
+    DJANGO_DEBUG: "false"
+    DJANGO_TIME_ZONE: UTC
+    # App Domain
+    APP_DOMAIN: dummy.com
+    APP_HTTP_PROTOCOL: https
+    APP_FRONTEND_HOST: dummy.com
+    DJANGO_ALLOWED_HOSTS: "*"
+    SESSION_COOKIE_DOMAIN: .dummy.com
+    CSRF_COOKIE_DOMAIN: .dummy.com
+    # CORS
+    CORS_ALLOWED_ORIGINS: dummy.com
+    # Misc
+    DEFAULT_FROM_EMAIL: dummy@dummy.com
+
+  secretsName: ""
+  secrets:
+    DJANGO_SECRET_KEY: dummy-secret-key
+    # Database
+    DB_NAME: dummy
+    DB_USER: dummy
+    DB_PASSWORD: dummy
+    DB_HOST: dummy
+    DB_PORT: "5432"
+    # Email
+    EMAIL_HOST: dummy.com
+    EMAIL_PORT: "443"
+    EMAIL_HOST_USER: dummy
+    EMAIL_HOST_PASSWORD: dummy
+    # Sentry
+    SENTRY_DSN: dummy.com/dummy-id
+    # Hcaptcha
+    HCAPTCHA_SITEKEY: "10000000-ffff-ffff-ffff-000000000001"
+    HCAPTCHA_SECRET: "0x0000000000000000000000000000000000000000"
+
+  hooks:
+    jobs:
+      # Exercises the dev3 `files` mechanism: script mounted via a per-job
+      # ConfigMap at /etc/hook-files and piped into `manage.py shell`.
+      custom-python-script-01:
+        enabled: true
+        annotations:
+          argocd.argoproj.io/hook: "Sync"
+          argocd.argoproj.io/sync-wave: "25"
+          argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+        command: ["sh", "-c", "./manage.py shell < /etc/hook-files/create_users.py"]
+        files:
+          create_users.py: |
+            from apps.user.models import User
+            from django.db import transaction
+
+
+            @transaction.atomic
+            def create_initial_users():
+                user, _ = User.objects.update_or_create(
+                    email="admin@example.com",
+                    defaults={
+                        "first_name": "Hi",
+                        "last_name": "there",
+                        "is_superuser": False,
+                        "is_staff": False,
+                        "password": "not-working-password-hash",
+                    },
+                )
+                print(f"Successfully created/updated user email={user.email}")
+
+
+            create_initial_users()

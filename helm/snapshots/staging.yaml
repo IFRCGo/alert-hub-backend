@@ -1,0 +1,904 @@
+---
+# Source: ifrcgo-alert-hub-helm/charts/app/templates/api/service-account.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: service-token-reader
+  labels:
+    
+    azure.workload.identity/use: "true"
+automountServiceAccountToken: true
+
+---
+# Source: ifrcgo-alert-hub-helm/charts/app/templates/config/configmap.yaml
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: alert-hub-staging-env-name
+  labels:
+    app: alert-hub-staging
+    environment: staging
+    release: release-name
+data:
+  # Configs
+  APP_DOMAIN: "alert-hub.example.com"
+  APP_ENVIRONMENT: "staging"
+  APP_FRONTEND_HOST: "alert-hub.example.com"
+  APP_HTTP_PROTOCOL: "https"
+  APP_RELEASE: "develop.xxxxxxxx"
+  AZURE_STORAGE_ACCOUNT_NAME: ""
+  AZURE_STORAGE_MANAGED_IDENTITY: "true"
+  AZURE_STORAGE_MEDIA_CONTAINER: ""
+  AZURE_STORAGE_STATIC_CONTAINER: ""
+  CORS_ALLOWED_ORIGINS: "https://alert-hub.example.com"
+  CORS_ALLOWED_ORIGIN_REGEXES: ""
+  CSRF_COOKIE_DOMAIN: ".alert-hub.example.com"
+  DEFAULT_FROM_EMAIL: "Alerthub Staging <hazard.alerts@ifrc.org>"
+  DJANGO_ALLOWED_HOSTS: "*"
+  DJANGO_DEBUG: "false"
+  DJANGO_TIME_ZONE: "UTC"
+  EMAIL_USE_TLS: "true"
+  SENTRY_PROFILE_SAMPLE_RATE: "0.5"
+  SENTRY_TRACES_SAMPLE_RATE: "0.5"
+  SESSION_COOKIE_DOMAIN: ".alert-hub.example.com"
+  UPTIME_WORKER_HEARTBEAT: ""
+  USE_AZURE_STORAGE: "false"
+
+---
+# Source: ifrcgo-alert-hub-helm/charts/app/templates/api/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: alert-hub-staging-api
+  labels:
+    app: alert-hub-staging
+    component: api
+    environment: staging
+    release: release-name
+spec:
+  type: ClusterIP
+  selector:
+    app: alert-hub-staging
+    component: api
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+
+---
+# Source: ifrcgo-alert-hub-helm/charts/app/templates/api/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alert-hub-staging-api
+  annotations:
+    argocd.argoproj.io/sync-wave: "30"
+    reloader.stakater.com/auto: "true"
+  labels:
+    app: alert-hub-staging
+    component: api
+    environment: staging
+    release: release-name
+spec:
+  revisionHistoryLimit: 1
+  selector:
+    matchLabels:
+      app: alert-hub-staging
+      component: api
+  template:
+    metadata:
+      annotations:
+        checksum/secret: 01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b
+        checksum/configmap: 5b99de321ffccdadbc227520062004b8191f92941103aef7fb7380c9d8d4c82c
+      labels:
+        app: alert-hub-staging
+        component: api
+        azure.workload.identity/use: "true"
+    spec:
+      volumes:
+        - name: alert-hub-staging-secret
+          csi:
+            driver: "secrets-store.csi.k8s.io"
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: alert-hub-staging-secret-provider
+      serviceAccountName: service-token-reader
+      terminationGracePeriodSeconds: 38
+      containers:
+        - name: api
+          image: "local.example.com/ifrcgo/alert-hub:develop.xxxxxxxx"
+          imagePullPolicy: IfNotPresent
+          command:
+            - /code/deploy/run_web.sh
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+          livenessProbe:
+            failureThreshold: 6
+            httpGet:
+              path: /healthz/live/
+              port: http
+            periodSeconds: 20
+            timeoutSeconds: 2
+          readinessProbe:
+            failureThreshold: 6
+            httpGet:
+              path: /healthz/ready/
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 2
+          startupProbe:
+            failureThreshold: 30
+            httpGet:
+              path: /healthz/ready/
+              port: http
+            periodSeconds: 5
+          resources:
+            limits:
+              cpu: "2"
+              memory: 1Gi
+            requests:
+              cpu: "0.2"
+              memory: 1Gi
+          envFrom:
+            - secretRef:
+                name: alert-hub-staging-secret
+            - configMapRef:
+                name: alert-hub-staging-env-name
+          env:
+            - name: DJANGO_APP_TYPE
+              value: "web"
+            - name: CACHE_REDIS_URL
+              value: redis://alert-hub-dragonfly:6379/1
+            - name: CELERY_RABBITMQ_CONNECTION_STRING
+              valueFrom:
+                secretKeyRef:
+                  key: connection_string
+                  name: alert-hub-rabbitmq-default-user
+            - name: CELERY_RABBITMQ_VHOST
+              value: celery
+            - name: CELERY_RESULT_BACKEND
+              value: redis://alert-hub-dragonfly:6379/0
+            
+          lifecycle:
+            preStop:
+              sleep:
+                seconds: 8
+          volumeMounts:
+            - name: alert-hub-staging-secret
+              mountPath: /mnt/secrets-store
+              readOnly: true
+
+---
+# Source: ifrcgo-alert-hub-helm/charts/app/templates/worker-addons/deployment.yaml
+# Addon: beat
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alert-hub-staging-worker-beat
+  annotations:
+    argocd.argoproj.io/sync-wave: "30"
+    reloader.stakater.com/auto: "true"
+  labels:
+    app: alert-hub-staging
+    component: worker-addon
+    addon: beat
+    environment: staging
+    release: release-name
+spec:
+  strategy:
+    type: Recreate
+  revisionHistoryLimit: 1
+  selector:
+    matchLabels:
+      app: alert-hub-staging
+      component: worker-addon
+      addon: beat
+  template:
+    metadata:
+      annotations:
+        checksum/secret: 01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b
+        checksum/configmap: 5b99de321ffccdadbc227520062004b8191f92941103aef7fb7380c9d8d4c82c
+      labels:
+        app: alert-hub-staging
+        component: worker-addon
+        addon: beat
+        azure.workload.identity/use: "true"
+    spec:
+      volumes:
+        - name: alert-hub-staging-secret
+          csi:
+            driver: "secrets-store.csi.k8s.io"
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: alert-hub-staging-secret-provider
+        - emptyDir:
+            medium: Memory
+            sizeLimit: 1Mi
+          name: celery-heartbeat
+      serviceAccountName: service-token-reader
+      containers:
+        - name: beat
+          image: "local.example.com/ifrcgo/alert-hub:develop.xxxxxxxx"
+          imagePullPolicy: IfNotPresent
+          command:
+            - celery
+            - -A
+            - main
+            - beat
+            - -l
+            - INFO
+            - --scheduler=banjo_utils.celery_health.persistent.HeartbeatPersistentScheduler
+          livenessProbe:
+            exec:
+              command:
+              - banjo-celery-probe
+              - --max-age
+              - "360"
+            failureThreshold: 3
+            periodSeconds: 60
+            timeoutSeconds: 5
+          resources:
+            limits:
+              cpu: "1"
+              memory: 512Mi
+            requests:
+              cpu: "0.1"
+              memory: 256Mi
+          envFrom:
+            - secretRef:
+                name: alert-hub-staging-secret
+            - configMapRef:
+                name: alert-hub-staging-env-name
+          env:
+            - name: DJANGO_APP_TYPE
+              value: "worker"
+            - name: CACHE_REDIS_URL
+              value: redis://alert-hub-dragonfly:6379/1
+            - name: CELERY_RABBITMQ_CONNECTION_STRING
+              valueFrom:
+                secretKeyRef:
+                  key: connection_string
+                  name: alert-hub-rabbitmq-default-user
+            - name: CELERY_RABBITMQ_VHOST
+              value: celery
+            - name: CELERY_RESULT_BACKEND
+              value: redis://alert-hub-dragonfly:6379/0
+            
+            - name: BANJO_CELERY_HEARTBEAT_FILE
+              value: "/var/run/celery/beat_heartbeat"
+          volumeMounts:
+            - name: alert-hub-staging-secret
+              mountPath: /mnt/secrets-store
+              readOnly: true
+            - mountPath: /var/run/celery
+              name: celery-heartbeat
+
+---
+# Source: ifrcgo-alert-hub-helm/charts/app/templates/worker/deployment.yaml
+# Queue: default
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alert-hub-staging-worker-default
+  annotations:
+    argocd.argoproj.io/sync-wave: "30"
+    reloader.stakater.com/auto: "true"
+  labels:
+    app: alert-hub-staging
+    component: worker
+    queue: default
+    environment: staging
+    release: release-name
+spec:
+  revisionHistoryLimit: 1
+  selector:
+    matchLabels:
+      app: alert-hub-staging
+      component: worker
+      queue: default
+  template:
+    metadata:
+      annotations:
+        checksum/secret: 01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b
+        checksum/configmap: 5b99de321ffccdadbc227520062004b8191f92941103aef7fb7380c9d8d4c82c
+      labels:
+        app: alert-hub-staging
+        component: worker
+        queue: default
+        azure.workload.identity/use: "true"
+    spec:
+      volumes:
+        - name: alert-hub-staging-secret
+          csi:
+            driver: "secrets-store.csi.k8s.io"
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: alert-hub-staging-secret-provider
+        - emptyDir:
+            medium: Memory
+            sizeLimit: 1Mi
+          name: celery-heartbeat
+      serviceAccountName: service-token-reader
+      containers:
+        - name: worker
+          command:
+            - celery
+            - -A
+            - main
+            - worker
+            - -l
+            - INFO
+            - -Q
+            - default
+            - --concurrency
+            - "4"
+            - --max-tasks-per-child
+            - "10"
+          image: "local.example.com/ifrcgo/alert-hub:develop.xxxxxxxx"
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            exec:
+              command:
+              - banjo-celery-probe
+            failureThreshold: 6
+            periodSeconds: 20
+            timeoutSeconds: 5
+          startupProbe:
+            exec:
+              command:
+              - banjo-celery-probe
+            failureThreshold: 30
+            periodSeconds: 5
+          resources:
+            limits:
+              cpu: "2"
+              memory: 1536Mi
+            requests:
+              cpu: "0.1"
+              memory: 512Mi
+          envFrom:
+            - secretRef:
+                name: alert-hub-staging-secret
+            - configMapRef:
+                name: alert-hub-staging-env-name
+          env:
+            - name: DJANGO_APP_TYPE
+              value: "worker"
+            - name: CACHE_REDIS_URL
+              value: redis://alert-hub-dragonfly:6379/1
+            - name: CELERY_RABBITMQ_CONNECTION_STRING
+              valueFrom:
+                secretKeyRef:
+                  key: connection_string
+                  name: alert-hub-rabbitmq-default-user
+            - name: CELERY_RABBITMQ_VHOST
+              value: celery
+            - name: CELERY_RESULT_BACKEND
+              value: redis://alert-hub-dragonfly:6379/0
+            
+            - name: BANJO_CELERY_HEARTBEAT_FILE
+              value: "/var/run/celery/worker_heartbeat"
+          volumeMounts:
+            - name: alert-hub-staging-secret
+              mountPath: /mnt/secrets-store
+              readOnly: true
+            - mountPath: /var/run/celery
+              name: celery-heartbeat
+---
+# Source: ifrcgo-alert-hub-helm/charts/app/templates/worker/deployment.yaml
+# Queue: feeds
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alert-hub-staging-worker-feeds
+  annotations:
+    argocd.argoproj.io/sync-wave: "30"
+    reloader.stakater.com/auto: "true"
+  labels:
+    app: alert-hub-staging
+    component: worker
+    queue: feeds
+    environment: staging
+    release: release-name
+spec:
+  replicas: 2
+  revisionHistoryLimit: 1
+  selector:
+    matchLabels:
+      app: alert-hub-staging
+      component: worker
+      queue: feeds
+  template:
+    metadata:
+      annotations:
+        checksum/secret: 01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b
+        checksum/configmap: 5b99de321ffccdadbc227520062004b8191f92941103aef7fb7380c9d8d4c82c
+      labels:
+        app: alert-hub-staging
+        component: worker
+        queue: feeds
+        azure.workload.identity/use: "true"
+    spec:
+      volumes:
+        - name: alert-hub-staging-secret
+          csi:
+            driver: "secrets-store.csi.k8s.io"
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: alert-hub-staging-secret-provider
+        - emptyDir:
+            medium: Memory
+            sizeLimit: 1Mi
+          name: celery-heartbeat
+      serviceAccountName: service-token-reader
+      containers:
+        - name: worker
+          command:
+            - celery
+            - -A
+            - main
+            - worker
+            - -l
+            - INFO
+            - -Q
+            - feeds
+            - --concurrency
+            - "4"
+            - --max-tasks-per-child
+            - "10"
+            - --soft-time-limit
+            - "300"
+            - --time-limit
+            - "500"
+          image: "local.example.com/ifrcgo/alert-hub:develop.xxxxxxxx"
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            exec:
+              command:
+              - banjo-celery-probe
+            failureThreshold: 6
+            periodSeconds: 20
+            timeoutSeconds: 5
+          startupProbe:
+            exec:
+              command:
+              - banjo-celery-probe
+            failureThreshold: 30
+            periodSeconds: 5
+          resources:
+            limits:
+              cpu: "2"
+              memory: 1536Mi
+            requests:
+              cpu: "0.1"
+              memory: 512Mi
+          envFrom:
+            - secretRef:
+                name: alert-hub-staging-secret
+            - configMapRef:
+                name: alert-hub-staging-env-name
+          env:
+            - name: DJANGO_APP_TYPE
+              value: "worker"
+            - name: CACHE_REDIS_URL
+              value: redis://alert-hub-dragonfly:6379/1
+            - name: CELERY_RABBITMQ_CONNECTION_STRING
+              valueFrom:
+                secretKeyRef:
+                  key: connection_string
+                  name: alert-hub-rabbitmq-default-user
+            - name: CELERY_RABBITMQ_VHOST
+              value: celery
+            - name: CELERY_RESULT_BACKEND
+              value: redis://alert-hub-dragonfly:6379/0
+            
+            - name: BANJO_CELERY_HEARTBEAT_FILE
+              value: "/var/run/celery/worker_heartbeat"
+          volumeMounts:
+            - name: alert-hub-staging-secret
+              mountPath: /mnt/secrets-store
+              readOnly: true
+            - mountPath: /var/run/celery
+              name: celery-heartbeat
+
+---
+# Source: ifrcgo-alert-hub-helm/charts/app/templates/hooks/job.yaml
+# Hook: collect-static
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: alert-hub-staging-collect-static
+  annotations:
+    argocd.argoproj.io/hook: Sync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+    argocd.argoproj.io/sync-wave: "20"
+  labels:
+    app: alert-hub-staging
+    component: hook
+    hookName: collect-static
+    environment: staging
+    release: release-name
+spec:
+  template:
+    metadata:
+      annotations:
+        checksum/secret: 01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b
+        checksum/configmap: 5b99de321ffccdadbc227520062004b8191f92941103aef7fb7380c9d8d4c82c
+      labels:
+        app: alert-hub-staging
+        component: hook
+        hookName: collect-static
+        azure.workload.identity/use: "true"
+    spec:
+      restartPolicy: "Never"
+      volumes:
+        - name: alert-hub-staging-secret
+          csi:
+            driver: "secrets-store.csi.k8s.io"
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: alert-hub-staging-secret-provider
+      serviceAccountName: service-token-reader
+      containers:
+        - name: collect-static
+          image: "local.example.com/ifrcgo/alert-hub:develop.xxxxxxxx"
+          imagePullPolicy: IfNotPresent
+          command: 
+            - ./manage.py
+            - collectstatic
+            - --noinput
+          resources:
+            limits:
+              cpu: "4"
+              memory: 2Gi
+            requests:
+              cpu: "0.1"
+              memory: 1Gi
+          envFrom:
+            - secretRef:
+                name: alert-hub-staging-secret
+            - configMapRef:
+                name: alert-hub-staging-env-name
+          env:
+            - name: DJANGO_APP_TYPE
+              value: "hook"
+            - name: CACHE_REDIS_URL
+              value: redis://alert-hub-dragonfly:6379/1
+            - name: CELERY_RABBITMQ_CONNECTION_STRING
+              valueFrom:
+                secretKeyRef:
+                  key: connection_string
+                  name: alert-hub-rabbitmq-default-user
+            - name: CELERY_RABBITMQ_VHOST
+              value: celery
+            - name: CELERY_RESULT_BACKEND
+              value: redis://alert-hub-dragonfly:6379/0
+            
+          volumeMounts:
+            - name: alert-hub-staging-secret
+              mountPath: /mnt/secrets-store
+              readOnly: true
+---
+# Source: ifrcgo-alert-hub-helm/charts/app/templates/hooks/job.yaml
+# Hook: db-migrate
+apiVersion: batch/v1
+kind: Job
+metadata:
+  generateName: alert-hub-staging-db-migrate-
+  annotations:
+    argocd.argoproj.io/hook: Sync
+    argocd.argoproj.io/sync-wave: "20"
+  labels:
+    app: alert-hub-staging
+    component: hook
+    hookName: db-migrate
+    environment: staging
+    release: release-name
+spec:
+  activeDeadlineSeconds: 3600
+  ttlSecondsAfterFinished: 604800
+  template:
+    metadata:
+      annotations:
+        checksum/secret: 01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b
+        checksum/configmap: 5b99de321ffccdadbc227520062004b8191f92941103aef7fb7380c9d8d4c82c
+      labels:
+        app: alert-hub-staging
+        component: hook
+        hookName: db-migrate
+        azure.workload.identity/use: "true"
+    spec:
+      restartPolicy: "Never"
+      volumes:
+        - name: alert-hub-staging-secret
+          csi:
+            driver: "secrets-store.csi.k8s.io"
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: alert-hub-staging-secret-provider
+      serviceAccountName: service-token-reader
+      containers:
+        - name: db-migrate
+          image: "local.example.com/ifrcgo/alert-hub:develop.xxxxxxxx"
+          imagePullPolicy: IfNotPresent
+          command: 
+            - ./manage.py
+            - migrate
+          resources:
+            limits:
+              cpu: "4"
+              memory: 2Gi
+            requests:
+              cpu: "0.1"
+              memory: 1Gi
+          envFrom:
+            - secretRef:
+                name: alert-hub-staging-secret
+            - configMapRef:
+                name: alert-hub-staging-env-name
+          env:
+            - name: DJANGO_APP_TYPE
+              value: "hook"
+            - name: CACHE_REDIS_URL
+              value: redis://alert-hub-dragonfly:6379/1
+            - name: CELERY_RABBITMQ_CONNECTION_STRING
+              valueFrom:
+                secretKeyRef:
+                  key: connection_string
+                  name: alert-hub-rabbitmq-default-user
+            - name: CELERY_RABBITMQ_VHOST
+              value: celery
+            - name: CELERY_RESULT_BACKEND
+              value: redis://alert-hub-dragonfly:6379/0
+            
+          volumeMounts:
+            - name: alert-hub-staging-secret
+              mountPath: /mnt/secrets-store
+              readOnly: true
+---
+# Source: ifrcgo-alert-hub-helm/charts/app/templates/hooks/job.yaml
+# Hook: wait-for-resources
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: alert-hub-staging-wait-for-resources
+  annotations:
+    argocd.argoproj.io/hook: Sync
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded
+    argocd.argoproj.io/sync-wave: "10"
+  labels:
+    app: alert-hub-staging
+    component: hook
+    hookName: wait-for-resources
+    environment: staging
+    release: release-name
+spec:
+  template:
+    metadata:
+      annotations:
+        checksum/secret: 01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b
+        checksum/configmap: 5b99de321ffccdadbc227520062004b8191f92941103aef7fb7380c9d8d4c82c
+      labels:
+        app: alert-hub-staging
+        component: hook
+        hookName: wait-for-resources
+        azure.workload.identity/use: "true"
+    spec:
+      restartPolicy: "Never"
+      volumes:
+        - name: alert-hub-staging-secret
+          csi:
+            driver: "secrets-store.csi.k8s.io"
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: alert-hub-staging-secret-provider
+      serviceAccountName: service-token-reader
+      containers:
+        - name: wait-for-resources
+          image: "local.example.com/ifrcgo/alert-hub:develop.xxxxxxxx"
+          imagePullPolicy: IfNotPresent
+          command: 
+            - ./manage.py
+            - wait_for_resources
+            - --db
+            - --cache
+            - --celery-broker
+          resources:
+            limits:
+              cpu: "4"
+              memory: 2Gi
+            requests:
+              cpu: "0.1"
+              memory: 1Gi
+          envFrom:
+            - secretRef:
+                name: alert-hub-staging-secret
+            - configMapRef:
+                name: alert-hub-staging-env-name
+          env:
+            - name: DJANGO_APP_TYPE
+              value: "hook"
+            - name: CACHE_REDIS_URL
+              value: redis://alert-hub-dragonfly:6379/1
+            - name: CELERY_RABBITMQ_CONNECTION_STRING
+              valueFrom:
+                secretKeyRef:
+                  key: connection_string
+                  name: alert-hub-rabbitmq-default-user
+            - name: CELERY_RABBITMQ_VHOST
+              value: celery
+            - name: CELERY_RESULT_BACKEND
+              value: redis://alert-hub-dragonfly:6379/0
+            
+          volumeMounts:
+            - name: alert-hub-staging-secret
+              mountPath: /mnt/secrets-store
+              readOnly: true
+
+---
+# Source: ifrcgo-alert-hub-helm/charts/app/templates/api/ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: alert-hub-staging-api
+  labels:
+    app: alert-hub-staging
+    component: api
+    environment: staging
+    release: release-name
+  annotations:
+    argocd.argoproj.io/sync-wave: "30"
+spec:
+  ingressClassName: "nginx"
+  rules:
+    - host: "alert-hub.example.com"
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: alert-hub-staging-api
+                port:
+                  number: 80
+  tls:
+    - secretName: alert-hub-tls
+      hosts:
+        - "alert-hub.example.com"
+
+---
+# Source: ifrcgo-alert-hub-helm/charts/app/templates/extraManifests.yaml
+# Manifest: dragonflydb-cluster
+apiVersion: dragonflydb.io/v1alpha1
+kind: Dragonfly
+metadata:
+  labels:
+    app.kubernetes.io/name: dragonfly
+  name: alert-hub-dragonfly
+spec:
+  args:
+  - --dbfilename=mainSnapshot
+  replicas: 1
+  resources:
+    limits:
+      cpu: "1"
+      memory: 750Mi
+    requests:
+      cpu: "0.1"
+      memory: 512Mi
+  snapshot:
+    cron: '*/5 * * * *'
+    persistentVolumeClaimSpec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 1Gi
+---
+# Source: ifrcgo-alert-hub-helm/charts/app/templates/extraManifests.yaml
+# Manifest: rabbitmq-cluster
+apiVersion: rabbitmq.com/v1beta1
+kind: RabbitmqCluster
+metadata:
+  name: alert-hub-rabbitmq
+spec:
+  persistence:
+    storage: 2Gi
+  rabbitmq:
+    additionalConfig: |
+      default_vhost = celery
+  replicas: 1
+  resources:
+    limits:
+      cpu: "4"
+      memory: 1Gi
+    requests:
+      cpu: 100m
+      memory: 512Mi
+
+---
+# Source: ifrcgo-alert-hub-helm/charts/app/templates/api/secrets-provider-class.yaml
+apiVersion: secrets-store.csi.x-k8s.io/v1
+kind: SecretProviderClass
+metadata:
+  name: alert-hub-staging-secret-provider
+spec:
+  provider: azure
+  parameters:
+    clientID: ""
+    keyvaultName: ""
+    tenantId: ""
+    usePodIdentity: "false"
+    objects: |
+      array:
+        - |
+          objectName: DB-HOST
+          objectType: secret
+        - |
+          objectName: DB-NAME
+          objectType: secret
+        - |
+          objectName: DB-PASSWORD
+          objectType: secret
+        - |
+          objectName: DB-PORT
+          objectType: secret
+        - |
+          objectName: DB-USER
+          objectType: secret
+        - |
+          objectName: DJANGO-SECRET-KEY
+          objectType: secret
+        - |
+          objectName: EMAIL-HOST
+          objectType: secret
+        - |
+          objectName: EMAIL-HOST-PASSWORD
+          objectType: secret
+        - |
+          objectName: EMAIL-HOST-USER
+          objectType: secret
+        - |
+          objectName: EMAIL-PORT
+          objectType: secret
+        - |
+          objectName: HCAPTCHA-SECRET
+          objectType: secret
+        - |
+          objectName: HCAPTCHA-SITEKEY
+          objectType: secret
+        - |
+          objectName: SENTRY-DSN
+          objectType: secret
+  secretObjects:
+    - secretName: alert-hub-staging-secret
+      type: Opaque
+      data:
+        - objectName: DB-HOST
+          key: DB_HOST
+        - objectName: DB-NAME
+          key: DB_NAME
+        - objectName: DB-PASSWORD
+          key: DB_PASSWORD
+        - objectName: DB-PORT
+          key: DB_PORT
+        - objectName: DB-USER
+          key: DB_USER
+        - objectName: DJANGO-SECRET-KEY
+          key: DJANGO_SECRET_KEY
+        - objectName: EMAIL-HOST
+          key: EMAIL_HOST
+        - objectName: EMAIL-HOST-PASSWORD
+          key: EMAIL_HOST_PASSWORD
+        - objectName: EMAIL-HOST-USER
+          key: EMAIL_HOST_USER
+        - objectName: EMAIL-PORT
+          key: EMAIL_PORT
+        - objectName: HCAPTCHA-SECRET
+          key: HCAPTCHA_SECRET
+        - objectName: HCAPTCHA-SITEKEY
+          key: HCAPTCHA_SITEKEY
+        - objectName: SENTRY-DSN
+          key: SENTRY_DSN

@@ -1,0 +1,62 @@
+# Operator-managed infrastructure (Dragonfly cache + RabbitMQ broker) and the
+# env wiring that points the app at those in-cluster services.
+# Applied as an overlay (see ../tests.yaml) and at deploy time alongside the
+# environment values files.
+app:
+  # Dict form (keyed by env-var name); values are k8s env specs minus name.
+  extraEnvVars:
+    # Checkout the resources defined by extraManifests
+    CELERY_RABBITMQ_CONNECTION_STRING: { valueFrom: { secretKeyRef: { name: alert-hub-rabbitmq-default-user, key: connection_string } } }
+    CELERY_RABBITMQ_VHOST:             { value: celery }
+    CELERY_RESULT_BACKEND:             { value: redis://alert-hub-dragonfly:6379/0 }
+    CACHE_REDIS_URL:                   { value: redis://alert-hub-dragonfly:6379/1 }
+
+  extraManifests:
+    dragonflydb-cluster:
+      apiVersion: dragonflydb.io/v1alpha1
+      kind: Dragonfly
+      metadata:
+        labels:
+          app.kubernetes.io/name: dragonfly
+        name: alert-hub-dragonfly  # NOTE: this will be the service name
+      spec:
+        replicas: 1
+        args: ["--dbfilename=mainSnapshot"]  # NOTE: Only maintains 1 last snapshot
+        resources:
+          requests:
+            cpu: "0.1"
+            memory: 512Mi
+          limits:
+            cpu: "1"
+            memory: 750Mi
+        snapshot:
+          cron: "*/5 * * * *"
+          persistentVolumeClaimSpec:
+            # storageClassName:
+            accessModes:
+            - ReadWriteOnce
+            resources:
+              requests:
+                storage: 1Gi
+
+    # RabbitMQ https://www.rabbitmq.com/kubernetes/operator/using-operator
+    rabbitmq-cluster:
+      apiVersion: rabbitmq.com/v1beta1
+      kind: RabbitmqCluster
+      metadata:
+        name: alert-hub-rabbitmq  # NOTE: This is used secret name
+      spec:
+        replicas: 1  # Scaling down is not supported
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "512Mi"
+          limits:
+            cpu: "4"
+            memory: "1Gi"
+        rabbitmq:
+          additionalConfig: |
+            default_vhost = celery
+        persistence:
+         # storageClassName:
+         storage: "2Gi"

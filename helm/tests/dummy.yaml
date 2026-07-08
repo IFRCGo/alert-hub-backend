@@ -1,0 +1,42 @@
+# Dummy values injected by cluster operators / CICD at deploy time.
+# Only present so that the environment values files can be rendered standalone
+# for snapshot testing (see ../tests.yaml).
+app:
+  image:
+    name: local.example.com/ifrcgo/alert-hub
+    tag: develop.xxxxxxxx
+
+  api:
+    ingress:
+      className: nginx
+      host: alert-hub.example.com
+      tls:
+        secretName: alert-hub-tls
+
+  env:
+    # App Domain
+    APP_DOMAIN: alert-hub.example.com
+    APP_FRONTEND_HOST: alert-hub.example.com
+    SESSION_COOKIE_DOMAIN: .alert-hub.example.com
+    CSRF_COOKIE_DOMAIN: .alert-hub.example.com
+    CORS_ALLOWED_ORIGINS: https://alert-hub.example.com
+    DEFAULT_FROM_EMAIL: Alerthub <noreply@example.com>
+
+  secrets:
+    DJANGO_SECRET_KEY: dummy-secret-key
+    # Database
+    DB_NAME: dummy
+    DB_USER: dummy
+    DB_PASSWORD: dummy
+    DB_HOST: dummy
+    DB_PORT: "5432"
+    # Sentry
+    SENTRY_DSN: https://dummy@sentry.example.com/1
+    # Email
+    EMAIL_HOST: smtp.example.com
+    EMAIL_PORT: "443"
+    EMAIL_HOST_USER: dummy
+    EMAIL_HOST_PASSWORD: dummy
+    # Hcaptcha
+    HCAPTCHA_SITEKEY: "10000000-ffff-ffff-ffff-000000000001"
+    HCAPTCHA_SECRET: "0x0000000000000000000000000000000000000000"

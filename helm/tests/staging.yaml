@@ -1,0 +1,4 @@
+app:
+  fullnameOverride: alert-hub-staging
+  ingress:
+    host: staging.alert-hub.example.com

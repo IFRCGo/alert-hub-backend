@@ -15,6 +15,10 @@ from pathlib import Path
 
 import environ
 from azure.identity import DefaultAzureCredential
+from banjo_utils.health import (
+    is_health_probe_path,
+    make_sentry_traces_sampler_with_health_probe_ignore,
+)
 from django.utils.translation import gettext_lazy as _
 
 from main import sentry
@@ -132,6 +136,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'storages',
     'django_premailer',
+    'banjo_utils',
     # External - Health-check
     'health_check',  # required
     'health_check.db',  # stock Django health checkers
@@ -150,6 +155,9 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    # banjo_utils HealthProbeMiddleware serves pod-local /healthz/live/ and
+    # /healthz/ready/ (bypassing ALLOWED_HOSTS); keep it first.
+    "banjo_utils.health.HealthProbeMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "corsheaders.middleware.CorsMiddleware",
@@ -414,6 +422,11 @@ HEALTH_CHECK = {
     'DISK_USAGE_MAX': 80,  # percent
     'MEMORY_MIN': 100,  # in MB
 }
+
+# banjo-utils HealthProbeMiddleware endpoints (k8s liveness/readiness).
+# django-health-check's /health-check/ stays as the external UptimeRobot monitor.
+BANJO_HEALTH_PROBE_LIVE_URL = "/healthz/live/"
+BANJO_HEALTH_PROBE_READY_URL = "/healthz/ready/"
 UPTIME_WORKER_HEARTBEAT = env('UPTIME_WORKER_HEARTBEAT')
 
 
@@ -446,6 +459,21 @@ if DEBUG:
             record.context = ''
         return True
 
+    def skip_health_probe_logs(record):
+        '''
+        Drop runserver request-line records for k8s health-probe paths (/healthz/*).
+        The kubelet hits the probes every few seconds; without this the dev
+        request logger is swamped. Reads the path from the django.server request
+        line ("GET /path HTTP/1.1"), honouring BANJO_HEALTH_PROBE_* overrides.
+        '''
+        args = record.args
+        path = ''
+        if isinstance(args, (tuple, list)) and args:
+            request_line = str(args[0]).strip('"').split(' ')
+            if len(request_line) >= 2:
+                path = request_line[1]
+        return not is_health_probe_path(path)
+
     LOGGING = {
         'version': 1,
         'disable_existing_loggers': False,
@@ -453,7 +481,11 @@ if DEBUG:
             'render_extra_context': {
                 '()': 'django.utils.log.CallbackFilter',
                 'callback': log_render_extra_context,
-            }
+            },
+            'skip_health_probes': {
+                '()': 'django.utils.log.CallbackFilter',
+                'callback': skip_health_probe_logs,
+            },
         },
         'formatters': {
             'colored_verbose': {
@@ -490,6 +522,13 @@ if DEBUG:
                 'level': 'DEBUG',
                 'propagate': False,
             },
+            # runserver request-line logger: drop /healthz/* probe spam
+            'django.server': {
+                'handlers': ['colored_console'],
+                'level': 'INFO',
+                'propagate': False,
+                'filters': ['skip_health_probes'],
+            },
         },
     }
 
@@ -506,7 +545,8 @@ if SENTRY_DSN:
         'send_default_pii': True,
         'release': env('APP_RELEASE'),
         'environment': APP_ENVIRONMENT,
-        'traces_sample_rate': env('SENTRY_TRACES_SAMPLE_RATE'),
+        # Drop health-probe transactions from tracing (banjo-utils health endpoints).
+        'traces_sampler': make_sentry_traces_sampler_with_health_probe_ignore(env('SENTRY_TRACES_SAMPLE_RATE')),
         'profiles_sample_rate': env('SENTRY_PROFILE_SAMPLE_RATE'),
         'debug': DEBUG,
         'tags': {
