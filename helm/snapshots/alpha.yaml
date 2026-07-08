@@ -224,13 +224,13 @@ spec:
             - beat
             - -l
             - INFO
-            - --scheduler=banjo_utils.celery_health.persistent.HeartbeatPersistentScheduler
+            - --scheduler=banjo_utils.celery_health.database.HeartbeatDatabaseScheduler
           livenessProbe:
             exec:
               command:
               - banjo-celery-probe
               - --max-age
-              - "360"
+              - "60"
             failureThreshold: 3
             periodSeconds: 60
             timeoutSeconds: 5

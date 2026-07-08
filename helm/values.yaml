@@ -99,9 +99,10 @@ app:
     addons:
       beat:
         enabled: true
-        # HeartbeatPersistentScheduler keeps celery's built-in PersistentScheduler
-        # (schedule stays code-defined in main.celery) while touching the beat
-        # heartbeat file each tick for banjo-celery-probe liveness.
+        # HeartbeatDatabaseScheduler uses django-celery-beat's DatabaseScheduler
+        # (jobs sourced from the DB, matching CELERY_BEAT_SCHEDULER in settings)
+        # while touching the beat heartbeat file each tick for banjo-celery-probe
+        # liveness.
         command:
           - "celery"
           - "-A"
@@ -109,7 +110,7 @@ app:
           - "beat"
           - "-l"
           - "INFO"
-          - "--scheduler=banjo_utils.celery_health.persistent.HeartbeatPersistentScheduler"
+          - "--scheduler=banjo_utils.celery_health.database.HeartbeatDatabaseScheduler"
         strategy: {type: Recreate}
         extraEnv:
           BANJO_CELERY_HEARTBEAT_FILE: /var/run/celery/beat_heartbeat
@@ -120,8 +121,8 @@ app:
         probes:
           enabled: true
           liveness:
-            # --max-age must exceed PersistentScheduler's max_interval (300s)
-            exec: {command: [banjo-celery-probe, --max-age, "360"]}
+            # DatabaseScheduler polls every ~5s, so a tighter --max-age is fine
+            exec: {command: [banjo-celery-probe, --max-age, "60"]}
             periodSeconds: 60
             timeoutSeconds: 5
             failureThreshold: 3
