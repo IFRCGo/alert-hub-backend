@@ -16,7 +16,7 @@ x-server: &base_server_setup
     APP_ENVIRONMENT: ${APP_ENVIRONMENT:-DEV}
     DJANGO_APP_TYPE: web
     DJANGO_DEBUG: ${DJANGO_DEBUG:-true}
-    DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY?error}
+    DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-insecure-dev-django-secret-key}
     # -- Domain configurations
     DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-*}
     APP_DOMAIN: localhost:8000
