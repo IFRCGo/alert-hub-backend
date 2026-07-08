@@ -1,15 +1,20 @@
 # Snapshot test matrix consumed by ./update-snapshots.sh (fugit).
 # Each key is a snapshot under ./snapshots/, rendered from values.yaml (base)
 # + the listed values files + the matching ./tests/<key> override.
+#   - values/operators.yaml : operator-managed infra (Dragonfly, RabbitMQ)
+#   - tests/dummy.yaml       : dummy secrets/domains so `required` fields render
 tests:
   alpha.yaml:
-    - tests/operators.yaml
-    - values-alpha.yaml
+    - values/operators.yaml
+    - tests/dummy.yaml
+    - values/alpha.yaml
   staging.yaml:
-    - tests/operators.yaml
-    - values-go-deploy.yaml
-    - values-staging.yaml
+    - values/operators.yaml
+    - tests/dummy.yaml
+    - values/go-deploy.yaml
+    - values/staging.yaml
   production.yaml:
-    - tests/operators.yaml
-    - values-go-deploy.yaml
-    - values-production.yaml
+    - values/operators.yaml
+    - tests/dummy.yaml
+    - values/go-deploy.yaml
+    - values/production.yaml

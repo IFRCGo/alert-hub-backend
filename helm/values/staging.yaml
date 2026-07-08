@@ -1,4 +1,4 @@
-# This extends ./values-go-deploy.yaml
+# This extends ./go-deploy.yaml
 
 app:
   environment: staging
