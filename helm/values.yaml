@@ -1,6 +1,6 @@
 app:
   environment: PROD
-  nameOverride: ifrcgo-alert-hub-helm
+  nameOverride: alerthub
 
   appTypeEnvName: "DJANGO_APP_TYPE"
 
