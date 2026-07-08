@@ -150,6 +150,8 @@ spec:
           env:
             - name: DJANGO_APP_TYPE
               value: "web"
+            - name: CACHE_REDIS_URL
+              value: redis://alert-hub-dragonfly:6379/1
             - name: CELERY_RABBITMQ_CONNECTION_STRING
               valueFrom:
                 secretKeyRef:
@@ -159,8 +161,6 @@ spec:
               value: celery
             - name: CELERY_RESULT_BACKEND
               value: redis://alert-hub-dragonfly:6379/0
-            - name: CACHE_REDIS_URL
-              value: redis://alert-hub-dragonfly:6379/1
             
           lifecycle:
             preStop:
@@ -255,6 +255,8 @@ spec:
           env:
             - name: DJANGO_APP_TYPE
               value: "worker"
+            - name: CACHE_REDIS_URL
+              value: redis://alert-hub-dragonfly:6379/1
             - name: CELERY_RABBITMQ_CONNECTION_STRING
               valueFrom:
                 secretKeyRef:
@@ -264,8 +266,6 @@ spec:
               value: celery
             - name: CELERY_RESULT_BACKEND
               value: redis://alert-hub-dragonfly:6379/0
-            - name: CACHE_REDIS_URL
-              value: redis://alert-hub-dragonfly:6379/1
             
             - name: BANJO_CELERY_HEARTBEAT_FILE
               value: "/var/run/celery/beat_heartbeat"
@@ -367,6 +367,8 @@ spec:
           env:
             - name: DJANGO_APP_TYPE
               value: "worker"
+            - name: CACHE_REDIS_URL
+              value: redis://alert-hub-dragonfly:6379/1
             - name: CELERY_RABBITMQ_CONNECTION_STRING
               valueFrom:
                 secretKeyRef:
@@ -376,8 +378,6 @@ spec:
               value: celery
             - name: CELERY_RESULT_BACKEND
               value: redis://alert-hub-dragonfly:6379/0
-            - name: CACHE_REDIS_URL
-              value: redis://alert-hub-dragonfly:6379/1
             
             - name: BANJO_CELERY_HEARTBEAT_FILE
               value: "/var/run/celery/worker_heartbeat"
@@ -483,6 +483,8 @@ spec:
           env:
             - name: DJANGO_APP_TYPE
               value: "worker"
+            - name: CACHE_REDIS_URL
+              value: redis://alert-hub-dragonfly:6379/1
             - name: CELERY_RABBITMQ_CONNECTION_STRING
               valueFrom:
                 secretKeyRef:
@@ -492,8 +494,6 @@ spec:
               value: celery
             - name: CELERY_RESULT_BACKEND
               value: redis://alert-hub-dragonfly:6379/0
-            - name: CACHE_REDIS_URL
-              value: redis://alert-hub-dragonfly:6379/1
             
             - name: BANJO_CELERY_HEARTBEAT_FILE
               value: "/var/run/celery/worker_heartbeat"
@@ -565,6 +565,8 @@ spec:
           env:
             - name: DJANGO_APP_TYPE
               value: "hook"
+            - name: CACHE_REDIS_URL
+              value: redis://alert-hub-dragonfly:6379/1
             - name: CELERY_RABBITMQ_CONNECTION_STRING
               valueFrom:
                 secretKeyRef:
@@ -574,8 +576,6 @@ spec:
               value: celery
             - name: CELERY_RESULT_BACKEND
               value: redis://alert-hub-dragonfly:6379/0
-            - name: CACHE_REDIS_URL
-              value: redis://alert-hub-dragonfly:6379/1
             
           volumeMounts:
             - name: alert-hub-production-secret
@@ -642,6 +642,8 @@ spec:
           env:
             - name: DJANGO_APP_TYPE
               value: "hook"
+            - name: CACHE_REDIS_URL
+              value: redis://alert-hub-dragonfly:6379/1
             - name: CELERY_RABBITMQ_CONNECTION_STRING
               valueFrom:
                 secretKeyRef:
@@ -651,8 +653,6 @@ spec:
               value: celery
             - name: CELERY_RESULT_BACKEND
               value: redis://alert-hub-dragonfly:6379/0
-            - name: CACHE_REDIS_URL
-              value: redis://alert-hub-dragonfly:6379/1
             
           volumeMounts:
             - name: alert-hub-production-secret
@@ -721,6 +721,8 @@ spec:
           env:
             - name: DJANGO_APP_TYPE
               value: "hook"
+            - name: CACHE_REDIS_URL
+              value: redis://alert-hub-dragonfly:6379/1
             - name: CELERY_RABBITMQ_CONNECTION_STRING
               valueFrom:
                 secretKeyRef:
@@ -730,8 +732,6 @@ spec:
               value: celery
             - name: CELERY_RESULT_BACKEND
               value: redis://alert-hub-dragonfly:6379/0
-            - name: CACHE_REDIS_URL
-              value: redis://alert-hub-dragonfly:6379/1
             
           volumeMounts:
             - name: alert-hub-production-secret

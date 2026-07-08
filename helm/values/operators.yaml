@@ -3,19 +3,13 @@
 # Applied as an overlay (see ../tests.yaml) and at deploy time alongside the
 # environment values files.
 app:
+  # Dict form (keyed by env-var name); values are k8s env specs minus name.
   extraEnvVars:
     # Checkout the resources defined by extraManifests
-    - name: CELERY_RABBITMQ_CONNECTION_STRING
-      valueFrom:
-        secretKeyRef:
-          name: alert-hub-rabbitmq-default-user
-          key: connection_string
-    - name: CELERY_RABBITMQ_VHOST
-      value: celery
-    - name: CELERY_RESULT_BACKEND
-      value: redis://alert-hub-dragonfly:6379/0
-    - name: CACHE_REDIS_URL
-      value: redis://alert-hub-dragonfly:6379/1
+    CELERY_RABBITMQ_CONNECTION_STRING: { valueFrom: { secretKeyRef: { name: alert-hub-rabbitmq-default-user, key: connection_string } } }
+    CELERY_RABBITMQ_VHOST:             { value: celery }
+    CELERY_RESULT_BACKEND:             { value: redis://alert-hub-dragonfly:6379/0 }
+    CACHE_REDIS_URL:                   { value: redis://alert-hub-dragonfly:6379/1 }
 
   extraManifests:
     dragonflydb-cluster:
