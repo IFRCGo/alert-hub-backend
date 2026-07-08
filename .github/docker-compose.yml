@@ -3,6 +3,7 @@ services:
     image: $DOCKER_IMAGE_BACKEND
     environment:
       CI: "true"
+      DJANGO_SECRET_KEY: "CI-INSECURE-DJANGO-SECRET-KEY"
     volumes:
       - ./:/code
       - ./ci-share/:/ci-share/
