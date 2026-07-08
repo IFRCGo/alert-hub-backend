@@ -10,10 +10,11 @@ on:
 permissions:
   contents: read
   packages: write
+  pull-requests: read
 
 jobs:
   _:
-    uses: toggle-corp/banjo-action/.github/workflows/pipeline.yml@v0.1.1
+    uses: toggle-corp/banjo-action/.github/workflows/pipeline.yml@v0.2.0
     with:
       # -- Same as CI (./ci.yml)
       # Job: Pre-commit
