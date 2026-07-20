@@ -1797,7 +1797,7 @@
         "language": "English",
         "picUrl": "https://alert-hub.s3.amazonaws.com/images/th-tmd-en.png",
         "capAlertFeed": "https://www.tmd.go.th/en/api/xml/CAP",
-        "format": "atom"
+        "format": "rss"
     },
     {
         "sourceId": "th-tmd-th",
@@ -1806,7 +1806,7 @@
         "language": "Thai",
         "picUrl": "https://alert-hub.s3.amazonaws.com/images/th-tmd-th.png",
         "capAlertFeed": "https://www.tmd.go.th/api/xml/CAP",
-        "format": "atom"
+        "format": "rss"
     },
     {
         "sourceId": "ua-uhmc-uk",
