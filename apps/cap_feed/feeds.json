@@ -1256,7 +1256,7 @@
         "iso3": "ZAF",
         "language": "English",
         "picUrl": "https://alert-hub.s3.amazonaws.com/images/za-saws-en.png",
-        "capAlertFeed": "http://caps.weathersa.co.za/Home/RssFeed",
+        "capAlertFeed": "https://caps.weathersa.co.za/Home/RssFeed",
         "format": "rss"
     },
     {
