@@ -212,7 +212,7 @@
         "iso3": "CAN",
         "language": "English",
         "picUrl": "https://alert-hub.s3.amazonaws.com/images/ca-aema-en.png",
-        "capAlertFeed": "http://emergencyalert.alberta.ca/aeapublic/feed.atom",
+        "capAlertFeed": "https://emergencyalert.alberta.ca/aeapublic/feed.atom",
         "format": "atom"
     },
     {
@@ -752,7 +752,7 @@
         "iso3": "KWT",
         "language": "English",
         "picUrl": "https://alert-hub.s3.amazonaws.com/images/kw-dom-en.png",
-        "capAlertFeed": "http://www.met.gov.kw/rss_eng/kuwait_cap.xml",
+        "capAlertFeed": "https://www.met.gov.kw/rss_eng/kuwait_cap.xml",
         "format": "rss"
     },
     {
@@ -1112,7 +1112,7 @@
         "iso3": "PHL",
         "language": "English",
         "picUrl": "https://alert-hub.s3.amazonaws.com/images/ph-pagasa-en.png",
-        "capAlertFeed": "http://publicalert.pagasa.dost.gov.ph/feeds/",
+        "capAlertFeed": "https://publicalert.pagasa.dost.gov.ph/feeds/",
         "format": "atom"
     },
     {
@@ -1778,7 +1778,7 @@
         "iso3": "SGP",
         "language": "English",
         "picUrl": "https://alert-hub.s3.amazonaws.com/images/sg-mss-en.png",
-        "capAlertFeed": "http://www.weather.gov.sg/files/rss/rsscapalert/rsscapalert.xml",
+        "capAlertFeed": "https://www.weather.gov.sg/files/rss/rsscapalert/rsscapalert.xml",
         "format": "rss"
     },
     {
