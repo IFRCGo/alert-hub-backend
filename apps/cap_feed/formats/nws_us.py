@@ -8,12 +8,16 @@ from apps.cap_feed.formats.cap_xml import get_alert
 from apps.cap_feed.models import Alert, Feed, ProcessedAlert
 from utils.common import logger_log_extra
 
-from .utils import COMMON_REQUESTS_HEADERS, fetch_alert_using_url
+from .utils import COMMON_REQUESTS_HEADERS, fetch_alert_using_url, find_cap_link
 
 logger = logging.getLogger(__name__)
 
 
-# processing for nws_us format, example: https://api.weather.gov/alerts/active
+# processing for atom feeds whose <id> is not the CAP document url, so the alert is
+# fetched from an <atom:link> instead.
+# examples: https://api.weather.gov/alerts/active
+#           https://publicalert.pagasa.dost.gov.ph/feeds/
+#           https://www.alberta.ca/data/aea/rss/feed-full.atom
 def get_alerts_nws_us(feed, ns):
     alert_urls = set()
     polled_alerts_count = 0
@@ -53,10 +57,7 @@ def get_alerts_nws_us(feed, ns):
             if url is None:
                 raise Exception('URL is None')
 
-            cap_link_element = alert_entry.find('atom:link', ns)
-            if cap_link_element is None:
-                raise Exception('atom:link not found')
-            cap_link = cap_link_element.attrib['href']
+            cap_link = find_cap_link(alert_entry, ns)
             if cap_link is None:
                 raise Exception('cap_link is None')
 

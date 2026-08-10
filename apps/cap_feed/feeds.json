@@ -212,8 +212,8 @@
         "iso3": "CAN",
         "language": "English",
         "picUrl": "https://alert-hub.s3.amazonaws.com/images/ca-aema-en.png",
-        "capAlertFeed": "https://emergencyalert.alberta.ca/aeapublic/feed.atom",
-        "format": "atom"
+        "capAlertFeed": "https://www.alberta.ca/data/aea/rss/feed-full.atom",
+        "format": "nws_us"
     },
     {
         "sourceId": "cf-dmn-fr",
@@ -1113,7 +1113,7 @@
         "language": "English",
         "picUrl": "https://alert-hub.s3.amazonaws.com/images/ph-pagasa-en.png",
         "capAlertFeed": "https://publicalert.pagasa.dost.gov.ph/feeds/",
-        "format": "atom"
+        "format": "nws_us"
     },
     {
         "sourceId": "pl-imgw-xx",

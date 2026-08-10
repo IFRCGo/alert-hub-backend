@@ -15,6 +15,43 @@ COMMON_REQUESTS_HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36',  # noqa
 }
 
+# Media types feeds use to advertise a CAP alert document on an <atom:link>.
+CAP_LINK_TYPES = (
+    'application/cap+xml',
+    'application/common-alerting-protocol+xml',
+)
+
+# Extensions CAP alert documents are served under, used when a feed labels no media type.
+CAP_LINK_SUFFIXES = ('.cap', '.xml')
+
+
+def find_cap_link(alert_entry, ns) -> str | None:
+    """Return the href of the <atom:link> that points at the CAP alert document.
+
+    An entry may carry several links, and the CAP document is not always the first
+    one: some feeds list an HTML landing page first and attach CAP as an enclosure.
+    Prefer an explicit CAP media type, then an enclosure, then a CAP-looking href.
+    """
+    links = alert_entry.findall('atom:link', ns)
+
+    for cap_link_type in CAP_LINK_TYPES:
+        for link in links:
+            if link.attrib.get('type') == cap_link_type:
+                return link.attrib.get('href')
+
+    for link in links:
+        if link.attrib.get('rel') == 'enclosure':
+            return link.attrib.get('href')
+
+    for link in links:
+        href = link.attrib.get('href')
+        if href and href.lower().endswith(CAP_LINK_SUFFIXES):
+            return href
+
+    if links:
+        return links[0].attrib.get('href')
+    return None
+
 
 # converts CAP1.2 iso format datetime string to datetime object in UTC timezone
 def convert_datetime(original_datetime):
