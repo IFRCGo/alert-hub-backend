@@ -1,15 +1,19 @@
 import asyncio
+import datetime
+import email.utils
+import re
 import time
 import xml.etree.ElementTree as ET
+from typing import NamedTuple
 
 import httpx
 import validators
 from django.core.management.base import BaseCommand, CommandError
-from django.db.models import Exists, Max, OuterRef
+from django.db.models import Count, Exists, Max, OuterRef
 from django.utils import timezone
 
 from apps.cap_feed.formats.utils import COMMON_REQUESTS_HEADERS, find_cap_link
-from apps.cap_feed.models import Alert, Feed, ProcessedAlert
+from apps.cap_feed.models import Alert, Feed, FeedLog, ProcessedAlert
 
 # Namespaces used to navigate the feed index documents.
 NS = {
@@ -23,13 +27,32 @@ CAP_NS_PREFIX = 'urn:oasis:names:tc:emergency:cap'
 # Width of the single-line progress indicator; wide enough for the verdict breakdown.
 PROGRESS_WIDTH = 110
 
+# Width of the `─── VERDICT (n) ───` rules that separate the report sections.
+SECTION_WIDTH = 60
+
 # How many slowest feeds the response-time summary lists.
 SLOWEST_COUNT = 5
+
+# How much of an unusable response body is echoed as evidence.
+SNIPPET_LENGTH = 160
+
+# How much of a feed log's error message is echoed.
+LOG_MESSAGE_LENGTH = 140
+
+# FeedLog.save() prunes rows older than this, so log counts are always over this window.
+LOG_RETENTION = '14d'
 
 # Root structure -> feed formats that are able to parse it.
 STRUCTURE_TO_FORMATS = {
     'rss': {Feed.Format.RSS},
     'atom': {Feed.Format.ATOM, Feed.Format.NWS_US},
+}
+
+# Entry tag each structure holds its alerts in, used to report entries found under the
+# structure the feed does *not* serve.
+STRUCTURE_ENTRY_PATHS = {
+    'rss': ('<item>', './/item'),
+    'atom': ('<atom:entry>', f'.//{{{NS["atom"]}}}entry'),
 }
 
 
@@ -43,6 +66,64 @@ class Verdict:
     NOT_INGESTED = 'NOT_INGESTED'
 
 
+# Verdicts worst-first: the order report sections and the summary line are laid out in,
+# so the feeds needing attention are read before the ones that are fine.
+VERDICT_ORDER = (
+    Verdict.UNREACHABLE,
+    Verdict.INVALID_XML,
+    Verdict.UNKNOWN_STRUCTURE,
+    Verdict.MISMATCH,
+    Verdict.EMPTY,
+    Verdict.NOT_INGESTED,
+    Verdict.OK,
+)
+
+
+def verdict_rank(verdict: str) -> int:
+    """Sort key placing the worst verdicts first; unlisted verdicts sort last."""
+    try:
+        return VERDICT_ORDER.index(verdict)
+    except ValueError:
+        return len(VERDICT_ORDER)
+
+
+class IndexMeta(NamedTuple):
+    """What the feed index says about itself, independent of the alerts it lists."""
+
+    title: str | None
+    updated: datetime.datetime | None
+    newest_entry: datetime.datetime | None
+
+
+class CheckResult(NamedTuple):
+    """Outcome of the network phase for one feed.
+
+    `details` are ordered (label, text) pairs; the report renders them as aligned lines
+    under the feed's header, so each label owns one facet of what was observed.
+    """
+
+    verdict: str
+    details: list[tuple[str, str]]
+    elapsed: float | None
+    entry_count: int | None
+    index_meta: IndexMeta
+
+
+class FeedReport(NamedTuple):
+    """A checked feed plus the database context the report needs, ready to render."""
+
+    feed: Feed
+    verdict: str
+    details: list[tuple[str, str]]
+    elapsed: float | None
+    entry_count: int | None
+    index_meta: IndexMeta
+    latest_sent: datetime.datetime | None
+
+
+EMPTY_INDEX_META = IndexMeta(title=None, updated=None, newest_entry=None)
+
+
 def format_seconds(seconds: float) -> str:
     """Format a duration for the report, keeping sub-second timings readable."""
     if seconds < 1:
@@ -50,11 +131,67 @@ def format_seconds(seconds: float) -> str:
     return f'{seconds:.2f}s'
 
 
+def format_datetime(value: datetime.datetime) -> str:
+    """Format a timestamp as a compact UTC instant."""
+    return value.astimezone(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
+
+
+def format_age(value: datetime.datetime, now: datetime.datetime) -> str:
+    """Describe how long ago something happened, in the coarsest useful unit."""
+    seconds = (now - value).total_seconds()
+    if seconds < 0:
+        return 'in the future'
+    for unit_seconds, unit in ((86400, 'd'), (3600, 'h'), (60, 'm')):
+        if seconds >= unit_seconds:
+            return f'{int(seconds // unit_seconds)}{unit} ago'
+    return f'{int(seconds)}s ago'
+
+
 def local_tag(tag: str) -> str:
     """Return the namespace-stripped, lower-cased local name of an XML tag."""
     if '}' in tag:
         tag = tag.split('}', 1)[1]
     return tag.lower()
+
+
+def element_text(parent: ET.Element | None, path: str, ns: dict[str, str] | None = None) -> str | None:
+    """Return the collapsed text of the first matching child, or None."""
+    if parent is None:
+        return None
+    element = parent.find(path, ns) if ns else parent.find(path)
+    if element is None or not element.text:
+        return None
+    return re.sub(r'\s+', ' ', element.text).strip() or None
+
+
+def parse_index_datetime(raw: str | None) -> datetime.datetime | None:
+    """Parse a feed timestamp, accepting both the atom (ISO) and rss (RFC 822) spellings."""
+    if not raw:
+        return None
+    try:
+        return datetime.datetime.fromisoformat(raw.replace('Z', '+00:00'))
+    except ValueError:
+        pass
+    try:
+        return email.utils.parsedate_to_datetime(raw)
+    except (TypeError, ValueError):
+        return None
+
+
+def plural(count: int, noun: str, plural_noun: str | None = None) -> str:
+    """Render a count with its noun agreeing in number."""
+    return f'{count} {noun if count == 1 else (plural_noun or noun + "s")}'
+
+
+def truncate(text: str, limit: int) -> str:
+    text = re.sub(r'\s+', ' ', text).strip()
+    return text if len(text) <= limit else f'{text[:limit]}…'
+
+
+def content_snippet(content: bytes) -> str:
+    """A one-line, printable head of a response body, for evidence on unusable responses."""
+    decoded = content[: SNIPPET_LENGTH * 4].decode('utf-8', errors='replace')
+    return truncate(decoded, SNIPPET_LENGTH)
 
 
 def detect_structure(root: ET.Element) -> str:
@@ -77,6 +214,43 @@ def count_entries(root: ET.Element, fmt: str) -> int:
         return len(channel.findall('item'))
     # atom / nws_us both iterate over atom:entry
     return len(root.findall('atom:entry', NS))
+
+
+def read_index_meta(root: ET.Element, structure: str) -> IndexMeta:
+    """Read the index's self-description: its title, when it changed, and its newest entry."""
+    if structure == 'rss':
+        channel = root.find('channel')
+        title = element_text(channel, 'title')
+        updated = parse_index_datetime(
+            element_text(channel, 'lastBuildDate') or element_text(channel, 'pubDate'),
+        )
+        entry_dates = [parse_index_datetime(element_text(item, 'pubDate')) for item in root.findall('.//item')]
+    else:
+        title = element_text(root, 'atom:title', NS)
+        updated = parse_index_datetime(element_text(root, 'atom:updated', NS))
+        entry_dates = [
+            parse_index_datetime(element_text(entry, 'atom:updated', NS) or element_text(entry, 'atom:published', NS))
+            for entry in root.findall('atom:entry', NS)
+        ]
+    known = [date for date in entry_dates if date is not None]
+    return IndexMeta(title=title, updated=updated, newest_entry=max(known) if known else None)
+
+
+def describe_child_tags(root: ET.Element) -> str:
+    """Summarise the direct children of an element as `tag×count`, in document order."""
+    counts: dict[str, int] = {}
+    for child in root:
+        counts[local_tag(child.tag)] = counts.get(local_tag(child.tag), 0) + 1
+    return ' · '.join(f'<{tag}>×{count}' for tag, count in counts.items()) or 'no children'
+
+
+def count_foreign_entries(root: ET.Element, structure: str) -> tuple[str, int] | None:
+    """Count entries belonging to the structure this document is *not* — the usual sign
+    of a feed whose inner markup no longer matches its root element."""
+    other = 'atom' if structure == 'rss' else 'rss'
+    label, path = STRUCTURE_ENTRY_PATHS[other]
+    found = len(root.findall(path))
+    return (label, found) if found else None
 
 
 def first_alert_link(root: ET.Element, fmt: str) -> str | None:
@@ -117,12 +291,83 @@ def requires_cap_link(root: ET.Element) -> bool:
     return id_el is None or not id_el.text or not validators.url(id_el.text)
 
 
+def cap_namespace(root: ET.Element) -> dict[str, str]:
+    """Build a namespace map for a CAP document, honouring whichever version it declares."""
+    if root.tag.startswith('{'):
+        return {'cap': root.tag[1:].split('}', 1)[0]}
+    return {}
+
+
+def join_parts(*parts: str | None, separator: str = ' · ') -> str:
+    """Join the parts that have a value, dropping the ones that do not apply."""
+    return separator.join(part for part in parts if part)
+
+
+def describe_cap_alert(root: ET.Element, now: datetime.datetime) -> list[str]:
+    """Summarise the CAP fields that decide whether an alert is ingestable."""
+    ns = cap_namespace(root)
+    prefix = 'cap:' if ns else ''
+
+    def field(parent, name):
+        return element_text(parent, f'{prefix}{name}', ns or None)
+
+    def children(parent, name):
+        return parent.findall(f'{prefix}{name}', ns or None)
+
+    version = ns['cap'].rsplit(':', 1)[-1] if ns else 'no namespace'
+    sender, identifier = field(root, 'sender'), field(root, 'identifier')
+    sent = parse_index_datetime(field(root, 'sent'))
+    lines = [
+        join_parts(
+            f'CAP {version}',
+            f'sender={sender}' if sender else None,
+            f'identifier={identifier}' if identifier else None,
+        ),
+        join_parts(
+            f'sent {format_datetime(sent)} ({format_age(sent, now)})' if sent else None,
+            join_parts(field(root, 'status'), field(root, 'msgType'), field(root, 'scope'), separator='/') or None,
+        ),
+    ]
+
+    infos = children(root, 'info')
+    if not infos:
+        lines.append('no <info> block — nothing to ingest')
+        return [line for line in lines if line]
+
+    info = infos[0]
+    event, language = field(info, 'event'), field(info, 'language')
+    lines.append(
+        join_parts(
+            plural(len(infos), 'info block'),
+            f'event="{truncate(event, 60)}"' if event else None,
+            join_parts(field(info, 'severity'), field(info, 'urgency'), field(info, 'certainty'), separator='/') or None,
+            f'lang={language}' if language else None,
+            plural(len(children(info, 'area')), 'area'),
+        )
+    )
+    return [line for line in lines if line]
+
+
 class Command(BaseCommand):
     help = (
         'Check that each feed\'s configured `format` matches the structure actually served, '
         'plus reachability / well-formedness / non-empty checks and whether any alerts are '
         'stored in the database. Feeds are fetched in parallel. Read-only; does not modify feeds.'
     )
+
+    # OK feeds are reported as a table: (heading, alignment) per column. STORED reports the
+    # newest alert held in the database, so it is dropped when the database is not consulted.
+    OK_COLUMNS = (
+        ('FEED', '<'),
+        ('ISO3', '<'),
+        ('FORMAT', '<'),
+        ('TIME', '>'),
+        ('ENTRIES', '>'),
+        ('NEWEST', '>'),
+        ('STORED', '>'),
+        ('FLAGS', '<'),
+    )
+    DB_ONLY_COLUMNS = frozenset({'STORED'})
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -146,7 +391,7 @@ class Command(BaseCommand):
         parser.add_argument(
             '--deep',
             action='store_true',
-            help='Also fetch the first alert document per feed and verify it is a CAP XML.',
+            help='Also fetch the first alert document per feed and report its CAP metadata.',
         )
         parser.add_argument(
             '--timeout',
@@ -173,7 +418,7 @@ class Command(BaseCommand):
         parser.add_argument(
             '--skip-db',
             action='store_true',
-            help='Skip the check for alerts stored in the database.',
+            help='Skip the stored-alert and feed-log lookups.',
         )
 
     def get_queryset(self, options):
@@ -211,39 +456,134 @@ class Command(BaseCommand):
         )
         return {row['feed_id']: row['latest_sent'] for row in rows}
 
-    def describe_age(self, sent, now):
-        """Describe how long ago an alert was sent, in the coarsest useful unit."""
-        seconds = (now - sent).total_seconds()
-        if seconds < 0:
-            return 'in the future'
-        for unit_seconds, unit in ((86400, 'd'), (3600, 'h'), (60, 'm')):
-            if seconds >= unit_seconds:
-                return f'{int(seconds // unit_seconds)}{unit} ago'
-        return f'{int(seconds)}s ago'
+    def get_feed_logs(self, feeds):
+        """Map feed id -> (log_count, latest_log) over the retained log window.
 
-    def describe_active_alerts(self, entry_count, latest_sent, now):
-        """One line pairing what the feed advertises now with the newest alert stored."""
-        parts = []
-        if entry_count is not None:
-            parts.append(f'{entry_count} alert entr{"y" if entry_count == 1 else "ies"} found.')
-        if latest_sent is not None:
-            parts.append(f'latest alert sent {latest_sent.isoformat()} ({self.describe_age(latest_sent, now)})')
+        FeedLog rows are the aggregator's own account of why a feed failed to ingest, so
+        they explain verdicts the HTTP check alone cannot.
+        """
+        feed_ids = [feed.pk for feed in feeds]
+        counts = {
+            row['feed_id']: row['log_count']
+            for row in FeedLog.objects.filter(feed__in=feed_ids).values('feed_id').annotate(log_count=Count('pk'))
+        }
+        latest = {
+            row['feed_id']: row
+            for row in FeedLog.objects.filter(feed__in=feed_ids)
+            .order_by('feed_id', '-timestamp')
+            .distinct('feed_id')
+            .values('feed_id', 'timestamp', 'exception', 'error_message', 'alert_url')
+        }
+        return {feed_id: (counts.get(feed_id, 0), latest.get(feed_id)) for feed_id in counts}
+
+    def feed_iso3(self, feed):
+        return feed.country.iso3 if feed.country_id else '???'
+
+    def feed_flags(self, feed):
+        """The configuration flags worth flagging: everything that is not the healthy default."""
+        flags = []
+        if feed.status != Feed.Status.ACTIVE:
+            flags.append(f'status={feed.status}')
+        if not feed.enable_polling:
+            flags.append('polling=off')
+        if feed.is_archived:
+            flags.append('archived')
+        if not feed.official:
+            flags.append('unofficial')
+        return flags
+
+    def describe_feed_config(self, feed):
+        """The feed's own record: how it is configured and who to ask about it."""
+        parts = [
+            f'status={feed.status}',
+            f'polling=every {feed.polling_interval}s' if feed.enable_polling else 'polling=off',
+            f'rebroadcast={"on" if feed.enable_rebroadcast else "off"}',
+            'official' if feed.official else 'unofficial',
+        ]
+        if feed.is_archived:
+            archived_at = f' at {format_datetime(feed.archived_at)}' if feed.archived_at else ''
+            parts.append(f'archived{archived_at}')
+        author = ' '.join(part for part in (feed.author_name, f'<{feed.author_email}>' if feed.author_email else '') if part)
+        if author:
+            parts.append(f'author={author}')
+        return ' · '.join(parts)
+
+    def describe_http(self, response, elapsed):
+        """Status, size, media type, and where the request actually ended up."""
+        parts = [
+            f'{response.status_code} {response.reason_phrase}'.strip(),
+            format_seconds(elapsed),
+            f'{len(response.content) / 1024:.1f} KiB',
+            response.headers.get('content-type', 'no content-type'),
+        ]
+        for header in ('last-modified', 'etag'):
+            if response.headers.get(header):
+                parts.append(f'{header}={truncate(response.headers[header], 40)}')
+        if response.history:
+            parts.append(f'{plural(len(response.history), "redirect")} → {response.url}')
+        return ' · '.join(parts)
+
+    def describe_index(self, structure, meta, entry_count, now):
+        """What the index says about itself, next to what the parser found in it."""
+        parts = [f'<{structure}>']
+        if meta.title:
+            parts.append(f'title="{truncate(meta.title, 60)}"')
+        if meta.updated:
+            parts.append(f'updated {format_datetime(meta.updated)} ({format_age(meta.updated, now)})')
+        parts.append(self.describe_entries(entry_count))
+        if meta.newest_entry:
+            parts.append(f'newest entry {format_datetime(meta.newest_entry)} ({format_age(meta.newest_entry, now)})')
+        return ' · '.join(parts)
+
+    def describe_entries(self, entry_count):
+        """Describe how many alert entries the configured parser found in the index."""
+        if entry_count is None:
+            return 'entries n/a'
+        return plural(entry_count, 'entry', 'entries')
+
+    def describe_stored_alerts(self, feed, entry_count, latest_sent, now):
+        """What the database holds for this feed, live alerts first then its whole history."""
+        if latest_sent is None:
+            live = 'no unexpired alert stored'
         else:
-            parts.append('no unexpired alert stored.')
-        return f'Active alerts: {" ".join(parts)}'
-
-    def describe_historical_alerts(self, feed):
-        """Return (has_alerts, message) for anything this feed has ever ingested."""
+            live = f'latest unexpired alert sent {format_datetime(latest_sent)} ({format_age(latest_sent, now)})'
         if feed.has_alerts:
-            return True, 'Historical alerts: ✅ alerts stored for this feed.'
-        if feed.has_processed_alerts:
-            return False, (
-                'Historical alerts: ⚠️ no Alert rows, but alerts have been processed (parsed then discarded/not saved).'
-            )
-        return False, 'Historical alerts: ❌ no Alert rows and nothing processed — this feed has never been ingested.'
+            history = 'Alert rows exist'
+        elif feed.has_processed_alerts:
+            history = 'no Alert rows, but alerts have been processed (parsed then discarded)'
+        else:
+            history = 'never ingested — no Alert rows, nothing processed'
+        # An index that could not be parsed advertises nothing worth reporting here.
+        advertised = f'{plural(entry_count, "entry", "entries")} advertised' if entry_count is not None else None
+        return join_parts(advertised, live, history)
 
-    async def check_feed(self, client, feed, deep):
-        """Return (verdict, list_of_message_lines, fetch_seconds, entry_count)."""
+    def describe_feed_log(self, log_count, latest_log, now):
+        """The most recent thing the aggregator recorded against this feed."""
+        if not log_count or latest_log is None:
+            return None
+        timestamp = latest_log['timestamp']
+        parts = [
+            f'{plural(log_count, "log")} in last {LOG_RETENTION}',
+            f'latest {format_datetime(timestamp)} ({format_age(timestamp, now)})',
+            latest_log['exception'],
+        ]
+        if latest_log['error_message']:
+            parts.append(truncate(latest_log['error_message'], LOG_MESSAGE_LENGTH))
+        if latest_log['alert_url']:
+            parts.append(latest_log['alert_url'])
+        return ' · '.join(parts)
+
+    def describe_hint(self, feed, verdict):
+        """A next step, only where the metadata makes one unambiguous."""
+        if verdict == Verdict.NOT_INGESTED and not feed.enable_polling:
+            return 'polling is disabled for this feed, so it will never ingest until enable_polling is set.'
+        if verdict == Verdict.NOT_INGESTED and feed.has_processed_alerts:
+            return 'alerts reach the parser but no Alert row survives — check the feed logs above and the CAP contents.'
+        if verdict == Verdict.NOT_INGESTED:
+            return 'the index parses but nothing has ever been ingested — run the poll for this feed and watch its logs.'
+        return None
+
+    async def check_feed(self, client, feed, deep, now) -> CheckResult:
         headers = dict(COMMON_REQUESTS_HEADERS)
         if feed.format == Feed.Format.NWS_US:
             # NWS serves GeoJSON by default; the atom variant must be requested explicitly
@@ -256,91 +596,152 @@ class Command(BaseCommand):
             response.raise_for_status()
         except httpx.HTTPError as e:
             elapsed = time.monotonic() - started
-            return Verdict.UNREACHABLE, [f'Failed to fetch feed after {format_seconds(elapsed)}: {e!r}'], elapsed, None
+            return CheckResult(
+                verdict=Verdict.UNREACHABLE,
+                details=self.describe_fetch_failure(e, elapsed),
+                elapsed=elapsed,
+                entry_count=None,
+                index_meta=EMPTY_INDEX_META,
+            )
         elapsed = time.monotonic() - started
 
-        verdict, messages, entry_count = await self.analyse_response(client, feed, response, deep)
-        messages.insert(
-            0,
-            f'HTTP {response.status_code} in {format_seconds(elapsed)}, {len(response.content) / 1024:.1f} KiB.',
+        result = await self.analyse_response(client, feed, response, deep, now)
+        return result._replace(
+            details=[('http', self.describe_http(response, elapsed)), *result.details],
+            elapsed=elapsed,
         )
-        return verdict, messages, elapsed, entry_count
 
-    async def analyse_response(self, client, feed, response, deep):
-        """Return (verdict, list_of_message_lines, entry_count) for an already-fetched feed index.
+    def describe_fetch_failure(self, error, elapsed):
+        """Report a failed fetch by what actually went wrong, with the server's own words."""
+        details = []
+        response = getattr(error, 'response', None)
+        if response is not None:
+            details.append(
+                (
+                    'http',
+                    f'{response.status_code} {response.reason_phrase} · {format_seconds(elapsed)} · '
+                    f'{response.headers.get("content-type", "no content-type")} · {response.url}',
+                )
+            )
+        details.append(('issue', f'{type(error).__name__} after {format_seconds(elapsed)}: {error}'))
+        if response is not None and response.content:
+            details.append(('body', content_snippet(response.content)))
+        return details
 
-        entry_count is None when the index could not be parsed far enough to count entries.
+    async def analyse_response(self, client, feed, response, deep, now) -> CheckResult:
+        """Judge an already-fetched feed index.
+
+        The returned `elapsed` is left unset; the caller owns the fetch timing. `entry_count`
+        is None when the index could not be parsed far enough to count entries.
         """
-        messages = []
+
+        def result(verdict, details, entry_count=None, index_meta=EMPTY_INDEX_META):
+            return CheckResult(verdict, list(details), None, entry_count, index_meta)
 
         if not response.content or response.content.strip() == b'':
-            return Verdict.EMPTY, ['Feed returned empty content.'], None
+            return result(Verdict.EMPTY, [('issue', 'feed returned an empty body.')])
 
         try:
             root = ET.fromstring(response.content)
         except ET.ParseError as e:
-            return Verdict.INVALID_XML, [f'Response is not well-formed XML: {e}'], None
+            return result(
+                Verdict.INVALID_XML,
+                [
+                    ('issue', f'response is not well-formed XML: {e}'),
+                    ('body', content_snippet(response.content)),
+                ],
+            )
 
         structure = detect_structure(root)
         if structure == 'unknown':
-            return (
+            return result(
                 Verdict.UNKNOWN_STRUCTURE,
-                [f'Unrecognised root element <{local_tag(root.tag)}> (expected <rss> or <feed>).'],
-                None,
+                [
+                    ('issue', f'unrecognised root element <{local_tag(root.tag)}>, expected <rss> or <feed>.'),
+                    ('markup', f'root children: {describe_child_tags(root)}'),
+                    ('body', content_snippet(response.content)),
+                ],
             )
 
-        compatible_formats = STRUCTURE_TO_FORMATS[structure]
         entry_count = count_entries(root, feed.format)
+        meta = read_index_meta(root, structure)
+        details = [('index', self.describe_index(structure, meta, entry_count, now))]
+        compatible_formats = STRUCTURE_TO_FORMATS[structure]
 
         if feed.format not in compatible_formats:
-            suggested = sorted(f.value for f in compatible_formats)
-            messages.append(
-                f'Configured format is "{feed.format}" but served structure is <{structure}> '
-                f'(root <{local_tag(root.tag)}>). Suggested format: {" or ".join(suggested)}.'
+            suggested = ' or '.join(sorted(f.value for f in compatible_formats))
+            details.append(
+                (
+                    'issue',
+                    f'configured format "{feed.format}" cannot read a <{structure}> index '
+                    f'(root <{local_tag(root.tag)}>) — suggested format: {suggested}.',
+                )
             )
-            return Verdict.MISMATCH, messages, entry_count
+            return result(Verdict.MISMATCH, details, entry_count, meta)
 
         if feed.format == Feed.Format.ATOM and requires_cap_link(root):
-            messages.append(
-                f'Configured format is "{feed.format}" but <atom:id> is not a url, so no CAP document can be '
-                f'fetched and every entry is skipped. Suggested format: {Feed.Format.NWS_US.value}.'
+            first_id = element_text(root.find('atom:entry', NS), 'atom:id', NS)
+            details.append(
+                (
+                    'issue',
+                    f'configured format "{feed.format}" reads the CAP document from <atom:id>, but that is not a url '
+                    f'({first_id or "missing"}), so every entry is skipped — '
+                    f'suggested format: {Feed.Format.NWS_US.value}.',
+                )
             )
-            return Verdict.MISMATCH, messages, entry_count
+            return result(Verdict.MISMATCH, details, entry_count, meta)
 
         # Structure matches the configured format; make sure the parser can actually see entries.
         if entry_count == 0:
-            messages.append(
-                f'Structure matches format "{feed.format}" but 0 alert entries were found. '
-                'Feed may be genuinely empty, or its inner structure changed.'
+            details.append(
+                (
+                    'issue',
+                    f'structure matches format "{feed.format}" but no alert entries were found — '
+                    'the feed may be genuinely empty, or its inner markup changed.',
+                )
             )
-            return Verdict.EMPTY, messages, entry_count
+            details.append(('markup', f'root children: {describe_child_tags(root)}'))
+            foreign = count_foreign_entries(root, structure)
+            if foreign:
+                label, found = foreign
+                details.append(
+                    ('markup', f'{plural(found, f"{label} element")} present, which a <{structure}> index does not use.')
+                )
+            return result(Verdict.EMPTY, details, entry_count, meta)
 
         if deep:
-            messages.extend(await self.deep_check(client, root, feed))
+            details.extend(await self.deep_check(client, root, feed, now))
 
-        return Verdict.OK, messages, entry_count
+        return result(Verdict.OK, details, entry_count, meta)
 
-    async def deep_check(self, client, root, feed):
+    async def deep_check(self, client, root, feed, now):
+        """Fetch the first alert document and report the CAP metadata the ingest depends on."""
         link = first_alert_link(root, feed.format)
         if not link:
-            return ['[deep] Could not extract first alert link.']
+            return [('deep', 'could not extract the first alert link from the index.')]
         started = time.monotonic()
         try:
-            resp = await client.get(link, headers=COMMON_REQUESTS_HEADERS)
-            resp.raise_for_status()
-            alert_root = ET.fromstring(resp.content)
+            response = await client.get(link, headers=COMMON_REQUESTS_HEADERS)
+            response.raise_for_status()
+            alert_root = ET.fromstring(response.content)
         except httpx.HTTPError as e:
             took = format_seconds(time.monotonic() - started)
-            return [f'[deep] Failed to fetch first alert doc after {took} ({link}): {e!r}']
+            return [('deep', f'failed to fetch the first alert doc after {took}: {type(e).__name__}: {e}'), ('deep', link)]
         except ET.ParseError as e:
-            return [f'[deep] First alert doc is not well-formed XML ({link}): {e}']
+            return [('deep', f'first alert doc is not well-formed XML: {e}'), ('deep', link)]
         took = format_seconds(time.monotonic() - started)
 
-        if local_tag(alert_root.tag) == 'alert' and CAP_NS_PREFIX in alert_root.tag:
-            return [f'[deep] First alert doc is valid CAP, fetched in {took}: {link}']
-        return [f'[deep] First alert doc is NOT a CAP <alert> (root <{alert_root.tag}>), fetched in {took}: {link}']
+        if local_tag(alert_root.tag) != 'alert' or CAP_NS_PREFIX not in alert_root.tag:
+            return [
+                ('deep', f'first alert doc is not a CAP <alert> (root <{alert_root.tag}>), fetched in {took}.'),
+                ('deep', link),
+            ]
+        lines = [f'first alert doc fetched in {took}, {len(response.content) / 1024:.1f} KiB']
+        lines.extend(describe_cap_alert(alert_root, now))
+        lines.append(link)
+        return [('deep', line) for line in lines]
 
-    async def run_checks(self, feeds, options, on_progress):
+    async def run_checks(self, feeds, options, now, on_progress):
         """Fetch and check all feeds concurrently. Results are returned in feed order."""
         concurrency = max(1, options['concurrency'])
         semaphore = asyncio.Semaphore(concurrency)
@@ -354,25 +755,138 @@ class Command(BaseCommand):
             async def run_one(feed):
                 async with semaphore:
                     try:
-                        verdict, messages, elapsed, entry_count = await self.check_feed(client, feed, options['deep'])
+                        result = await self.check_feed(client, feed, options['deep'], now)
                     except Exception as e:
                         # A single misbehaving feed must not abort the whole run.
-                        verdict = Verdict.UNREACHABLE
-                        messages = [f'Unexpected error while checking feed: {e!r}']
-                        elapsed = None
-                        entry_count = None
-                on_progress(feed, verdict, elapsed)
-                return verdict, messages, elapsed, entry_count
+                        result = CheckResult(
+                            verdict=Verdict.UNREACHABLE,
+                            details=[('issue', f'unexpected error while checking feed: {type(e).__name__}: {e}')],
+                            elapsed=None,
+                            entry_count=None,
+                            index_meta=EMPTY_INDEX_META,
+                        )
+                on_progress(feed, result.verdict, result.elapsed)
+                return result
 
             return await asyncio.gather(*(run_one(feed) for feed in feeds))
 
     def render_progress(self, done, total, counts, feed, elapsed):
-        breakdown = ', '.join(f'{verdict}={count}' for verdict, count in sorted(counts.items()))
-        iso3 = feed.country.iso3 if feed.country_id else '???'
+        breakdown = ' · '.join(
+            f'{count} {verdict}' for verdict, count in sorted(counts.items(), key=lambda item: verdict_rank(item[0]))
+        )
         took = format_seconds(elapsed) if elapsed is not None else 'n/a'
-        line = f'  [{done}/{total}] {breakdown} | last: feed #{feed.pk} ({iso3}) {took}'
+        line = f'  [{done}/{total}] {breakdown} | last: feed #{feed.pk} ({self.feed_iso3(feed)}) {took}'
         self.stdout.write(f'\r{line[:PROGRESS_WIDTH]:<{PROGRESS_WIDTH}}', ending='')
         self.stdout.flush()
+
+    def section_rule(self, verdict, count):
+        """A `─── VERDICT (n) ───` rule introducing one verdict's feeds."""
+        label = f'─── {verdict} ({count}) '
+        return label + '─' * max(3, SECTION_WIDTH - len(label))
+
+    def render_problem_block(self, report, style):
+        """Header line plus every labelled detail gathered for a feed that needs attention."""
+        took = format_seconds(report.elapsed) if report.elapsed is not None else 'n/a'
+        self.stdout.write(
+            style(
+                f'[{report.verdict}] feed #{report.feed.pk} ({self.feed_iso3(report.feed)}, '
+                f'format={report.feed.format}, {took}) {report.feed.url}'
+            )
+        )
+        label_width = max(len(label) for label, _ in report.details)
+        for label, value in report.details:
+            self.stdout.write(f'    {label:<{label_width}}  {value}')
+
+    def ok_row(self, report, now):
+        """The table cells describing one healthy feed, keyed by column heading."""
+        return {
+            'FEED': f'#{report.feed.pk}',
+            'ISO3': self.feed_iso3(report.feed),
+            'FORMAT': report.feed.format,
+            'TIME': format_seconds(report.elapsed) if report.elapsed is not None else 'n/a',
+            'ENTRIES': '—' if report.entry_count is None else str(report.entry_count),
+            'NEWEST': format_age(report.index_meta.newest_entry, now) if report.index_meta.newest_entry else '—',
+            'STORED': format_age(report.latest_sent, now) if report.latest_sent else '—',
+            'FLAGS': ' '.join(self.feed_flags(report.feed)),
+        }
+
+    def render_ok_rows(self, reports, now, skip_db):
+        """A table of healthy feeds, so a long tail of OK feeds stays scannable."""
+        columns = [
+            (heading, alignment)
+            for heading, alignment in self.OK_COLUMNS
+            if not (skip_db and heading in self.DB_ONLY_COLUMNS)
+        ]
+        headings = tuple(heading for heading, _ in columns)
+        alignments = tuple(alignment for _, alignment in columns)
+        rows = [tuple(self.ok_row(report, now)[heading] for heading in headings) for report in reports]
+        widths = [max(len(cell) for cell in column) for column in zip(headings, *rows)]
+
+        def render(cells):
+            line = '  ' + '  '.join(
+                f'{cell:{alignment}{width}}' for cell, alignment, width in zip(cells, alignments, widths)
+            )
+            self.stdout.write(line.rstrip())
+
+        render(headings)
+        for report, cells in zip(reports, rows):
+            render(cells)
+            for label, value in report.details:
+                if label == 'deep':
+                    self.stdout.write(f'      {value}')
+
+    def render_timings(self, timings):
+        durations = sorted(elapsed for elapsed, _ in timings)
+        slowest = sorted(timings, key=lambda item: item[0], reverse=True)[:SLOWEST_COUNT]
+        self.stdout.write('\nResponse times:')
+        self.stdout.write(
+            f'    min {format_seconds(durations[0])} · '
+            f'median {format_seconds(durations[len(durations) // 2])} · '
+            f'max {format_seconds(durations[-1])}'
+        )
+        self.stdout.write(f'    slowest {len(slowest)}:')
+        for elapsed, feed in slowest:
+            self.stdout.write(f'        {format_seconds(elapsed):>8}  feed #{feed.pk} ({self.feed_iso3(feed)}) {feed.url}')
+
+    def build_reports(self, feeds, results, latest_sent, feed_logs, now, skip_db):
+        """Pair each check result with its database context and settle the final verdict.
+
+        Detail lines are only assembled for feeds that will be reported as a block; healthy
+        feeds carry their metadata in the table row instead.
+        """
+        reports = []
+        for feed, result in zip(feeds, results):
+            verdict = result.verdict
+            if not skip_db and verdict == Verdict.OK and not feed.has_alerts:
+                verdict = Verdict.NOT_INGESTED
+
+            details = list(result.details)
+            if verdict != Verdict.OK:
+                details.insert(0, ('feed', self.describe_feed_config(feed)))
+                if not skip_db:
+                    details.append(
+                        ('alerts', self.describe_stored_alerts(feed, result.entry_count, latest_sent.get(feed.pk), now))
+                    )
+                    log_count, latest_log = feed_logs.get(feed.pk, (0, None))
+                    log_message = self.describe_feed_log(log_count, latest_log, now)
+                    if log_message:
+                        details.append(('log', log_message))
+                hint = self.describe_hint(feed, verdict)
+                if hint:
+                    details.append(('hint', hint))
+
+            reports.append(
+                FeedReport(
+                    feed=feed,
+                    verdict=verdict,
+                    details=details,
+                    elapsed=result.elapsed,
+                    entry_count=result.entry_count,
+                    index_meta=result.index_meta,
+                    latest_sent=latest_sent.get(feed.pk),
+                )
+            )
+        return reports
 
     def handle(self, *_, **options):
         # Materialised up front: the async fetch phase cannot touch the ORM.
@@ -393,18 +907,20 @@ class Command(BaseCommand):
             if show_progress:
                 self.render_progress(sum(fetch_counts.values()), total, fetch_counts, feed, elapsed)
 
-        results = asyncio.run(self.run_checks(feeds, options, on_progress))
+        now = timezone.now()
+        results = asyncio.run(self.run_checks(feeds, options, now, on_progress))
 
         if show_progress:
             # Drop the progress line before writing the per-feed report.
             self.stdout.write(f'\r{"":<{PROGRESS_WIDTH}}\r', ending='')
 
-        now = timezone.now()
         latest_sent = {}
+        feed_logs = {}
         if not options['skip_db']:
             started = time.monotonic()
             latest_sent = self.get_latest_sent(feeds)
-            self.stdout.write(f'Latest-alert lookup took {format_seconds(time.monotonic() - started)}.')
+            feed_logs = self.get_feed_logs(feeds)
+            self.stdout.write(f'Stored-alert and feed-log lookups took {format_seconds(time.monotonic() - started)}.')
 
         style_for = {
             Verdict.OK: self.style.SUCCESS,
@@ -416,52 +932,36 @@ class Command(BaseCommand):
             Verdict.NOT_INGESTED: self.style.WARNING,
         }
 
-        counts = {}
-        problems = 0
-        timings = []
-        for feed, (verdict, messages, elapsed, entry_count) in zip(feeds, results):
-            if elapsed is not None:
-                timings.append((elapsed, feed))
+        reports = self.build_reports(feeds, results, latest_sent, feed_logs, now, options['skip_db'])
 
-            if not options['skip_db']:
-                messages.append(self.describe_active_alerts(entry_count, latest_sent.get(feed.pk), now))
-                has_alerts, historical_message = self.describe_historical_alerts(feed)
-                messages.append(historical_message)
-                if verdict == Verdict.OK and not has_alerts:
-                    verdict = Verdict.NOT_INGESTED
-            elif entry_count is not None:
-                messages.append(f'{entry_count} alert entr{"y" if entry_count == 1 else "ies"} found.')
+        by_verdict = {}
+        for report in reports:
+            by_verdict.setdefault(report.verdict, []).append(report)
+        ordered_verdicts = sorted(by_verdict, key=verdict_rank)
 
-            counts[verdict] = counts.get(verdict, 0) + 1
-            if verdict != Verdict.OK:
-                problems += 1
-            elif options['only_issues']:
+        for verdict in ordered_verdicts:
+            if verdict == Verdict.OK and options['only_issues']:
                 continue
-
+            group = by_verdict[verdict]
             style = style_for.get(verdict, self.style.NOTICE)
-            iso3 = feed.country.iso3 if feed.country_id else '???'
-            took = format_seconds(elapsed) if elapsed is not None else 'n/a'
-            self.stdout.write(style(f'[{verdict}] feed #{feed.pk} ({iso3}, format={feed.format}, {took}) {feed.url}'))
-            for msg in messages:
-                self.stdout.write(f'    {msg}')
+            self.stdout.write('')
+            self.stdout.write(style(self.section_rule(verdict, len(group))))
+            if verdict == Verdict.OK:
+                self.render_ok_rows(group, now, options['skip_db'])
+            else:
+                for report in group:
+                    self.render_problem_block(report, style)
 
-        self.stdout.write('\nSummary:')
-        for verdict, count in sorted(counts.items()):
-            self.stdout.write(f'    {verdict}: {count}')
+        breakdown = ' · '.join(
+            style_for.get(verdict, self.style.NOTICE)(f'{len(by_verdict[verdict])} {verdict}')
+            for verdict in ordered_verdicts
+        )
+        self.stdout.write(f'\nSummary: {total} feed(s) · {breakdown}')
 
+        timings = [(report.elapsed, report.feed) for report in reports if report.elapsed is not None]
         if timings:
-            durations = sorted(elapsed for elapsed, _ in timings)
-            slowest = sorted(timings, key=lambda item: item[0], reverse=True)[:SLOWEST_COUNT]
-            self.stdout.write('\nResponse times:')
-            self.stdout.write(
-                f'    min {format_seconds(durations[0])}, '
-                f'median {format_seconds(durations[len(durations) // 2])}, '
-                f'max {format_seconds(durations[-1])}'
-            )
-            self.stdout.write(f'    slowest {len(slowest)}:')
-            for elapsed, feed in slowest:
-                iso3 = feed.country.iso3 if feed.country_id else '???'
-                self.stdout.write(f'        {format_seconds(elapsed):>8}  feed #{feed.pk} ({iso3}) {feed.url}')
+            self.render_timings(timings)
 
+        problems = sum(len(group) for verdict, group in by_verdict.items() if verdict != Verdict.OK)
         if problems and options['strict']:
             raise CommandError(f'{problems} feed(s) reported problems.')
