@@ -1,10 +1,13 @@
+import asyncio
+import time
 import xml.etree.ElementTree as ET
 
 import httpx
 from django.core.management.base import BaseCommand, CommandError
+from django.db.models import Exists, OuterRef
 
 from apps.cap_feed.formats.utils import COMMON_REQUESTS_HEADERS
-from apps.cap_feed.models import Feed
+from apps.cap_feed.models import Alert, Feed, ProcessedAlert
 
 # Namespaces used to navigate the feed index documents.
 NS = {
@@ -14,6 +17,12 @@ NS = {
 
 # CAP namespace prefix (version agnostic) used to validate individual alert docs.
 CAP_NS_PREFIX = 'urn:oasis:names:tc:emergency:cap'
+
+# Width of the single-line progress indicator; wide enough for the verdict breakdown.
+PROGRESS_WIDTH = 110
+
+# How many slowest feeds the response-time summary lists.
+SLOWEST_COUNT = 5
 
 # Root structure -> feed formats that are able to parse it.
 STRUCTURE_TO_FORMATS = {
@@ -29,6 +38,14 @@ class Verdict:
     UNREACHABLE = 'UNREACHABLE'
     INVALID_XML = 'INVALID_XML'
     UNKNOWN_STRUCTURE = 'UNKNOWN_STRUCTURE'
+    NOT_INGESTED = 'NOT_INGESTED'
+
+
+def format_seconds(seconds: float) -> str:
+    """Format a duration for the report, keeping sub-second timings readable."""
+    if seconds < 1:
+        return f'{seconds * 1000:.0f}ms'
+    return f'{seconds:.2f}s'
 
 
 def local_tag(tag: str) -> str:
@@ -85,7 +102,8 @@ def first_alert_link(root: ET.Element, fmt: str) -> str | None:
 class Command(BaseCommand):
     help = (
         'Check that each feed\'s configured `format` matches the structure actually served, '
-        'plus reachability / well-formedness / non-empty checks. Read-only; does not modify feeds.'
+        'plus reachability / well-formedness / non-empty checks and whether any alerts are '
+        'stored in the database. Feeds are fetched in parallel. Read-only; does not modify feeds.'
     )
 
     def add_arguments(self, parser):
@@ -119,13 +137,32 @@ class Command(BaseCommand):
             help='Per-request timeout in seconds (default: 60).',
         )
         parser.add_argument(
+            '--concurrency',
+            type=int,
+            default=10,
+            help='Number of feeds fetched in parallel (default: 10).',
+        )
+        parser.add_argument(
             '--strict',
             action='store_true',
             help='Exit with an error if any feed has a problem (useful for CI).',
         )
+        parser.add_argument(
+            '--only-issues',
+            action='store_true',
+            help='Only print feeds with a non-OK verdict.',
+        )
+        parser.add_argument(
+            '--skip-db',
+            action='store_true',
+            help='Skip the check for alerts stored in the database.',
+        )
 
     def get_queryset(self, options):
-        qs = Feed.objects.select_related('country').all()
+        qs = Feed.objects.select_related('country').annotate(
+            has_alerts=Exists(Alert.objects.filter(feed=OuterRef('pk'))),
+            has_processed_alerts=Exists(ProcessedAlert.objects.filter(feed=OuterRef('pk'))),
+        )
         if not options['include_archived']:
             qs = qs.filter(is_archived=False)
         if options['feed_ids']:
@@ -138,21 +175,41 @@ class Command(BaseCommand):
             qs = qs.filter(format=options['format'])
         return qs.order_by('pk')
 
-    def check_feed(self, feed, timeout, deep):
-        """Return (verdict, list_of_message_lines)."""
-        messages = []
+    def check_db(self, feed):
+        """Return (has_alerts, message) for the feed's stored alerts."""
+        if feed.has_alerts:
+            return True, 'DB: alerts stored for this feed.'
+        if feed.has_processed_alerts:
+            return False, 'DB: no Alert rows, but alerts have been processed (parsed then discarded/not saved).'
+        return False, 'DB: no Alert rows and nothing processed — this feed has never been ingested.'
 
+    async def check_feed(self, client, feed, deep):
+        """Return (verdict, list_of_message_lines, fetch_seconds)."""
         headers = dict(COMMON_REQUESTS_HEADERS)
         if feed.format == Feed.Format.NWS_US:
             # NWS serves GeoJSON by default; the atom variant must be requested explicitly
             # (mirrors apps/cap_feed/formats/nws_us.py).
             headers['Accept'] = 'application/atom+xml'
 
+        started = time.monotonic()
         try:
-            response = httpx.get(feed.url, headers=headers, timeout=timeout)
+            response = await client.get(feed.url, headers=headers)
             response.raise_for_status()
         except httpx.HTTPError as e:
-            return Verdict.UNREACHABLE, [f'Failed to fetch feed: {e!r}']
+            elapsed = time.monotonic() - started
+            return Verdict.UNREACHABLE, [f'Failed to fetch feed after {format_seconds(elapsed)}: {e!r}'], elapsed
+        elapsed = time.monotonic() - started
+
+        verdict, messages = await self.analyse_response(client, feed, response, deep)
+        messages.insert(
+            0,
+            f'HTTP {response.status_code} in {format_seconds(elapsed)}, {len(response.content) / 1024:.1f} KiB.',
+        )
+        return verdict, messages, elapsed
+
+    async def analyse_response(self, client, feed, response, deep):
+        """Return (verdict, list_of_message_lines) for an already-fetched feed index."""
+        messages = []
 
         if not response.content or response.content.strip() == b'':
             return Verdict.EMPTY, ['Feed returned empty content.']
@@ -190,35 +247,87 @@ class Command(BaseCommand):
         messages.append(f'{entry_count} alert entr{"y" if entry_count == 1 else "ies"} found.')
 
         if deep:
-            messages.extend(self.deep_check(root, feed, timeout))
+            messages.extend(await self.deep_check(client, root, feed))
 
         return Verdict.OK, messages
 
-    def deep_check(self, root, feed, timeout):
+    async def deep_check(self, client, root, feed):
         link = first_alert_link(root, feed.format)
         if not link:
             return ['[deep] Could not extract first alert link.']
+        started = time.monotonic()
         try:
-            resp = httpx.get(link, headers=COMMON_REQUESTS_HEADERS, timeout=timeout)
+            resp = await client.get(link, headers=COMMON_REQUESTS_HEADERS)
             resp.raise_for_status()
             alert_root = ET.fromstring(resp.content)
         except httpx.HTTPError as e:
-            return [f'[deep] Failed to fetch first alert doc ({link}): {e!r}']
+            took = format_seconds(time.monotonic() - started)
+            return [f'[deep] Failed to fetch first alert doc after {took} ({link}): {e!r}']
         except ET.ParseError as e:
             return [f'[deep] First alert doc is not well-formed XML ({link}): {e}']
+        took = format_seconds(time.monotonic() - started)
 
         if local_tag(alert_root.tag) == 'alert' and CAP_NS_PREFIX in alert_root.tag:
-            return [f'[deep] First alert doc is valid CAP: {link}']
-        return [f'[deep] First alert doc is NOT a CAP <alert> (root <{alert_root.tag}>): {link}']
+            return [f'[deep] First alert doc is valid CAP, fetched in {took}: {link}']
+        return [f'[deep] First alert doc is NOT a CAP <alert> (root <{alert_root.tag}>), fetched in {took}: {link}']
+
+    async def run_checks(self, feeds, options, on_progress):
+        """Fetch and check all feeds concurrently. Results are returned in feed order."""
+        concurrency = max(1, options['concurrency'])
+        semaphore = asyncio.Semaphore(concurrency)
+
+        async with httpx.AsyncClient(
+            timeout=options['timeout'],
+            follow_redirects=True,
+            limits=httpx.Limits(max_connections=concurrency),
+        ) as client:
+
+            async def run_one(feed):
+                async with semaphore:
+                    try:
+                        verdict, messages, elapsed = await self.check_feed(client, feed, options['deep'])
+                    except Exception as e:
+                        # A single misbehaving feed must not abort the whole run.
+                        verdict = Verdict.UNREACHABLE
+                        messages = [f'Unexpected error while checking feed: {e!r}']
+                        elapsed = None
+                on_progress(feed, verdict, elapsed)
+                return verdict, messages, elapsed
+
+            return await asyncio.gather(*(run_one(feed) for feed in feeds))
+
+    def render_progress(self, done, total, counts, feed, elapsed):
+        breakdown = ', '.join(f'{verdict}={count}' for verdict, count in sorted(counts.items()))
+        iso3 = feed.country.iso3 if feed.country_id else '???'
+        took = format_seconds(elapsed) if elapsed is not None else 'n/a'
+        line = f'  [{done}/{total}] {breakdown} | last: feed #{feed.pk} ({iso3}) {took}'
+        self.stdout.write(f'\r{line[:PROGRESS_WIDTH]:<{PROGRESS_WIDTH}}', ending='')
+        self.stdout.flush()
 
     def handle(self, *_, **options):
-        feeds = self.get_queryset(options)
-        total = feeds.count()
+        # Materialised up front: the async fetch phase cannot touch the ORM.
+        feeds = list(self.get_queryset(options))
+        total = len(feeds)
         if total == 0:
             self.stdout.write(self.style.WARNING('No feeds matched the given filters.'))
             return
 
-        self.stdout.write(f'Checking {total} feed(s)...\n')
+        self.stdout.write(f'Checking {total} feed(s), {max(1, options["concurrency"])} at a time...')
+
+        # The in-place progress line needs a terminal; piped output gets the report only.
+        show_progress = options['verbosity'] > 0 and getattr(self.stdout, 'isatty', lambda: False)()
+        fetch_counts = {}
+
+        def on_progress(feed, verdict, elapsed):
+            fetch_counts[verdict] = fetch_counts.get(verdict, 0) + 1
+            if show_progress:
+                self.render_progress(sum(fetch_counts.values()), total, fetch_counts, feed, elapsed)
+
+        results = asyncio.run(self.run_checks(feeds, options, on_progress))
+
+        if show_progress:
+            # Drop the progress line before writing the per-feed report.
+            self.stdout.write(f'\r{"":<{PROGRESS_WIDTH}}\r', ending='')
 
         style_for = {
             Verdict.OK: self.style.SUCCESS,
@@ -227,25 +336,52 @@ class Command(BaseCommand):
             Verdict.INVALID_XML: self.style.ERROR,
             Verdict.UNKNOWN_STRUCTURE: self.style.ERROR,
             Verdict.EMPTY: self.style.WARNING,
+            Verdict.NOT_INGESTED: self.style.WARNING,
         }
 
         counts = {}
         problems = 0
-        for feed in feeds:
-            verdict, messages = self.check_feed(feed, options['timeout'], options['deep'])
+        timings = []
+        for feed, (verdict, messages, elapsed) in zip(feeds, results):
+            if elapsed is not None:
+                timings.append((elapsed, feed))
+
+            if not options['skip_db']:
+                has_alerts, db_message = self.check_db(feed)
+                messages.append(db_message)
+                if verdict == Verdict.OK and not has_alerts:
+                    verdict = Verdict.NOT_INGESTED
+
             counts[verdict] = counts.get(verdict, 0) + 1
             if verdict != Verdict.OK:
                 problems += 1
+            elif options['only_issues']:
+                continue
 
             style = style_for.get(verdict, self.style.NOTICE)
             iso3 = feed.country.iso3 if feed.country_id else '???'
-            self.stdout.write(style(f'[{verdict}] feed #{feed.pk} ({iso3}, format={feed.format}) {feed.url}'))
+            took = format_seconds(elapsed) if elapsed is not None else 'n/a'
+            self.stdout.write(style(f'[{verdict}] feed #{feed.pk} ({iso3}, format={feed.format}, {took}) {feed.url}'))
             for msg in messages:
                 self.stdout.write(f'    {msg}')
 
         self.stdout.write('\nSummary:')
         for verdict, count in sorted(counts.items()):
             self.stdout.write(f'    {verdict}: {count}')
+
+        if timings:
+            durations = sorted(elapsed for elapsed, _ in timings)
+            slowest = sorted(timings, key=lambda item: item[0], reverse=True)[:SLOWEST_COUNT]
+            self.stdout.write('\nResponse times:')
+            self.stdout.write(
+                f'    min {format_seconds(durations[0])}, '
+                f'median {format_seconds(durations[len(durations) // 2])}, '
+                f'max {format_seconds(durations[-1])}'
+            )
+            self.stdout.write(f'    slowest {len(slowest)}:')
+            for elapsed, feed in slowest:
+                iso3 = feed.country.iso3 if feed.country_id else '???'
+                self.stdout.write(f'        {format_seconds(elapsed):>8}  feed #{feed.pk} ({iso3}) {feed.url}')
 
         if problems and options['strict']:
             raise CommandError(f'{problems} feed(s) reported problems.')
