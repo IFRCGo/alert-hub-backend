@@ -16,7 +16,7 @@ dependencies = [
     "django-storages[s3, azure]",
     "django-admin-autocomplete-filter",
     "django-modeltranslation==0.19.5",
-    "iso639-lang>=2.1.0,<2.2.0",
+    "iso639-lang>=2.1.0,<2.7.0",
     "psycopg2-binary>=2.9.9,<3",
     "pytz",
     "colorlog",
