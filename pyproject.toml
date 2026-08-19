@@ -21,7 +21,7 @@ dependencies = [
     "pytz",
     "colorlog",
     "httpx",
-    "strawberry-graphql-django==0.49.1",
+    "strawberry-graphql-django==0.67.0",
     "strawberry-graphql==0.257.0",
     "sentry-sdk",
     "djangorestframework",
