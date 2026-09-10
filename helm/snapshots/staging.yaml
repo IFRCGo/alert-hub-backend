@@ -750,7 +750,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "30"
 spec:
-  ingressClassName: "nginx"
+  ingressClassName: "traefik"
   rules:
     - host: "alert-hub.example.com"
       http:

@@ -9,7 +9,6 @@ app:
     ingress:
       enabled: true
       host: test.com
-      className: "nginx"
 
   env:
     DJANGO_DEBUG: "false"

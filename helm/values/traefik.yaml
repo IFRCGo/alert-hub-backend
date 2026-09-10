@@ -1,0 +1,6 @@
+# Serve the api ingress through Traefik. Layer this after an environment overlay
+# so the class here wins.
+app:
+  api:
+    ingress:
+      className: traefik
