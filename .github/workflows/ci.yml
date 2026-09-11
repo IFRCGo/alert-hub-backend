@@ -20,3 +20,6 @@ jobs:
       docker__compose_test_cmd: "/code/scripts/run_tests.sh"
       # Job: Helm
       helm__chart_directory: "./helm"
+      # Pinned: helm renders whitespace differently across releases and the pipeline
+      # diffs the committed chart snapshots byte-for-byte.
+      helm__version: "v4.2.2"
