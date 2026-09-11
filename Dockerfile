@@ -1,4 +1,4 @@
-FROM python:3.11-slim-bullseye
+FROM python:3.11-slim-bookworm
 COPY --from=ghcr.io/astral-sh/uv:0.6.2 /uv /uvx /bin/
 
 LABEL maintainer="Alert-Hub Dev"

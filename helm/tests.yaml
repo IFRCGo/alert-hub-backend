@@ -3,18 +3,22 @@
 # + the listed values files + the matching ./tests/<key> override.
 #   - values/operators.yaml : operator-managed infra (Dragonfly, RabbitMQ)
 #   - tests/dummy.yaml       : dummy secrets/domains so `required` fields render
+#   - values/traefik.yaml    : api ingress class; listed last so it wins
 tests:
   alpha.yaml:
     - values/operators.yaml
     - tests/dummy.yaml
     - values/alpha.yaml
+    - values/traefik.yaml
   staging.yaml:
     - values/operators.yaml
     - tests/dummy.yaml
     - values/go-deploy.yaml
     - values/staging.yaml
+    - values/traefik.yaml
   production.yaml:
     - values/operators.yaml
     - tests/dummy.yaml
     - values/go-deploy.yaml
     - values/production.yaml
+    - values/traefik.yaml

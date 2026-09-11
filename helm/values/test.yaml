@@ -9,7 +9,6 @@ app:
     ingress:
       enabled: true
       host: test.com
-      className: "nginx"
 
   env:
     DJANGO_DEBUG: "false"
@@ -52,7 +51,7 @@ app:
       # ConfigMap at /etc/hook-files and piped into `manage.py shell`.
       custom-python-script-01:
         enabled: true
-        annotations:
+        jobAnnotations:
           argocd.argoproj.io/hook: "Sync"
           argocd.argoproj.io/sync-wave: "25"
           argocd.argoproj.io/hook-delete-policy: BeforeHookCreation

@@ -7,7 +7,6 @@ app:
   api:
     ingress:
       enabled: true
-      className: nginx
       tls:
         enabled: true
 
