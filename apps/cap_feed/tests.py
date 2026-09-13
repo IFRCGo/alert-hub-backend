@@ -1,16 +1,17 @@
+import json
 from datetime import datetime, timedelta
 from io import StringIO
 from unittest import mock
 
 import pytz
-from django.test import TestCase
+from django.test import SimpleTestCase, TestCase
 from django.utils import timezone
 
 from apps.cap_feed import tasks
 from apps.cap_feed.formats.format_handler import get_alerts
 from apps.cap_feed.formats.utils import convert_datetime
 
-from .models import Alert, AlertInfo, Country, Feed
+from .models import Alert, AlertInfo, Country, Feed, LanguageInfo, get_language_code
 
 
 class AlertModelTests(TestCase):
@@ -125,3 +126,28 @@ class AlertModelTests(TestCase):
             get_alerts(Feed.objects.get(url="test_feed"), {'test_url'})
         assert Alert.objects.count() == previous_alert_count
         assert AlertInfo.objects.count() == previous_alert_info_count
+
+
+class LanguageCodeTests(SimpleTestCase):
+    def test_known_values_map_to_iso2_codes(self):
+        assert get_language_code('English') == 'en'
+        assert get_language_code('en') == 'en'
+        assert get_language_code('en-US') == 'en'
+        assert get_language_code('EN_us') == 'en'
+        assert get_language_code('  French  ') == 'fr'
+        assert get_language_code('Greek') == 'el'
+        assert get_language_code('Modern Greek (1453-)') == 'el'
+
+    def test_unknown_values_have_no_code(self):
+        assert get_language_code('Unknown') is None
+        assert get_language_code('') is None
+        assert get_language_code(None) is None
+
+    def test_every_configured_feed_language_keeps_its_display_name(self):
+        with open('apps/cap_feed/feeds.json', encoding='utf-8') as file:
+            names = {feed_entry['language'] for feed_entry in json.load(file)}
+        labels = dict(LanguageInfo.Language.choices)
+        for name in names - {'Unknown'}:
+            code = get_language_code(name)
+            assert code is not None
+            assert labels[code] == name

@@ -146,22 +146,56 @@ class Admin1(models.Model):
         return self.name
 
 
+# Common names for languages whose ISO 639 name carries a qualifier.
+LANGUAGE_NAME_OVERRIDES = {
+    'el': 'Greek',  # Modern Greek (1453-)
+    'lg': 'Luganda',  # Ganda
+    'st': 'Sotho',  # Southern Sotho
+}
+
+
+def get_language_label(lang) -> str:
+    """Human readable name of an ISO 639 language, without the ISO qualifiers."""
+    if override := LANGUAGE_NAME_OVERRIDES.get(lang.pt1):
+        return override
+    return lang.name.split(';')[0].split('(')[0].strip()
+
+
+LANGUAGE_LABEL_BY_CODE = dict(
+    sorted(
+        ((lang.pt1, get_language_label(lang)) for lang in iter_langs() if lang.pt1),
+        key=lambda code_label: code_label[1],
+    )
+)
+
+LANGUAGE_CODE_BY_NAME = {
+    name.lower(): lang.pt1 for lang in iter_langs() if lang.pt1 for name in (lang.name, get_language_label(lang))
+}
+
+
+DEFAULT_LANGUAGE_CODE = 'en'
+
+
+def get_language_code(value: str | None) -> str | None:
+    """ISO 639-1 code for a language name, code or locale tag. None when unrecognised."""
+    if not value:
+        return None
+    value = value.strip()
+    code = value.lower().replace('_', '-').split('-')[0]
+    if code in LANGUAGE_LABEL_BY_CODE:
+        return code
+    return LANGUAGE_CODE_BY_NAME.get(value.lower())
+
+
 class LanguageInfo(models.Model):
-    LANGUAGE_CHOICES = [(lg.pt1, lg.pt1 + ' - ' + lg.name) for lg in iter_langs() if lg.pt1]
-    """
-    TODO: Move this to textchoices
-    Language = models.TextChoices('Language', {
-        lg.pt1.upper(): (
-            lg.pt1,
-            lg.pt1 + ' - ' + lg.name,
-        )
-        for lg in iter_langs() if lg.pt1
-    })
-    """
+    Language = models.TextChoices(
+        'Language',
+        {code.upper(): (code, label) for code, label in LANGUAGE_LABEL_BY_CODE.items()},
+    )
 
     feed = models.ForeignKey('Feed', on_delete=models.CASCADE)
     name = models.CharField()
-    language = models.CharField(blank=True, null=True, choices=LANGUAGE_CHOICES, default='en-US')
+    language = models.CharField(blank=True, null=True, choices=Language.choices, default=DEFAULT_LANGUAGE_CODE)
     logo = models.CharField(blank=True, null=True)
 
     feed_id: int

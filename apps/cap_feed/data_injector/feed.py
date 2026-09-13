@@ -2,7 +2,7 @@ import json
 import logging
 import os
 
-from apps.cap_feed.models import Country, Feed, LanguageInfo
+from apps.cap_feed.models import Country, Feed, LanguageInfo, get_language_code
 
 module_dir = os.path.dirname(__file__)  # get current directory
 logger = logging.getLogger(__name__)
@@ -38,7 +38,7 @@ def inject_feeds():
                 language_info = LanguageInfo()
                 language_info.feed = feed
                 language_info.name = feed_entry['name']
-                language_info.language = feed_entry['language']
+                language_info.language = get_language_code(feed_entry['language'])
                 language_info.logo = feed_entry['picUrl']
                 language_info.save()
 

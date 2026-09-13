@@ -172,7 +172,7 @@ class LanguageInfoType:
     feed_id: strawberry.ID
     name = string_field(LanguageInfo.name)
     logo = string_field(LanguageInfo.logo)
-    language = string_field(LanguageInfo.language)
+    language = enum_display_field(LanguageInfo.language)
 
 
 @strawberry_django.type(Feed)
